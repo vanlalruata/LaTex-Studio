@@ -6,6 +6,7 @@ import PublicContainer from '@/components/public/PublicContainer.vue';
 import { home, login, register } from '@/routes';
 import {
     about,
+    contact,
     demo,
     faq,
     features,
@@ -125,6 +126,14 @@ const resourceLinks = computed(() => {
                                     class="text-sm text-ink-muted transition-colors hover:text-ink"
                                 >
                                     About
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    :href="contact()"
+                                    class="text-sm text-ink-muted transition-colors hover:text-ink"
+                                >
+                                    Contact
                                 </Link>
                             </li>
                             <li>

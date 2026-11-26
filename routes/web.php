@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ContactEnquiryController as AdminContactEnquiryController;
 use App\Http\Controllers\Admin\PublicSiteController as AdminPublicSiteController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\CommentController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\ProjectIndexController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectRevisionController;
 use App\Http\Controllers\PublicSite\AboutController;
+use App\Http\Controllers\PublicSite\ContactController;
 use App\Http\Controllers\PublicSite\DemoController;
 use App\Http\Controllers\PublicSite\FaqController;
 use App\Http\Controllers\PublicSite\FeatureController;
@@ -31,6 +33,10 @@ Route::get('/demo', DemoController::class)->name('public.demo');
 Route::get('/templates', TemplateController::class)->name('public.templates');
 Route::get('/pricing', PricingController::class)->name('public.pricing');
 Route::get('/about', AboutController::class)->name('public.about');
+Route::get('/contact', [ContactController::class, 'show'])->name('public.contact');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->middleware('throttle:contact-enquiry')
+    ->name('public.contact.store');
 Route::get('/faq', FaqController::class)->name('public.faq');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('public.privacy');
 Route::get('/terms', [LegalController::class, 'terms'])->name('public.terms');
@@ -86,6 +92,8 @@ Route::middleware(['auth', 'verified', 'can:manage-public-site'])
         Route::post('/plans', [AdminPublicSiteController::class, 'storePlan'])->name('plans.store');
         Route::put('/plans/{plan}', [AdminPublicSiteController::class, 'updatePlan'])->name('plans.update');
         Route::delete('/plans/{plan}', [AdminPublicSiteController::class, 'destroyPlan'])->name('plans.destroy');
+        Route::get('/enquiries', [AdminContactEnquiryController::class, 'index'])->name('enquiries.index');
+        Route::patch('/enquiries/{enquiry}', [AdminContactEnquiryController::class, 'update'])->name('enquiries.update');
     });
 
 require __DIR__.'/settings.php';

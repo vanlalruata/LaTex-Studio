@@ -1,4 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
+import contact50a660 from './contact'
 /**
 * @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
  * @see app/Http/Controllers/PublicSite/FeatureController.php:12
@@ -468,6 +469,84 @@ about.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     about.form = aboutForm
 /**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+export const contact = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: contact.url(options),
+    method: 'get',
+})
+
+contact.definition = {
+    methods: ["get","head"],
+    url: '/contact',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+contact.url = (options?: RouteQueryOptions) => {
+    return contact.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+contact.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: contact.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+contact.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: contact.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+    const contactForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: contact.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+        contactForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: contact.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\ContactController::contact
+ * @see app/Http/Controllers/PublicSite/ContactController.php:17
+ * @route '/contact'
+ */
+        contactForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: contact.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    contact.form = contactForm
+/**
 * @see \App\Http\Controllers\PublicSite\FaqController::__invoke
  * @see app/Http/Controllers/PublicSite/FaqController.php:12
  * @route '/faq'
@@ -708,6 +787,7 @@ demo: Object.assign(demo, demo),
 templates: Object.assign(templates, templates),
 pricing: Object.assign(pricing, pricing),
 about: Object.assign(about, about),
+contact: Object.assign(contact, contact50a660),
 faq: Object.assign(faq, faq),
 privacy: Object.assign(privacy, privacy),
 terms: Object.assign(terms, terms),

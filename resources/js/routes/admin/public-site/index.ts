@@ -1,6 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 import settings from './settings'
 import plans from './plans'
+import enquiries from './enquiries'
 /**
 * @see \App\Http\Controllers\Admin\PublicSiteController::index
  * @see app/Http/Controllers/Admin/PublicSiteController.php:20
@@ -83,6 +84,7 @@ const publicSite = {
     index: Object.assign(index, index),
 settings: Object.assign(settings, settings),
 plans: Object.assign(plans, plans),
+enquiries: Object.assign(enquiries, enquiries),
 }
 
 export default publicSite

@@ -5,6 +5,7 @@ import DemoController from './DemoController'
 import TemplateController from './TemplateController'
 import PricingController from './PricingController'
 import AboutController from './AboutController'
+import ContactController from './ContactController'
 import FaqController from './FaqController'
 import LegalController from './LegalController'
 const PublicSite = {
@@ -15,6 +16,7 @@ DemoController: Object.assign(DemoController, DemoController),
 TemplateController: Object.assign(TemplateController, TemplateController),
 PricingController: Object.assign(PricingController, PricingController),
 AboutController: Object.assign(AboutController, AboutController),
+ContactController: Object.assign(ContactController, ContactController),
 FaqController: Object.assign(FaqController, FaqController),
 LegalController: Object.assign(LegalController, LegalController),
 }
