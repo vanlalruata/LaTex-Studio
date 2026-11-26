@@ -27,6 +27,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
 import { dashboard } from '@/routes';
+import compilationsRoutes from '@/routes/compilations';
 import projectsRoutes from '@/routes/projects';
 import { inferMonacoLanguage } from '@/services/latex/monacoLatexLanguage';
 
@@ -112,9 +113,15 @@ const cursorPos = ref({ lineNumber: 1, column: 1 });
 const newFileName = ref('');
 const showNewFileInput = ref(false);
 const isStalePdf = ref(false);
+const isCompiling = ref(false);
+const latestCompilationState = ref<CompilationSummary | null>(props.latestCompilation);
+const lastSuccessfulCompilationId = ref<string | null>(
+    props.project.last_successful_compilation_id,
+);
 const editorRef = ref<InstanceType<typeof MonacoEditor> | null>(null);
 
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
+let compilePollTimer: ReturnType<typeof setTimeout> | null = null;
 
 function getCsrfToken(): string {
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -160,8 +167,11 @@ const currentLanguage = computed(() =>
 );
 
 const pdfUrl = computed(() =>
-    props.project.last_successful_compilation_id
-        ? `/compilations/${props.project.last_successful_compilation_id}/artifacts/pdf`
+    lastSuccessfulCompilationId.value
+        ? compilationsRoutes.artifacts.show({
+              compilation: lastSuccessfulCompilationId.value,
+              type: 'pdf',
+          }).url
         : null,
 );
 
@@ -379,9 +389,83 @@ function jumpToLine(line: number): void {
     editorRef.value?.revealLine(line);
 }
 
+async function triggerCompile(): Promise<void> {
+    if (!props.project.can_compile || isCompiling.value) {
+        return;
+    }
+
+    if (saveStatus.value === 'dirty') {
+        await saveCurrentFile();
+    }
+
+    isCompiling.value = true;
+
+    const response = await fetch(
+        projectsRoutes.compilations.store(props.project.public_id).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken(),
+            },
+            body: JSON.stringify({}),
+        },
+    );
+
+    if (!response.ok) {
+        isCompiling.value = false;
+        showBottomDrawer.value = true;
+        return;
+    }
+
+    const created = (await response.json()) as { public_id: string };
+    await pollCompilation(created.public_id);
+}
+
+async function pollCompilation(compilationId: string): Promise<void> {
+    const response = await fetch(compilationsRoutes.show(compilationId).url, {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+        isCompiling.value = false;
+        return;
+    }
+
+    const data = (await response.json()) as CompilationSummary & {
+        is_terminal: boolean;
+        last_successful_compilation_id: string | null;
+    };
+
+    latestCompilationState.value = data;
+
+    if (!data.is_terminal) {
+        compilePollTimer = setTimeout(() => {
+            void pollCompilation(compilationId);
+        }, 800);
+        return;
+    }
+
+    isCompiling.value = false;
+
+    if (data.status === 'published' && data.last_successful_compilation_id) {
+        lastSuccessfulCompilationId.value = data.last_successful_compilation_id;
+        isStalePdf.value = false;
+    } else {
+        // Failed/timed out: preserve previous PDF and surface diagnostics
+        showBottomDrawer.value = true;
+    }
+}
+
 onBeforeUnmount(() => {
     if (autosaveTimer) {
         clearTimeout(autosaveTimer);
+    }
+    if (compilePollTimer) {
+        clearTimeout(compilePollTimer);
     }
 });
 </script>
@@ -441,12 +525,14 @@ onBeforeUnmount(() => {
                 <button
                     v-if="project.can_compile"
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700"
-                    title="Compile manuscript (Phase 4 worker)"
-                    @click="showBottomDrawer = true"
+                    :disabled="isCompiling"
+                    class="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-60"
+                    title="Compile manuscript in isolated TeX Live worker"
+                    @click="triggerCompile"
                 >
-                    <Play class="size-3.5 fill-current" />
-                    <span>Compile</span>
+                    <Loader2 v-if="isCompiling" class="size-3.5 animate-spin" />
+                    <Play v-else class="size-3.5 fill-current" />
+                    <span>{{ isCompiling ? 'Compiling...' : 'Compile' }}</span>
                 </button>
             </div>
         </header>
@@ -692,23 +778,45 @@ onBeforeUnmount(() => {
                         </button>
                     </div>
                     <div class="flex-1 overflow-y-auto p-3 font-mono text-xs text-slate-700">
-                        <p v-if="!latestCompilation" class="text-slate-500">
-                            No compilation runs recorded for this project yet. Worker orchestration activates in Phase 4.
+                        <p v-if="!latestCompilationState" class="text-slate-500">
+                            No compilation runs recorded for this project yet. Click Compile to run an isolated build.
                         </p>
                         <div v-else class="space-y-2">
-                            <p>
-                                Compilation {{ latestCompilation.public_id }} · Status:
-                                <strong>{{ latestCompilation.status }}</strong>
-                            </p>
-                            <div
-                                v-for="(diag, i) in latestCompilation.diagnostics"
-                                :key="i"
-                                class="rounded border border-slate-200 bg-white p-2"
-                            >
-                                <span class="font-semibold uppercase">{{ diag.severity }}</span>
-                                <span v-if="diag.file_path"> · {{ diag.file_path }}:{{ diag.line }}</span>
-                                — {{ diag.message }}
+                            <div class="flex items-center justify-between">
+                                <p>
+                                    Build <span class="font-semibold">{{ latestCompilationState.public_id.slice(0, 8) }}</span> · Status:
+                                    <strong class="uppercase">{{ latestCompilationState.status }}</strong>
+                                    <span v-if="latestCompilationState.duration_ms"> ({{ latestCompilationState.duration_ms }} ms)</span>
+                                </p>
+                                <a
+                                    :href="compilationsRoutes.artifacts.show({ compilation: latestCompilationState.public_id, type: 'log' }).url"
+                                    target="_blank"
+                                    class="text-indigo-600 hover:underline"
+                                >
+                                    Raw Log
+                                </a>
                             </div>
+                            <p v-if="latestCompilationState.error_summary" class="rounded bg-rose-50 p-2 text-rose-700">
+                                {{ latestCompilationState.error_summary }}
+                            </p>
+                            <button
+                                v-for="(diag, i) in latestCompilationState.diagnostics"
+                                :key="i"
+                                type="button"
+                                class="block w-full rounded border border-slate-200 bg-white p-2 text-left transition hover:border-indigo-300"
+                                @click="diag.line ? jumpToLine(diag.line) : undefined"
+                            >
+                                <span
+                                    class="font-semibold uppercase"
+                                    :class="diag.severity === 'error' ? 'text-rose-600' : 'text-amber-600'"
+                                >
+                                    {{ diag.severity }}
+                                </span>
+                                <span v-if="diag.file_path || diag.line" class="text-slate-500">
+                                    · {{ diag.file_path ?? 'source' }}:{{ diag.line ?? '?' }}
+                                </span>
+                                — {{ diag.message }}
+                            </button>
                         </div>
                     </div>
                 </div>

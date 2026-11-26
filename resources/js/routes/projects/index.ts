@@ -1,6 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 import files from './files'
 import revisions from './revisions'
+import compilations from './compilations'
 /**
 * @see \App\Http\Controllers\ProjectController::store
  * @see app/Http/Controllers/ProjectController.php:24
@@ -446,6 +447,7 @@ destroy: Object.assign(destroy, destroy),
 export: Object.assign(exportMethod, exportMethod),
 files: Object.assign(files, files),
 revisions: Object.assign(revisions, revisions),
+compilations: Object.assign(compilations, compilations),
 }
 
 export default projects
