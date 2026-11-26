@@ -18,6 +18,7 @@ use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\ConversionJobController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FigureController;
+use App\Http\Controllers\FigureRenderController;
 use App\Http\Controllers\OcrJobController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ProjectChatController;
@@ -159,9 +160,15 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     // Advanced TikZ Figure Editor
     Route::get('projects/{project}/figures', [FigureController::class, 'index'])->name('projects.figures.index');
     Route::post('projects/{project}/figures', [FigureController::class, 'store'])->name('projects.figures.store');
+    Route::post('projects/{project}/figures/insert', [FigureController::class, 'insertIntoFile'])->name('projects.figures.insert');
     Route::get('projects/{project}/figures/{figure:public_id}', [FigureController::class, 'show'])->name('projects.figures.show');
     Route::put('projects/{project}/figures/{figure:public_id}', [FigureController::class, 'update'])->name('projects.figures.update');
     Route::delete('projects/{project}/figures/{figure:public_id}', [FigureController::class, 'destroy'])->name('projects.figures.destroy');
+    Route::get('projects/{project}/figures/{figure:public_id}/export', [FigureController::class, 'exportTex'])->name('projects.figures.export');
+    Route::post('projects/{project}/figures/{figure:public_id}/revisions/{revision:public_id}/restore', [FigureController::class, 'restoreRevision'])->name('projects.figures.revisions.restore');
+    Route::post('projects/{project}/figures/{figure:public_id}/renders', [FigureRenderController::class, 'store'])->name('projects.figures.renders.store');
+    Route::get('projects/{project}/figures/{figure:public_id}/renders/{renderJob:public_id}', [FigureRenderController::class, 'show'])->name('projects.figures.renders.show');
+    Route::get('projects/{project}/figures/{figure:public_id}/renders/{renderJob:public_id}/artifacts/{type}', [FigureRenderController::class, 'artifact'])->name('projects.figures.renders.artifact');
 
     // Phase 9: AI Research Assistant
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');

@@ -1,10 +1,15 @@
 <?php
 
+use App\DTOs\CompilationResult;
+use App\Enums\CompilationStatus;
 use App\Enums\ProjectRole;
 use App\Models\Figure;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\ProjectMember;
 use App\Models\User;
+use App\Services\Compiler\LatexCompilerInterface;
+use App\Services\Storage\PrivateStorageService;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('project editor can open figure editor and create, update, show, and delete a figure', function () {
@@ -128,4 +133,153 @@ test('figure routes reject cross-project access', function () {
     $this->actingAs($owner)
         ->putJson(route('projects.figures.update', [$projectB, $figure->public_id]), ['name' => 'Tampered'])
         ->assertNotFound();
+});
+
+test('figure revisions are recorded on save and can be restored', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create(['owner_id' => $owner->id]);
+
+    $createResponse = $this->actingAs($owner)
+        ->postJson(route('projects.figures.store', $project), [
+            'name' => 'Arch v1',
+            'schema_version' => 1,
+            'scene_json' => ['schema_version' => 1, 'objects' => [['id' => 'n1']]],
+            'tikz_source' => "\\begin{tikzpicture}\n  \\node (n1) at (0,0) {A};\n\\end{tikzpicture}",
+        ])
+        ->assertCreated();
+
+    $publicId = $createResponse->json('figure.public_id');
+    $firstRevisionId = $createResponse->json('revisions.0.public_id');
+
+    $this->actingAs($owner)
+        ->putJson(route('projects.figures.update', [$project, $publicId]), [
+            'tikz_source' => "\\begin{tikzpicture}\n  \\node (n1) at (1,1) {B};\n\\end{tikzpicture}",
+        ])
+        ->assertOk();
+
+    $this->actingAs($owner)
+        ->postJson(route('projects.figures.revisions.restore', [$project, $publicId, $firstRevisionId]))
+        ->assertOk()
+        ->assertJsonPath('figure.tikz_source', "\\begin{tikzpicture}\n  \\node (n1) at (0,0) {A};\n\\end{tikzpicture}");
+});
+
+test('figure can be rendered through compiler adapter and retains last successful render on failure', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create(['owner_id' => $owner->id]);
+
+    $figure = Figure::query()->create([
+        'project_id' => $project->id,
+        'user_id' => $owner->id,
+        'name' => 'Renderable Diagram',
+        'schema_version' => 1,
+        'mode' => 'visual_native',
+        'scene_json' => ['schema_version' => 1, 'objects' => []],
+        'tikz_source' => "\\begin{tikzpicture}\n  \\node (a) at (0,0) {Hello};\n\\end{tikzpicture}",
+        'required_packages_json' => ['tikz'],
+        'required_libraries_json' => ['arrows.meta'],
+    ]);
+
+    $mockSuccess = Mockery::mock(LatexCompilerInterface::class);
+    $mockSuccess->shouldReceive('compile')->once()->andReturn(new CompilationResult(
+        status: CompilationStatus::Succeeded,
+        exitCode: 0,
+        durationMs: 120,
+        pdfContents: '%PDF-1.4 fake pdf',
+        logContents: 'Output written on figure.pdf (1 page).',
+    ));
+    $this->instance(LatexCompilerInterface::class, $mockSuccess);
+
+    $res1 = $this->actingAs($owner)
+        ->postJson(route('projects.figures.renders.store', [$project, $figure]))
+        ->assertCreated();
+
+    $renderId1 = $res1->json('renderJob.public_id');
+
+    $this->actingAs($owner)
+        ->getJson(route('projects.figures.renders.show', [$project, $figure, $renderId1]))
+        ->assertOk()
+        ->assertJsonPath('renderJob.status', 'succeeded')
+        ->assertJsonPath('lastSuccessfulRenderId', $renderId1);
+
+    $this->actingAs($owner)
+        ->get(route('projects.figures.renders.artifact', [$project, $figure, $renderId1, 'pdf']))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf');
+
+    $mockFail = Mockery::mock(LatexCompilerInterface::class);
+    $mockFail->shouldReceive('compile')->once()->andReturn(new CompilationResult(
+        status: CompilationStatus::Failed,
+        exitCode: 1,
+        durationMs: 90,
+        logContents: "! Undefined control sequence.\nl.5 \\badcmd",
+        errorSummary: 'LaTeX failed.',
+    ));
+    $this->instance(LatexCompilerInterface::class, $mockFail);
+
+    $res2 = $this->actingAs($owner)
+        ->postJson(route('projects.figures.renders.store', [$project, $figure]))
+        ->assertCreated();
+
+    $renderId2 = $res2->json('renderJob.public_id');
+
+    $this->actingAs($owner)
+        ->getJson(route('projects.figures.renders.show', [$project, $figure, $renderId2]))
+        ->assertOk()
+        ->assertJsonPath('renderJob.status', 'failed')
+        ->assertJsonPath('lastSuccessfulRenderId', $renderId1);
+});
+
+test('figure can be exported as tex and inserted into manuscript file', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create(['owner_id' => $owner->id]);
+
+    $storage = app(PrivateStorageService::class);
+    $stored = $storage->putProjectFile($project->public_id, "\\documentclass{article}\n\\begin{document}\nHello\n\\end{document}\n");
+    $mainFile = ProjectFile::query()->create([
+        'project_id' => $project->id,
+        'path' => 'main.tex',
+        'storage_key' => $stored['storage_key'],
+        'mime_type' => 'application/x-tex',
+        'size_bytes' => $stored['size_bytes'],
+        'sha256_checksum' => $stored['sha256_checksum'],
+        'version' => 1,
+        'updated_by' => $owner->id,
+    ]);
+
+    $figure = Figure::query()->create([
+        'project_id' => $project->id,
+        'user_id' => $owner->id,
+        'name' => 'System Pipeline',
+        'schema_version' => 1,
+        'mode' => 'visual_native',
+        'scene_json' => ['schema_version' => 1, 'objects' => []],
+        'tikz_source' => "\\begin{tikzpicture}\n  \\node (a) at (0,0) {Input};\n\\end{tikzpicture}",
+        'required_packages_json' => ['tikz'],
+        'required_libraries_json' => ['arrows.meta'],
+    ]);
+
+    $this->actingAs($owner)
+        ->get(route('projects.figures.export', [$project, $figure]).'?standalone=1')
+        ->assertOk()
+        ->assertSee('\documentclass[tikz,border=4pt]{standalone}', false);
+
+    $this->actingAs($owner)
+        ->postJson(route('projects.figures.insert', $project), [
+            'figure_public_id' => $figure->public_id,
+            'file_public_id' => $mainFile->public_id,
+            'mode' => 'external',
+            'tikz_source' => $figure->tikz_source,
+            'figure_slug' => 'System Pipeline',
+            'caption' => 'Proposed pipeline',
+            'label' => 'fig:pipeline',
+            'packages_to_add' => ['tikz'],
+            'libraries_to_add' => ['arrows.meta'],
+        ])
+        ->assertOk()
+        ->assertJsonPath('external_file_path', 'figures/system-pipeline.tex');
+
+    $updatedMain = $storage->getContents($mainFile->fresh()->storage_key);
+    expect($updatedMain)->toContain('\usepackage{tikz}')
+        ->toContain('\usetikzlibrary{arrows.meta}')
+        ->toContain('\input{figures/system-pipeline.tex}');
 });

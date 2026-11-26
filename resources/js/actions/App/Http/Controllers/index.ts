@@ -20,6 +20,7 @@ import SuggestionController from './SuggestionController'
 import ProjectChatController from './ProjectChatController'
 import TableDesignController from './TableDesignController'
 import FigureController from './FigureController'
+import FigureRenderController from './FigureRenderController'
 import AiAssistantController from './AiAssistantController'
 import Admin from './Admin'
 import Settings from './Settings'
@@ -46,6 +47,7 @@ SuggestionController: Object.assign(SuggestionController, SuggestionController),
 ProjectChatController: Object.assign(ProjectChatController, ProjectChatController),
 TableDesignController: Object.assign(TableDesignController, TableDesignController),
 FigureController: Object.assign(FigureController, FigureController),
+FigureRenderController: Object.assign(FigureRenderController, FigureRenderController),
 AiAssistantController: Object.assign(AiAssistantController, AiAssistantController),
 Admin: Object.assign(Admin, Admin),
 Settings: Object.assign(Settings, Settings),

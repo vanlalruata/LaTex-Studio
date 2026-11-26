@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
  * @property string $tikz_source
  * @property list<string>|null $required_packages_json
  * @property list<string>|null $required_libraries_json
+ * @property int|null $last_successful_render_job_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -36,6 +38,7 @@ class Figure extends Model
         'tikz_source',
         'required_packages_json',
         'required_libraries_json',
+        'last_successful_render_job_id',
     ];
 
     protected static function booted(): void
@@ -79,5 +82,29 @@ class Figure extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return HasMany<FigureRevision, $this>
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(FigureRevision::class);
+    }
+
+    /**
+     * @return HasMany<FigureRenderJob, $this>
+     */
+    public function renderJobs(): HasMany
+    {
+        return $this->hasMany(FigureRenderJob::class);
+    }
+
+    /**
+     * @return BelongsTo<FigureRenderJob, $this>
+     */
+    public function lastSuccessfulRenderJob(): BelongsTo
+    {
+        return $this->belongsTo(FigureRenderJob::class, 'last_successful_render_job_id');
     }
 }

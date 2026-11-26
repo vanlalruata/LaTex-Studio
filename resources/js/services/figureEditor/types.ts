@@ -8,6 +8,7 @@ export type FigureShapeKind =
     | 'circle'
     | 'ellipse'
     | 'diamond'
+    | 'coordinate'
     | 'text';
 
 export type CanvasTool =
@@ -18,9 +19,38 @@ export type CanvasTool =
     | 'circle'
     | 'ellipse'
     | 'diamond'
-    | 'text';
+    | 'coordinate'
+    | 'text'
+    | 'connector';
 
-export type StrokeDash = 'solid' | 'dashed' | 'dotted';
+export type StrokeDash = 'solid' | 'dashed' | 'dotted' | 'dashdot';
+
+export type NodeAnchor =
+    | 'auto'
+    | 'center'
+    | 'north'
+    | 'south'
+    | 'east'
+    | 'west'
+    | 'north east'
+    | 'north west'
+    | 'south east'
+    | 'south west';
+
+export type ArrowTip = 'none' | 'Stealth' | 'Latex' | 'To' | 'Circle' | 'Bar';
+
+export type ConnectorRouting =
+    | 'straight'
+    | 'orthogonal_hv'
+    | 'orthogonal_vh'
+    | 'curved';
+
+export type EdgeLabelPosition =
+    | 'above'
+    | 'below'
+    | 'left'
+    | 'right'
+    | 'midway';
 
 export interface FigureObjectStyle {
     stroke: string;
@@ -34,7 +64,7 @@ export interface FigureObjectStyle {
 
 export interface FigureObject {
     id: string;
-    kind: 'shape' | 'text';
+    kind: 'shape' | 'text' | 'coordinate';
     tikzName: string;
     layerId: string;
     zIndex: number;
@@ -49,6 +79,38 @@ export interface FigureObject {
     visible: boolean;
     locked: boolean;
 }
+
+export interface ConnectorEndpoint {
+    objectId?: string;
+    anchor?: NodeAnchor;
+    x: number;
+    y: number;
+}
+
+export interface FigureConnector {
+    id: string;
+    kind: 'connector';
+    layerId: string;
+    zIndex: number;
+    routing: ConnectorRouting;
+    curveBendDeg: number;
+    from: ConnectorEndpoint;
+    to: ConnectorEndpoint;
+    arrowStart: ArrowTip;
+    arrowEnd: ArrowTip;
+    label: string;
+    labelPosition: EdgeLabelPosition;
+    style: {
+        stroke: string;
+        strokeWidthPt: number;
+        dash: StrokeDash;
+        textColor: string;
+    };
+    visible: boolean;
+    locked: boolean;
+}
+
+export type AnySceneItem = FigureObject | FigureConnector;
 
 export interface FigureLayer {
     id: string;
@@ -69,6 +131,18 @@ export interface FigureMetadata {
     label: string;
 }
 
+export interface ProtectedTikzBlock {
+    id: string;
+    anchorAfterObjectId: string | null;
+    rawTikz: string;
+}
+
+export interface SourceMapEntry {
+    itemId: string;
+    startLine: number;
+    endLine: number;
+}
+
 export interface FigureSceneDocument {
     schema_version: 1;
     id: string;
@@ -77,6 +151,8 @@ export interface FigureSceneDocument {
     grid: FigureGridSettings;
     layers: FigureLayer[];
     objects: FigureObject[];
+    connectors: FigureConnector[];
+    protectedBlocks: ProtectedTikzBlock[];
     metadata: FigureMetadata;
 }
 
