@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ContactEnquiryController as AdminContactEnquiryController;
 use App\Http\Controllers\Admin\MarketingFeatureController as AdminMarketingFeatureController;
 use App\Http\Controllers\Admin\PublicSiteController as AdminPublicSiteController;
+use App\Http\Controllers\Admin\TemplateController as AdminTemplateController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
@@ -114,6 +115,10 @@ Route::middleware(['auth', 'verified', 'can:manage-public-site'])
         Route::post('/features', [AdminMarketingFeatureController::class, 'store'])->name('features.store');
         Route::put('/features/{feature}', [AdminMarketingFeatureController::class, 'update'])->name('features.update');
         Route::delete('/features/{feature}', [AdminMarketingFeatureController::class, 'destroy'])->name('features.destroy');
+        Route::get('/templates', [AdminTemplateController::class, 'index'])->name('templates.index');
+        Route::post('/templates', [AdminTemplateController::class, 'store'])->name('templates.store');
+        Route::put('/templates/{template}', [AdminTemplateController::class, 'update'])->name('templates.update');
+        Route::delete('/templates/{template}', [AdminTemplateController::class, 'destroy'])->name('templates.destroy');
     });
 
 require __DIR__.'/settings.php';
