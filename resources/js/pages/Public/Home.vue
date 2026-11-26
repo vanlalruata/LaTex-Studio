@@ -21,6 +21,7 @@ import SectionHeading from '@/components/public/SectionHeading.vue';
 import SeoHead from '@/components/public/SeoHead.vue';
 import { dashboard, login, register } from '@/routes';
 import {
+    demo,
     faq,
     features as featuresRoute,
     howItWorks,
@@ -133,10 +134,10 @@ const workflowSteps = [
                                 Get started
                             </Link>
                             <Link
-                                :href="howItWorks()"
+                                :href="demo()"
                                 class="inline-flex items-center justify-center rounded-lg border border-academic-border bg-surface px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-academic-primary"
                             >
-                                See how it works
+                                Explore the demo
                             </Link>
                         </template>
                     </div>

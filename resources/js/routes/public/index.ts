@@ -156,6 +156,84 @@ howItWorks.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     howItWorks.form = howItWorksForm
 /**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+export const demo = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: demo.url(options),
+    method: 'get',
+})
+
+demo.definition = {
+    methods: ["get","head"],
+    url: '/demo',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+demo.url = (options?: RouteQueryOptions) => {
+    return demo.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+demo.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: demo.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+demo.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: demo.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+    const demoForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: demo.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+        demoForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: demo.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\DemoController::__invoke
+ * @see app/Http/Controllers/PublicSite/DemoController.php:11
+ * @route '/demo'
+ */
+        demoForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: demo.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    demo.form = demoForm
+/**
 * @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
  * @see app/Http/Controllers/PublicSite/TemplateController.php:12
  * @route '/templates'
@@ -548,6 +626,7 @@ terms.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 const publicMethod = {
     features: Object.assign(features, features),
 howItWorks: Object.assign(howItWorks, howItWorks),
+demo: Object.assign(demo, demo),
 templates: Object.assign(templates, templates),
 about: Object.assign(about, about),
 faq: Object.assign(faq, faq),

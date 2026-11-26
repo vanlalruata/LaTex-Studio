@@ -6,6 +6,7 @@ import PublicContainer from '@/components/public/PublicContainer.vue';
 import { home, login, register } from '@/routes';
 import {
     about,
+    demo,
     faq,
     features,
     howItWorks,
@@ -22,6 +23,7 @@ const productLinks = computed(() => {
     const links = [
         { label: 'Features', href: features.url() },
         { label: 'How it works', href: howItWorks.url() },
+        { label: 'Interactive demo', href: demo.url() },
         { label: 'Templates', href: templates.url() },
     ];
     if (publicSite.value?.pricingVisible) {
