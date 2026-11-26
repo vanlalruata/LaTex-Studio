@@ -86,6 +86,19 @@ class ProjectController extends Controller
             ->latest('created_at')
             ->first();
 
+        $buildHistory = $project->compilations()
+            ->latest('created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn ($c): array => [
+                'public_id' => $c->public_id,
+                'status' => $c->status->value,
+                'compiler_engine' => $c->compiler_engine->value,
+                'duration_ms' => $c->duration_ms,
+                'created_at' => $c->created_at?->toIso8601String(),
+            ])
+            ->values();
+
         return Inertia::render('Projects/Workspace', [
             'project' => [
                 'public_id' => $project->public_id,
@@ -132,6 +145,7 @@ class ProjectController extends Controller
                     'message' => $d->message,
                 ])->values(),
             ] : null,
+            'buildHistory' => $buildHistory,
         ]);
     }
 

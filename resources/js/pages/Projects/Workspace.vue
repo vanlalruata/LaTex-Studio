@@ -15,6 +15,7 @@ import {
     Italic,
     ListTree,
     Loader2,
+    MessageCircle,
     MessageSquare,
     Play,
     Plus,
@@ -24,6 +25,7 @@ import {
     Sparkles,
     Terminal,
     Trash2,
+    Wrench,
     X,
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -31,13 +33,16 @@ import AiAssistantPanel, {
     type AiActionItem,
     type AiCredentialSummary,
 } from '@/components/ai/AiAssistantPanel.vue';
+import CollaboratorChatPanel from '@/components/collaboration/CollaboratorChatPanel.vue';
 import ReviewPanel, {
     type CommentThreadItem,
     type SuggestionItem,
 } from '@/components/collaboration/ReviewPanel.vue';
 import BibliographyPanel from '@/components/editor/BibliographyPanel.vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
+import ResearchToolsPanel from '@/components/editor/ResearchToolsPanel.vue';
 import SymbolPalette from '@/components/editor/SymbolPalette.vue';
+import VisualLatexEditor from '@/components/editor/VisualLatexEditor.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
 import {
     AlertDialog,
@@ -115,12 +120,21 @@ interface CompilationSummary {
     diagnostics: DiagnosticItem[];
 }
 
+interface BuildHistoryItem {
+    public_id: string;
+    status: string;
+    compiler_engine: string;
+    duration_ms: number | null;
+    created_at: string | null;
+}
+
 const props = defineProps<{
     project: ProjectDetail;
     files: FileNode[];
     activeFile: ActiveFileState | null;
     revisions: RevisionItem[];
     latestCompilation: CompilationSummary | null;
+    buildHistory?: BuildHistoryItem[];
 }>();
 
 const fileList = ref<FileNode[]>([...props.files]);
@@ -135,8 +149,18 @@ const openTabs = ref<FileNode[]>(
 const revisionList = ref<RevisionItem[]>([...props.revisions]);
 const fileSearch = ref('');
 const leftSidebarTab = ref<
-    'explorer' | 'symbols' | 'bibliography' | 'review' | 'ai' | 'revisions'
+    | 'explorer'
+    | 'symbols'
+    | 'bibliography'
+    | 'tools'
+    | 'review'
+    | 'ai'
+    | 'revisions'
 >('explorer');
+const editorMode = ref<'code' | 'visual'>('code');
+const previewTab = ref<'pdf' | 'build'>('pdf');
+const showRightRail = ref(true);
+const rightRailTab = ref<'chat' | 'ai' | 'comments' | 'tools'>('chat');
 const bibEntries = ref<BibEntry[]>([]);
 const reviewThreads = ref<CommentThreadItem[]>([]);
 const reviewSuggestions = ref<SuggestionItem[]>([]);
@@ -805,6 +829,20 @@ onBeforeUnmount(() => {
                 </button>
 
                 <button
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition"
+                    :class="
+                        showRightRail
+                            ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    "
+                    @click="showRightRail = !showRightRail"
+                >
+                    <MessageCircle class="size-3.5" />
+                    <span>Chat &amp; AI</span>
+                </button>
+
+                <button
                     v-if="project.can_compile"
                     type="button"
                     :disabled="isCompiling"
@@ -863,6 +901,19 @@ onBeforeUnmount(() => {
                     @click="leftSidebarTab = 'bibliography'"
                 >
                     <BookOpen class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="
+                        leftSidebarTab === 'tools'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
+                    title="Research Tools (Tables, TikZ, Math, Snippets)"
+                    @click="leftSidebarTab = 'tools'"
+                >
+                    <Wrench class="size-4" />
                 </button>
                 <button
                     type="button"
@@ -1043,6 +1094,12 @@ onBeforeUnmount(() => {
                     @insert-cite="insertSnippet"
                 />
 
+                <!-- Research Tools -->
+                <ResearchToolsPanel
+                    v-else-if="leftSidebarTab === 'tools'"
+                    @insert="insertSnippet"
+                />
+
                 <!-- Review & Track Changes -->
                 <ReviewPanel
                     v-else-if="leftSidebarTab === 'review'"
@@ -1104,6 +1161,34 @@ onBeforeUnmount(() => {
                     class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2"
                 >
                     <div class="flex items-center overflow-x-auto">
+                        <div
+                            class="mr-2 flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5 text-[11px]"
+                        >
+                            <button
+                                type="button"
+                                class="rounded px-2 py-0.5 font-medium transition"
+                                :class="
+                                    editorMode === 'code'
+                                        ? 'bg-white text-slate-900 shadow-2xs'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                "
+                                @click="editorMode = 'code'"
+                            >
+                                Code
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded px-2 py-0.5 font-medium transition"
+                                :class="
+                                    editorMode === 'visual'
+                                        ? 'bg-white text-slate-900 shadow-2xs'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                "
+                                @click="editorMode = 'visual'"
+                            >
+                                Visual
+                            </button>
+                        </div>
                         <div
                             v-for="tab in openTabs"
                             :key="tab.public_id"
@@ -1170,18 +1255,27 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <!-- Monaco Editor Surface -->
+                <!-- Monaco / Visual Editor Surface -->
                 <div class="min-h-0 flex-1">
-                    <MonacoEditor
-                        v-if="currentFile"
-                        ref="editorRef"
-                        :model-value="currentFile.content"
-                        :language="currentLanguage"
-                        :read-only="!project.can_edit"
-                        @update:model-value="handleEditorInput"
-                        @cursor-change="cursorPos = $event"
-                        @save="saveCurrentFile"
-                    />
+                    <template v-if="currentFile">
+                        <MonacoEditor
+                            v-if="editorMode === 'code'"
+                            ref="editorRef"
+                            :model-value="currentFile.content"
+                            :language="currentLanguage"
+                            :read-only="!project.can_edit"
+                            @update:model-value="handleEditorInput"
+                            @cursor-change="cursorPos = $event"
+                            @save="saveCurrentFile"
+                        />
+                        <VisualLatexEditor
+                            v-else
+                            :model-value="currentFile.content"
+                            :can-edit="project.can_edit"
+                            @update:model-value="handleEditorInput"
+                            @insert-snippet="insertSnippet"
+                        />
+                    </template>
                     <div
                         v-else
                         class="flex h-full items-center justify-center text-sm text-slate-400"
@@ -1305,12 +1399,170 @@ onBeforeUnmount(() => {
                 </div>
             </main>
 
-            <!-- Right PDF Preview Column -->
+            <!-- Right PDF & Build Preview Column -->
             <section
-                class="hidden w-[42%] shrink-0 flex-col bg-slate-100 lg:flex"
+                class="hidden min-w-0 flex-1 flex-col border-r border-slate-200 bg-slate-100 lg:flex"
             >
-                <PdfViewer :pdf-url="pdfUrl" :is-stale="isStalePdf" />
+                <div
+                    class="flex items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5 text-xs"
+                >
+                    <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 font-medium transition"
+                        :class="
+                            previewTab === 'pdf'
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'text-slate-600 hover:bg-slate-100'
+                        "
+                        @click="previewTab = 'pdf'"
+                    >
+                        PDF
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 font-medium transition"
+                        :class="
+                            previewTab === 'build'
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'text-slate-600 hover:bg-slate-100'
+                        "
+                        @click="previewTab = 'build'"
+                    >
+                        Build History
+                    </button>
+                </div>
+
+                <div v-show="previewTab === 'pdf'" class="min-h-0 flex-1">
+                    <PdfViewer :pdf-url="pdfUrl" :is-stale="isStalePdf" />
+                </div>
+
+                <div
+                    v-if="previewTab === 'build'"
+                    class="flex-1 space-y-2 overflow-y-auto p-4 text-xs"
+                >
+                    <p
+                        v-if="
+                            !props.buildHistory ||
+                            props.buildHistory.length === 0
+                        "
+                        class="text-slate-500"
+                    >
+                        No builds recorded yet.
+                    </p>
+                    <div
+                        v-for="item in props.buildHistory"
+                        :key="item.public_id"
+                        class="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3"
+                    >
+                        <div>
+                            <p class="font-mono font-semibold text-slate-800">
+                                {{ item.public_id.slice(0, 8) }} ·
+                                {{ item.compiler_engine }}
+                            </p>
+                            <p class="mt-0.5 text-[11px] text-slate-500">
+                                {{ item.created_at }}
+                            </p>
+                        </div>
+                        <span
+                            class="rounded-full px-2 py-0.5 text-[11px] font-medium capitalize"
+                            :class="
+                                item.status === 'succeeded'
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : 'bg-rose-50 text-rose-700'
+                            "
+                        >
+                            {{ item.status }}
+                        </span>
+                    </div>
+                </div>
             </section>
+
+            <!-- Right Docked Collaboration, Chat & AI Rail -->
+            <aside
+                v-if="showRightRail"
+                class="hidden w-80 shrink-0 flex-col bg-white xl:flex"
+            >
+                <div
+                    class="grid grid-cols-4 border-b border-slate-200 bg-slate-50 text-[11px] font-medium"
+                >
+                    <button
+                        type="button"
+                        class="py-2 transition"
+                        :class="
+                            rightRailTab === 'chat'
+                                ? 'border-b-2 border-indigo-600 bg-white text-indigo-700'
+                                : 'text-slate-600 hover:text-slate-900'
+                        "
+                        @click="rightRailTab = 'chat'"
+                    >
+                        Chat
+                    </button>
+                    <button
+                        type="button"
+                        class="py-2 transition"
+                        :class="
+                            rightRailTab === 'ai'
+                                ? 'border-b-2 border-indigo-600 bg-white text-indigo-700'
+                                : 'text-slate-600 hover:text-slate-900'
+                        "
+                        @click="rightRailTab = 'ai'"
+                    >
+                        AI
+                    </button>
+                    <button
+                        type="button"
+                        class="py-2 transition"
+                        :class="
+                            rightRailTab === 'comments'
+                                ? 'border-b-2 border-indigo-600 bg-white text-indigo-700'
+                                : 'text-slate-600 hover:text-slate-900'
+                        "
+                        @click="rightRailTab = 'comments'"
+                    >
+                        Review
+                    </button>
+                    <button
+                        type="button"
+                        class="py-2 transition"
+                        :class="
+                            rightRailTab === 'tools'
+                                ? 'border-b-2 border-indigo-600 bg-white text-indigo-700'
+                                : 'text-slate-600 hover:text-slate-900'
+                        "
+                        @click="rightRailTab = 'tools'"
+                    >
+                        Tools
+                    </button>
+                </div>
+
+                <div class="min-h-0 flex-1">
+                    <CollaboratorChatPanel
+                        v-if="rightRailTab === 'chat'"
+                        :project-public-id="project.public_id"
+                    />
+                    <AiAssistantPanel
+                        v-else-if="rightRailTab === 'ai'"
+                        :credentials="aiCredentials"
+                        :actions="aiActions"
+                        :is-asking="isAiAsking"
+                        :error-message="aiError"
+                        @ask="handleAskAi"
+                    />
+                    <ReviewPanel
+                        v-else-if="rightRailTab === 'comments'"
+                        :threads="reviewThreads"
+                        :suggestions="reviewSuggestions"
+                        :can-comment="project.role !== 'viewer'"
+                        :can-edit="project.can_edit"
+                        @create-thread="handleCreateThread"
+                        @resolve-thread="handleResolveThread"
+                        @accept-suggestion="handleAcceptSuggestion"
+                        @reject-suggestion="handleRejectSuggestion"
+                        @jump-to-line="jumpToLine"
+                    />
+                    <ResearchToolsPanel v-else @insert="insertSnippet" />
+                </div>
+            </aside>
         </div>
 
         <!-- Bottom Status Bar -->

@@ -6,6 +6,7 @@ use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ProjectChatController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectIndexController;
@@ -79,6 +80,10 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('projects/{project}/suggestions', [SuggestionController::class, 'store'])->name('projects.suggestions.store');
     Route::post('projects/{project}/suggestions/{suggestion}/accept', [SuggestionController::class, 'accept'])->name('projects.suggestions.accept');
     Route::post('projects/{project}/suggestions/{suggestion}/reject', [SuggestionController::class, 'reject'])->name('projects.suggestions.reject');
+
+    // Project Collaborator Chat & Presence
+    Route::get('projects/{project}/chat', [ProjectChatController::class, 'index'])->name('projects.chat.index');
+    Route::post('projects/{project}/chat', [ProjectChatController::class, 'store'])->name('projects.chat.store');
 
     // Phase 9: AI Research Assistant
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');

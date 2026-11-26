@@ -8,6 +8,7 @@ import CompilationController from './CompilationController'
 import ProjectMemberController from './ProjectMemberController'
 import CommentController from './CommentController'
 import SuggestionController from './SuggestionController'
+import ProjectChatController from './ProjectChatController'
 import AiAssistantController from './AiAssistantController'
 import Admin from './Admin'
 import Settings from './Settings'
@@ -22,6 +23,7 @@ CompilationController: Object.assign(CompilationController, CompilationControlle
 ProjectMemberController: Object.assign(ProjectMemberController, ProjectMemberController),
 CommentController: Object.assign(CommentController, CommentController),
 SuggestionController: Object.assign(SuggestionController, SuggestionController),
+ProjectChatController: Object.assign(ProjectChatController, ProjectChatController),
 AiAssistantController: Object.assign(AiAssistantController, AiAssistantController),
 Admin: Object.assign(Admin, Admin),
 Settings: Object.assign(Settings, Settings),
