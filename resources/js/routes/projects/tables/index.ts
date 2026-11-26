@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
 export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
 index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ index.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
 index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -58,7 +58,7 @@ index.get = (args: { project: string | { public_id: string } } | [project: strin
 })
 /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
 index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -68,7 +68,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
 
     /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
     const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -78,7 +78,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
 
             /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
         indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -87,7 +87,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
         })
             /**
 * @see \App\Http\Controllers\TableDesignController::index
- * @see app/Http/Controllers/TableDesignController.php:18
+ * @see app/Http/Controllers/TableDesignController.php:24
  * @route '/projects/{project}/tables'
  */
         indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -103,7 +103,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\TableDesignController::store
- * @see app/Http/Controllers/TableDesignController.php:71
+ * @see app/Http/Controllers/TableDesignController.php:85
  * @route '/projects/{project}/tables'
  */
 export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -118,7 +118,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\TableDesignController::store
- * @see app/Http/Controllers/TableDesignController.php:71
+ * @see app/Http/Controllers/TableDesignController.php:85
  * @route '/projects/{project}/tables'
  */
 store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -151,7 +151,7 @@ store.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\TableDesignController::store
- * @see app/Http/Controllers/TableDesignController.php:71
+ * @see app/Http/Controllers/TableDesignController.php:85
  * @route '/projects/{project}/tables'
  */
 store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -161,7 +161,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
 
     /**
 * @see \App\Http\Controllers\TableDesignController::store
- * @see app/Http/Controllers/TableDesignController.php:71
+ * @see app/Http/Controllers/TableDesignController.php:85
  * @route '/projects/{project}/tables'
  */
     const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -171,7 +171,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
 
             /**
 * @see \App\Http\Controllers\TableDesignController::store
- * @see app/Http/Controllers/TableDesignController.php:71
+ * @see app/Http/Controllers/TableDesignController.php:85
  * @route '/projects/{project}/tables'
  */
         storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -181,8 +181,87 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
     
     store.form = storeForm
 /**
+* @see \App\Http\Controllers\TableDesignController::insert
+ * @see app/Http/Controllers/TableDesignController.php:147
+ * @route '/projects/{project}/tables/insert'
+ */
+export const insert = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: insert.url(args, options),
+    method: 'post',
+})
+
+insert.definition = {
+    methods: ["post"],
+    url: '/projects/{project}/tables/insert',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\TableDesignController::insert
+ * @see app/Http/Controllers/TableDesignController.php:147
+ * @route '/projects/{project}/tables/insert'
+ */
+insert.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { project: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+            args = { project: args.public_id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    project: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        project: typeof args.project === 'object'
+                ? args.project.public_id
+                : args.project,
+                }
+
+    return insert.definition.url
+            .replace('{project}', parsedArgs.project.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\TableDesignController::insert
+ * @see app/Http/Controllers/TableDesignController.php:147
+ * @route '/projects/{project}/tables/insert'
+ */
+insert.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: insert.url(args, options),
+    method: 'post',
+})
+
+    /**
+* @see \App\Http\Controllers\TableDesignController::insert
+ * @see app/Http/Controllers/TableDesignController.php:147
+ * @route '/projects/{project}/tables/insert'
+ */
+    const insertForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: insert.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\TableDesignController::insert
+ * @see app/Http/Controllers/TableDesignController.php:147
+ * @route '/projects/{project}/tables/insert'
+ */
+        insertForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: insert.url(args, options),
+            method: 'post',
+        })
+    
+    insert.form = insertForm
+/**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 export const show = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -197,7 +276,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 show.url = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -227,7 +306,7 @@ show.url = (args: { project: string | { public_id: string }, tableDesign: string
 
 /**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 show.get = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -236,7 +315,7 @@ show.get = (args: { project: string | { public_id: string }, tableDesign: string
 })
 /**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 show.head = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -246,7 +325,7 @@ show.head = (args: { project: string | { public_id: string }, tableDesign: strin
 
     /**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
     const showForm = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -256,7 +335,7 @@ show.head = (args: { project: string | { public_id: string }, tableDesign: strin
 
             /**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
         showForm.get = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -265,7 +344,7 @@ show.head = (args: { project: string | { public_id: string }, tableDesign: strin
         })
             /**
 * @see \App\Http\Controllers\TableDesignController::show
- * @see app/Http/Controllers/TableDesignController.php:46
+ * @see app/Http/Controllers/TableDesignController.php:56
  * @route '/projects/{project}/tables/{tableDesign}'
  */
         showForm.head = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -281,7 +360,7 @@ show.head = (args: { project: string | { public_id: string }, tableDesign: strin
     show.form = showForm
 /**
 * @see \App\Http\Controllers\TableDesignController::update
- * @see app/Http/Controllers/TableDesignController.php:95
+ * @see app/Http/Controllers/TableDesignController.php:109
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 export const update = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -296,7 +375,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\TableDesignController::update
- * @see app/Http/Controllers/TableDesignController.php:95
+ * @see app/Http/Controllers/TableDesignController.php:109
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 update.url = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -326,7 +405,7 @@ update.url = (args: { project: string | { public_id: string }, tableDesign: stri
 
 /**
 * @see \App\Http\Controllers\TableDesignController::update
- * @see app/Http/Controllers/TableDesignController.php:95
+ * @see app/Http/Controllers/TableDesignController.php:109
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 update.put = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -336,7 +415,7 @@ update.put = (args: { project: string | { public_id: string }, tableDesign: stri
 
     /**
 * @see \App\Http\Controllers\TableDesignController::update
- * @see app/Http/Controllers/TableDesignController.php:95
+ * @see app/Http/Controllers/TableDesignController.php:109
  * @route '/projects/{project}/tables/{tableDesign}'
  */
     const updateForm = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -351,7 +430,7 @@ update.put = (args: { project: string | { public_id: string }, tableDesign: stri
 
             /**
 * @see \App\Http\Controllers\TableDesignController::update
- * @see app/Http/Controllers/TableDesignController.php:95
+ * @see app/Http/Controllers/TableDesignController.php:109
  * @route '/projects/{project}/tables/{tableDesign}'
  */
         updateForm.put = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -367,7 +446,7 @@ update.put = (args: { project: string | { public_id: string }, tableDesign: stri
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\TableDesignController::destroy
- * @see app/Http/Controllers/TableDesignController.php:118
+ * @see app/Http/Controllers/TableDesignController.php:132
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 export const destroy = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -382,7 +461,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\TableDesignController::destroy
- * @see app/Http/Controllers/TableDesignController.php:118
+ * @see app/Http/Controllers/TableDesignController.php:132
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 destroy.url = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -412,7 +491,7 @@ destroy.url = (args: { project: string | { public_id: string }, tableDesign: str
 
 /**
 * @see \App\Http\Controllers\TableDesignController::destroy
- * @see app/Http/Controllers/TableDesignController.php:118
+ * @see app/Http/Controllers/TableDesignController.php:132
  * @route '/projects/{project}/tables/{tableDesign}'
  */
 destroy.delete = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -422,7 +501,7 @@ destroy.delete = (args: { project: string | { public_id: string }, tableDesign: 
 
     /**
 * @see \App\Http\Controllers\TableDesignController::destroy
- * @see app/Http/Controllers/TableDesignController.php:118
+ * @see app/Http/Controllers/TableDesignController.php:132
  * @route '/projects/{project}/tables/{tableDesign}'
  */
     const destroyForm = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -437,7 +516,7 @@ destroy.delete = (args: { project: string | { public_id: string }, tableDesign: 
 
             /**
 * @see \App\Http\Controllers\TableDesignController::destroy
- * @see app/Http/Controllers/TableDesignController.php:118
+ * @see app/Http/Controllers/TableDesignController.php:132
  * @route '/projects/{project}/tables/{tableDesign}'
  */
         destroyForm.delete = (args: { project: string | { public_id: string }, tableDesign: string | { public_id: string } } | [project: string | { public_id: string }, tableDesign: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -454,6 +533,7 @@ destroy.delete = (args: { project: string | { public_id: string }, tableDesign: 
 const tables = {
     index: Object.assign(index, index),
 store: Object.assign(store, store),
+insert: Object.assign(insert, insert),
 show: Object.assign(show, show),
 update: Object.assign(update, update),
 destroy: Object.assign(destroy, destroy),

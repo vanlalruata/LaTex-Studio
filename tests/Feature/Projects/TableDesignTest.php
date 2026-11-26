@@ -2,9 +2,11 @@
 
 use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\ProjectMember;
 use App\Models\TableDesign;
 use App\Models\User;
+use App\Services\Storage\PrivateStorageService;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('project editor can open table designer and save a table design', function () {
@@ -71,4 +73,43 @@ test('viewer and non-member cannot mutate table designs', function () {
     $this->actingAs($stranger)
         ->get(route('projects.tables.index', $project))
         ->assertForbidden();
+});
+
+test('table can be inserted into a project tex file with package injection and revision creation', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create([
+        'owner_id' => $owner->id,
+        'root_file_path' => 'main.tex',
+    ]);
+
+    $storage = app(PrivateStorageService::class);
+    $stored = $storage->putProjectFile($project->public_id, "\\documentclass{article}\n\\begin{document}\nHello.\n\\end{document}\n");
+
+    $file = ProjectFile::query()->create([
+        'project_id' => $project->id,
+        'path' => 'main.tex',
+        'mime_type' => 'text/x-tex',
+        'storage_key' => $stored['storage_key'],
+        'sha256_checksum' => $stored['sha256_checksum'],
+        'size_bytes' => $stored['size_bytes'],
+        'is_directory' => false,
+        'version' => 1,
+    ]);
+
+    $this->actingAs($owner)
+        ->postJson(route('projects.tables.insert', $project), [
+            'file_public_id' => $file->public_id,
+            'latex' => "\\begin{table}[htbp]\n\\centering\n\\begin{tabular}{lc}\n\\toprule\nA & B \\\\\n\\bottomrule\n\\end{tabular}\n\\end{table}",
+            'packages_to_add' => [
+                ['packageName' => 'booktabs', 'options' => []],
+            ],
+        ])
+        ->assertOk()
+        ->assertJsonPath('file_path', 'main.tex');
+
+    $updatedContents = $storage->getContents($file->fresh()->storage_key);
+    expect($updatedContents)
+        ->toContain('\usepackage{booktabs}')
+        ->toContain('\begin{tabular}{lc}')
+        ->toContain('Hello.');
 });

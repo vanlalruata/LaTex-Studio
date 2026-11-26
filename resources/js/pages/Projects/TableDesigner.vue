@@ -84,6 +84,7 @@ import {
     splitMergedCell,
 } from '@/services/tableDesigner/cellOperations';
 import { generateTableLatex } from '@/services/tableDesigner/latexGenerator';
+import { parseLatexTable } from '@/services/tableDesigner/latexTableParser';
 import {
     applyStyleProfileConfig,
     BUILT_IN_TABLE_TEMPLATES,
@@ -120,18 +121,28 @@ interface StyleProfileItem {
     configuration_json: Record<string, unknown>;
 }
 
+interface ProjectTexFile {
+    public_id: string;
+    path: string;
+}
+
 const props = defineProps<{
     project: {
         public_id: string;
         title: string;
+        root_file_path?: string;
         can_edit: boolean;
     };
     tableDesigns: SavedDesign[];
     activeDesign: SavedDesign | null;
     styleProfiles?: StyleProfileItem[];
+    projectFiles?: ProjectTexFile[];
+    loadedPackages?: string[];
 }>();
 
-const activePublicId = ref<string | null>(props.activeDesign?.public_id ?? null);
+const activePublicId = ref<string | null>(
+    props.activeDesign?.public_id ?? null,
+);
 const doc = ref<TableDocument>(
     props.activeDesign?.document_json
         ? structuredClone(props.activeDesign.document_json)
@@ -145,6 +156,17 @@ const hasUnsavedChanges = ref(false);
 const deleteDialogOpen = ref(false);
 const splitDialogOpen = ref(false);
 const templatesDialogOpen = ref(false);
+const insertDialogOpen = ref(false);
+const importLatexDialogOpen = ref(false);
+const rawLatexImportInput = ref('');
+const targetFilePublicId = ref<string>(
+    props.projectFiles?.find((f) => f.path === props.project.root_file_path)
+        ?.public_id ??
+        props.projectFiles?.[0]?.public_id ??
+        '',
+);
+const approvedPackages = ref<Set<string>>(new Set());
+const isInsertingIntoFile = ref(false);
 const isDraggingRange = ref(false);
 const dragAnchor = ref<{ rowIdx: number; colIdx: number } | null>(null);
 
@@ -208,7 +230,11 @@ const canSplitSelection = computed(
             (activeCell.value?.merge?.colSpan ?? 1) > 1),
 );
 
-function startRangeDrag(rowIdx: number, colIdx: number, shiftKey: boolean): void {
+function startRangeDrag(
+    rowIdx: number,
+    colIdx: number,
+    shiftKey: boolean,
+): void {
     if (shiftKey) {
         return;
     }
@@ -243,7 +269,9 @@ function endRangeDrag(): void {
 
 function handleMergeCells(): void {
     if (!canMergeSelection.value) {
-        toast.warning('Select a valid rectangular range of at least 2 cells to merge.');
+        toast.warning(
+            'Select a valid rectangular range of at least 2 cells to merge.',
+        );
         return;
     }
     pushUndoSnapshot();
@@ -271,7 +299,12 @@ function executeSplitCell(strategy: 'keep_first' | 'distribute_words'): void {
         return;
     }
     pushUndoSnapshot();
-    splitMergedCell(doc.value, selectedRowId.value, selectedColId.value, strategy);
+    splitMergedCell(
+        doc.value,
+        selectedRowId.value,
+        selectedColId.value,
+        strategy,
+    );
     splitDialogOpen.value = false;
     toast.success('Merged cell split.');
 }
@@ -281,7 +314,11 @@ function handleMoveRow(delta: -1 | 1): void {
         return;
     }
     pushUndoSnapshot();
-    const ok = moveRow(doc.value, selectedRow.value.index, selectedRow.value.index + delta);
+    const ok = moveRow(
+        doc.value,
+        selectedRow.value.index,
+        selectedRow.value.index + delta,
+    );
     if (!ok) {
         toast.warning('Cannot move a row across a multirow merge.');
     }
@@ -292,7 +329,11 @@ function handleMoveColumn(delta: -1 | 1): void {
         return;
     }
     pushUndoSnapshot();
-    const ok = moveColumn(doc.value, selectedCol.value.index, selectedCol.value.index + delta);
+    const ok = moveColumn(
+        doc.value,
+        selectedCol.value.index,
+        selectedCol.value.index + delta,
+    );
     if (!ok) {
         toast.warning('Cannot move a column across a multicolumn merge.');
     }
@@ -314,7 +355,8 @@ function setEnvironment(env: 'tabular' | 'tabularx' | 'longtable'): void {
         if (!doc.value.layout.longtableConfig) {
             doc.value.layout.longtableConfig = {
                 repeatFirstHeader: true,
-                continuationCaption: '\\tablename\\ \\thetable\\ -- Continued from previous page',
+                continuationCaption:
+                    '\\tablename\\ \\thetable\\ -- Continued from previous page',
                 footerText: 'Continued on next page',
             };
         }
@@ -391,6 +433,82 @@ function exportJsonPreset(): void {
     URL.revokeObjectURL(url);
 }
 
+const missingPackages = computed(() => {
+    const loaded = new Set(props.loadedPackages ?? []);
+    return generated.value.packages.filter((p) => !loaded.has(p.packageName));
+});
+
+function openInsertDialog(): void {
+    approvedPackages.value = new Set(
+        missingPackages.value.map((p) => p.packageName),
+    );
+    insertDialogOpen.value = true;
+}
+
+async function confirmInsertIntoDocument(): Promise<void> {
+    if (!targetFilePublicId.value || isInsertingIntoFile.value) {
+        return;
+    }
+    isInsertingIntoFile.value = true;
+    try {
+        const packagesToAdd = missingPackages.value
+            .filter((p) => approvedPackages.value.has(p.packageName))
+            .map((p) => ({
+                packageName: p.packageName,
+                options: p.options ?? [],
+            }));
+
+        const response = await fetch(
+            projectsRoutes.tables.insert(props.project.public_id).url,
+            {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    file_public_id: targetFilePublicId.value,
+                    latex: manualSource.value,
+                    packages_to_add: packagesToAdd,
+                    table_design_public_id: activePublicId.value,
+                }),
+            },
+        );
+
+        if (!response.ok) {
+            toast.error('Unable to insert table into document.');
+            return;
+        }
+        const data = (await response.json()) as { file_path: string };
+        insertDialogOpen.value = false;
+        toast.success(
+            `Inserted table into ${data.file_path} and created revision.`,
+        );
+    } finally {
+        isInsertingIntoFile.value = false;
+    }
+}
+
+function handleParseLatexImport(): void {
+    const result = parseLatexTable(rawLatexImportInput.value);
+    if (!result.ok || !result.document) {
+        pushUndoSnapshot();
+        manualSource.value = result.rawLatex;
+        isExternallyModified.value = true;
+        importLatexDialogOpen.value = false;
+        toast.warning(result.reason || 'Opened in source-only mode.');
+        return;
+    }
+
+    pushUndoSnapshot();
+    doc.value = result.document;
+    isExternallyModified.value = false;
+    importLatexDialogOpen.value = false;
+    toast.success('Parsed LaTeX table into visual editor.');
+}
+
 function importJsonPreset(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -401,7 +519,11 @@ function importJsonPreset(event: Event): void {
     reader.onload = () => {
         try {
             const parsed = JSON.parse(String(reader.result)) as TableDocument;
-            if (parsed.schemaVersion !== 1 || !Array.isArray(parsed.rows) || !Array.isArray(parsed.columns)) {
+            if (
+                parsed.schemaVersion !== 1 ||
+                !Array.isArray(parsed.rows) ||
+                !Array.isArray(parsed.columns)
+            ) {
                 toast.error('Invalid table preset JSON format.');
                 return;
             }
@@ -760,7 +882,9 @@ async function copyLatex(): Promise<void> {
 }
 
 function downloadTex(): void {
-    const blob = new Blob([manualSource.value], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([manualSource.value], {
+        type: 'text/plain;charset=utf-8',
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -780,14 +904,20 @@ function renderCellMath(tex: string): string {
 
 <template>
     <TooltipProvider>
-        <div class="flex h-screen flex-col overflow-hidden bg-slate-50 text-slate-900">
+        <div
+            class="flex h-screen flex-col overflow-hidden bg-slate-50 text-slate-900"
+        >
             <Head :title="`Table Designer — ${project.title}`" />
 
             <!-- 3.1 Top Toolbar -->
-            <header class="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3">
+            <header
+                class="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3"
+            >
                 <div class="flex items-center gap-2.5">
                     <Button variant="ghost" size="sm" as-child>
-                        <Link :href="projectsRoutes.show(project.public_id).url">
+                        <Link
+                            :href="projectsRoutes.show(project.public_id).url"
+                        >
                             <ArrowLeft class="size-4" />
                             <span>Back to project</span>
                         </Link>
@@ -802,7 +932,13 @@ function renderCellMath(tex: string): string {
                     />
 
                     <Badge variant="outline" class="text-[11px]">
-                        {{ isSaving ? 'Saving...' : hasUnsavedChanges ? 'Unsaved' : 'Saved' }}
+                        {{
+                            isSaving
+                                ? 'Saving...'
+                                : hasUnsavedChanges
+                                  ? 'Unsaved'
+                                  : 'Saved'
+                        }}
                     </Badge>
                 </div>
 
@@ -835,12 +971,22 @@ function renderCellMath(tex: string): string {
                         <TooltipContent>Redo</TooltipContent>
                     </Tooltip>
 
-                    <Button variant="outline" size="sm" :disabled="!project.can_edit" @click="addRow()">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="!project.can_edit"
+                        @click="addRow()"
+                    >
                         <Rows3 class="size-3.5" />
                         <span>+ Row</span>
                     </Button>
 
-                    <Button variant="outline" size="sm" :disabled="!project.can_edit" @click="addColumn()">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="!project.can_edit"
+                        @click="addColumn()"
+                    >
                         <Columns3 class="size-3.5" />
                         <span>+ Column</span>
                     </Button>
@@ -866,16 +1012,42 @@ function renderCellMath(tex: string): string {
                     </Button>
 
                     <Button
-                        :variant="doc.layout.orientation === 'landscape' ? 'default' : 'outline'"
+                        :variant="
+                            doc.layout.orientation === 'landscape'
+                                ? 'default'
+                                : 'outline'
+                        "
                         size="sm"
-                        @click="doc.layout.orientation = doc.layout.orientation === 'landscape' ? 'portrait' : 'landscape'"
+                        @click="
+                            doc.layout.orientation =
+                                doc.layout.orientation === 'landscape'
+                                    ? 'portrait'
+                                    : 'landscape'
+                        "
                     >
                         <RotateCw class="size-3.5" />
                         <span>Landscape</span>
                     </Button>
 
-                    <Button variant="outline" size="sm" @click="templatesDialogOpen = true">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        @click="templatesDialogOpen = true"
+                    >
                         <span>Templates</span>
+                    </Button>
+
+                    <Button
+                        v-if="
+                            project.can_edit &&
+                            projectFiles &&
+                            projectFiles.length > 0
+                        "
+                        variant="outline"
+                        size="sm"
+                        @click="openInsertDialog"
+                    >
+                        <span>Insert into Document</span>
                     </Button>
 
                     <Button variant="outline" size="sm" @click="downloadTex">
@@ -883,14 +1055,23 @@ function renderCellMath(tex: string): string {
                         <span>Export .tex</span>
                     </Button>
 
-                    <Button v-if="project.can_edit" size="sm" :disabled="isSaving" @click="saveDesign">
+                    <Button
+                        v-if="project.can_edit"
+                        size="sm"
+                        :disabled="isSaving"
+                        @click="saveDesign"
+                    >
                         <Save class="size-3.5" />
                         <span>Save</span>
                     </Button>
 
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
-                            <Button variant="outline" size="icon-sm" aria-label="More actions">
+                            <Button
+                                variant="outline"
+                                size="icon-sm"
+                                aria-label="More actions"
+                            >
                                 <MoreHorizontal class="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -901,10 +1082,19 @@ function renderCellMath(tex: string): string {
                             <DropdownMenuItem @click="copyLatex">
                                 <Copy class="mr-2 size-3.5" /> Copy LaTeX
                             </DropdownMenuItem>
-                            <DropdownMenuItem @click="exportJsonPreset">
-                                <Download class="mr-2 size-3.5" /> Export JSON Preset
+                            <DropdownMenuItem
+                                @click="importLatexDialogOpen = true"
+                            >
+                                <Plus class="mr-2 size-3.5" /> Import LaTeX
+                                Table
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator v-if="activePublicId && project.can_edit" />
+                            <DropdownMenuItem @click="exportJsonPreset">
+                                <Download class="mr-2 size-3.5" /> Export JSON
+                                Preset
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator
+                                v-if="activePublicId && project.can_edit"
+                            />
                             <DropdownMenuItem
                                 v-if="activePublicId && project.can_edit"
                                 class="text-destructive"
@@ -920,8 +1110,12 @@ function renderCellMath(tex: string): string {
             <!-- Main 3-Column Designer Body -->
             <div class="flex min-h-0 flex-1">
                 <!-- 3.2 Left Sidebar: Table Structure -->
-                <aside class="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
-                    <div class="border-b border-slate-100 px-3 py-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                <aside
+                    class="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white"
+                >
+                    <div
+                        class="border-b border-slate-100 px-3 py-2 text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                    >
                         Table Structure
                     </div>
                     <ScrollArea class="flex-1 p-2">
@@ -930,18 +1124,28 @@ function renderCellMath(tex: string): string {
                                 <button
                                     type="button"
                                     class="flex w-full items-center justify-between rounded-md px-2 py-1.5 font-medium hover:bg-slate-100"
-                                    :class="selectionMode === 'table' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'"
+                                    :class="
+                                        selectionMode === 'table'
+                                            ? 'bg-indigo-50 text-indigo-700'
+                                            : 'text-slate-700'
+                                    "
                                     @click="selectionMode = 'table'"
                                 >
                                     <span>Table Overview</span>
-                                    <span class="font-mono text-[10px] text-slate-400">
-                                        {{ doc.rows.length }}x{{ doc.columns.length }}
+                                    <span
+                                        class="font-mono text-[10px] text-slate-400"
+                                    >
+                                        {{ doc.rows.length }}x{{
+                                            doc.columns.length
+                                        }}
                                     </span>
                                 </button>
                             </div>
 
                             <div>
-                                <p class="px-2 pb-1 text-[11px] font-semibold text-slate-400 uppercase">
+                                <p
+                                    class="px-2 pb-1 text-[11px] font-semibold text-slate-400 uppercase"
+                                >
                                     Rows ({{ doc.rows.length }})
                                 </p>
                                 <div class="space-y-0.5">
@@ -950,17 +1154,27 @@ function renderCellMath(tex: string): string {
                                         :key="row.id"
                                         type="button"
                                         class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-slate-100"
-                                        :class="selectionMode === 'row' && selectedRowId === row.id ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-600'"
+                                        :class="
+                                            selectionMode === 'row' &&
+                                            selectedRowId === row.id
+                                                ? 'bg-indigo-50 font-medium text-indigo-700'
+                                                : 'text-slate-600'
+                                        "
                                         @click="selectRow(row.id)"
                                     >
                                         <span>Row {{ row.index + 1 }}</span>
-                                        <span class="text-[10px] text-slate-400 capitalize">{{ row.section }}</span>
+                                        <span
+                                            class="text-[10px] text-slate-400 capitalize"
+                                            >{{ row.section }}</span
+                                        >
                                     </button>
                                 </div>
                             </div>
 
                             <div>
-                                <p class="px-2 pb-1 text-[11px] font-semibold text-slate-400 uppercase">
+                                <p
+                                    class="px-2 pb-1 text-[11px] font-semibold text-slate-400 uppercase"
+                                >
                                     Columns ({{ doc.columns.length }})
                                 </p>
                                 <div class="space-y-0.5">
@@ -969,26 +1183,45 @@ function renderCellMath(tex: string): string {
                                         :key="col.id"
                                         type="button"
                                         class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-slate-100"
-                                        :class="selectionMode === 'column' && selectedColId === col.id ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-600'"
+                                        :class="
+                                            selectionMode === 'column' &&
+                                            selectedColId === col.id
+                                                ? 'bg-indigo-50 font-medium text-indigo-700'
+                                                : 'text-slate-600'
+                                        "
                                         @click="selectColumn(col.id)"
                                     >
                                         <span>Col {{ col.index + 1 }}</span>
-                                        <span class="font-mono text-[10px] text-slate-400">{{ col.type }}</span>
+                                        <span
+                                            class="font-mono text-[10px] text-slate-400"
+                                            >{{ col.type }}</span
+                                        >
                                     </button>
                                 </div>
                             </div>
 
                             <div v-if="tableDesigns.length > 0">
-                                <p class="px-2 pb-1 text-[11px] font-semibold text-slate-400 uppercase">
+                                <p
+                                    class="px-2 pb-1 text-[11px] font-semibold text-slate-400 uppercase"
+                                >
                                     Saved Tables
                                 </p>
                                 <div class="space-y-0.5">
                                     <Link
                                         v-for="saved in tableDesigns"
                                         :key="saved.public_id"
-                                        :href="projectsRoutes.tables.show({ project: project.public_id, tableDesign: saved.public_id }).url"
+                                        :href="
+                                            projectsRoutes.tables.show({
+                                                project: project.public_id,
+                                                tableDesign: saved.public_id,
+                                            }).url
+                                        "
                                         class="block truncate rounded px-2 py-1 hover:bg-slate-100"
-                                        :class="saved.public_id === activePublicId ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600'"
+                                        :class="
+                                            saved.public_id === activePublicId
+                                                ? 'bg-slate-100 font-medium text-slate-900'
+                                                : 'text-slate-600'
+                                        "
                                     >
                                         {{ saved.name }}
                                     </Link>
@@ -1001,7 +1234,9 @@ function renderCellMath(tex: string): string {
                 <!-- 3.3 Center: Visual Table Canvas + 3.5 Bottom Panel -->
                 <main class="flex min-w-0 flex-1 flex-col">
                     <!-- Quick Formatting Bar -->
-                    <div class="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5">
+                    <div
+                        class="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-white px-3 py-1.5"
+                    >
                         <Button
                             variant="ghost"
                             size="icon-sm"
@@ -1087,7 +1322,9 @@ function renderCellMath(tex: string): string {
                         <Button
                             variant="ghost"
                             size="sm"
-                            :disabled="!project.can_edit || selectedCellKeys.size === 0"
+                            :disabled="
+                                !project.can_edit || selectedCellKeys.size === 0
+                            "
                             @click="handleClearSelectedCells"
                         >
                             Clear
@@ -1095,76 +1332,248 @@ function renderCellMath(tex: string): string {
                     </div>
 
                     <!-- Interactive Grid Canvas -->
-                    <div class="min-h-0 flex-1 overflow-auto bg-slate-100/70 p-6">
-                        <div class="inline-block min-w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
-                            <p v-if="doc.caption" class="mb-3 text-center text-sm font-medium text-slate-800">
+                    <div
+                        class="min-h-0 flex-1 overflow-auto bg-slate-100/70 p-6"
+                    >
+                        <div
+                            class="inline-block min-w-full rounded-xl border border-slate-200 bg-white p-6 shadow-xs"
+                        >
+                            <p
+                                v-if="doc.caption"
+                                class="mb-3 text-center text-sm font-medium text-slate-800"
+                            >
                                 {{ doc.caption }}
                             </p>
 
                             <table class="w-full border-collapse text-sm">
                                 <thead>
                                     <tr>
-                                        <th class="w-10 border border-slate-200 bg-slate-50 p-1.5 text-[10px] text-slate-400">
+                                        <th
+                                            class="w-10 border border-slate-200 bg-slate-50 p-1.5 text-[10px] text-slate-400"
+                                        >
                                             #
                                         </th>
                                         <th
                                             v-for="col in doc.columns"
                                             :key="col.id"
                                             class="cursor-pointer border border-slate-200 bg-slate-50 px-3 py-1.5 text-center text-xs font-medium text-slate-600 hover:bg-slate-100"
-                                            :class="{ 'bg-indigo-50 text-indigo-700': selectionMode === 'column' && selectedColId === col.id }"
+                                            :class="{
+                                                'bg-indigo-50 text-indigo-700':
+                                                    selectionMode ===
+                                                        'column' &&
+                                                    selectedColId === col.id,
+                                            }"
                                             @click="selectColumn(col.id)"
                                         >
-                                            C{{ col.index + 1 }} ({{ col.type }})
+                                            C{{ col.index + 1 }} ({{
+                                                col.type
+                                            }})
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody @mouseup="endRangeDrag" @mouseleave="endRangeDrag">
+                                <tbody
+                                    @mouseup="endRangeDrag"
+                                    @mouseleave="endRangeDrag"
+                                >
                                     <tr v-for="row in doc.rows" :key="row.id">
                                         <td
                                             class="cursor-pointer border border-slate-200 bg-slate-50 px-2 py-1 text-center text-xs font-medium text-slate-500 hover:bg-slate-100"
-                                            :class="{ 'bg-indigo-50 text-indigo-700': selectionMode === 'row' && selectedRowId === row.id }"
+                                            :class="{
+                                                'bg-indigo-50 text-indigo-700':
+                                                    selectionMode === 'row' &&
+                                                    selectedRowId === row.id,
+                                            }"
                                             @click="selectRow(row.id)"
                                         >
                                             R{{ row.index + 1 }}
                                         </td>
-                                        <template v-for="col in doc.columns" :key="col.id">
+                                        <template
+                                            v-for="col in doc.columns"
+                                            :key="col.id"
+                                        >
                                             <td
-                                                v-if="!doc.cells[cellKey(row.id, col.id)]?.merge || doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster"
-                                                :rowspan="doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster ? doc.cells[cellKey(row.id, col.id)]?.merge?.rowSpan : 1"
-                                                :colspan="doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster ? doc.cells[cellKey(row.id, col.id)]?.merge?.colSpan : 1"
+                                                v-if="
+                                                    !doc.cells[
+                                                        cellKey(row.id, col.id)
+                                                    ]?.merge ||
+                                                    doc.cells[
+                                                        cellKey(row.id, col.id)
+                                                    ]?.merge?.isMaster
+                                                "
+                                                :rowspan="
+                                                    doc.cells[
+                                                        cellKey(row.id, col.id)
+                                                    ]?.merge?.isMaster
+                                                        ? doc.cells[
+                                                              cellKey(
+                                                                  row.id,
+                                                                  col.id,
+                                                              )
+                                                          ]?.merge?.rowSpan
+                                                        : 1
+                                                "
+                                                :colspan="
+                                                    doc.cells[
+                                                        cellKey(row.id, col.id)
+                                                    ]?.merge?.isMaster
+                                                        ? doc.cells[
+                                                              cellKey(
+                                                                  row.id,
+                                                                  col.id,
+                                                              )
+                                                          ]?.merge?.colSpan
+                                                        : 1
+                                                "
                                                 class="relative border border-slate-200 p-0 transition-colors"
                                                 :style="{
                                                     backgroundColor:
-                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.backgroundColor ||
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.formatting
+                                                            .backgroundColor ||
                                                         row.backgroundColor ||
                                                         undefined,
                                                 }"
                                                 :class="[
-                                                    selectedCellKeys.has(cellKey(row.id, col.id))
-                                                        ? 'ring-2 ring-indigo-500 ring-inset bg-indigo-50/30'
+                                                    selectedCellKeys.has(
+                                                        cellKey(row.id, col.id),
+                                                    )
+                                                        ? 'bg-indigo-50/30 ring-2 ring-indigo-500 ring-inset'
                                                         : 'bg-white',
-                                                    row.topBorder.style !== 'none' ? 'border-t-2 border-t-slate-800' : '',
-                                                    row.bottomBorder.style !== 'none' ? 'border-b-2 border-b-slate-800' : '',
-                                                    col.leftBorder.style !== 'none' ? 'border-l-2 border-l-slate-800' : '',
-                                                    col.rightBorder.style !== 'none' ? 'border-r-2 border-r-slate-800' : '',
+                                                    row.topBorder.style !==
+                                                    'none'
+                                                        ? 'border-t-2 border-t-slate-800'
+                                                        : '',
+                                                    row.bottomBorder.style !==
+                                                    'none'
+                                                        ? 'border-b-2 border-b-slate-800'
+                                                        : '',
+                                                    col.leftBorder.style !==
+                                                    'none'
+                                                        ? 'border-l-2 border-l-slate-800'
+                                                        : '',
+                                                    col.rightBorder.style !==
+                                                    'none'
+                                                        ? 'border-r-2 border-r-slate-800'
+                                                        : '',
                                                 ]"
-                                                @mousedown="startRangeDrag(row.index, col.index, $event.shiftKey)"
-                                                @mouseenter="updateRangeDrag(row.index, col.index)"
-                                                @click="selectCell(row.id, col.id, $event.shiftKey)"
+                                                @mousedown="
+                                                    startRangeDrag(
+                                                        row.index,
+                                                        col.index,
+                                                        $event.shiftKey,
+                                                    )
+                                                "
+                                                @mouseenter="
+                                                    updateRangeDrag(
+                                                        row.index,
+                                                        col.index,
+                                                    )
+                                                "
+                                                @click="
+                                                    selectCell(
+                                                        row.id,
+                                                        col.id,
+                                                        $event.shiftKey,
+                                                    )
+                                                "
                                             >
                                                 <input
                                                     :data-cell-input="`${row.id}:${col.id}`"
-                                                    :value="doc.cells[cellKey(row.id, col.id)]?.content ?? ''"
-                                                    :readonly="!project.can_edit"
+                                                    :value="
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.content ?? ''
+                                                    "
+                                                    :readonly="
+                                                        !project.can_edit
+                                                    "
                                                     class="w-full bg-transparent px-3 py-2 text-sm outline-none"
                                                     :class="[
-                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.bold || row.bold ? 'font-bold' : '',
-                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.italic || row.italic ? 'italic' : '',
-                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.underline ? 'underline' : '',
-                                                        (doc.cells[cellKey(row.id, col.id)]?.merge?.horizontalAlignOverride || doc.cells[cellKey(row.id, col.id)]?.formatting.horizontalAlign || col.type) === 'c' ? 'text-center' : (doc.cells[cellKey(row.id, col.id)]?.merge?.horizontalAlignOverride || doc.cells[cellKey(row.id, col.id)]?.formatting.horizontalAlign || col.type) === 'r' ? 'text-right' : 'text-left',
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.formatting.bold ||
+                                                        row.bold
+                                                            ? 'font-bold'
+                                                            : '',
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.formatting.italic ||
+                                                        row.italic
+                                                            ? 'italic'
+                                                            : '',
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.formatting.underline
+                                                            ? 'underline'
+                                                            : '',
+                                                        (doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.merge
+                                                            ?.horizontalAlignOverride ||
+                                                            doc.cells[
+                                                                cellKey(
+                                                                    row.id,
+                                                                    col.id,
+                                                                )
+                                                            ]?.formatting
+                                                                .horizontalAlign ||
+                                                            col.type) === 'c'
+                                                            ? 'text-center'
+                                                            : (doc.cells[
+                                                                    cellKey(
+                                                                        row.id,
+                                                                        col.id,
+                                                                    )
+                                                                ]?.merge
+                                                                    ?.horizontalAlignOverride ||
+                                                                    doc.cells[
+                                                                        cellKey(
+                                                                            row.id,
+                                                                            col.id,
+                                                                        )
+                                                                    ]
+                                                                        ?.formatting
+                                                                        .horizontalAlign ||
+                                                                    col.type) ===
+                                                                'r'
+                                                              ? 'text-right'
+                                                              : 'text-left',
                                                     ]"
-                                                    @input="updateCellContent(row.id, col.id, ($event.target as HTMLInputElement).value)"
-                                                    @keydown="handleCellKeydown($event, row.index, col.index)"
+                                                    @input="
+                                                        updateCellContent(
+                                                            row.id,
+                                                            col.id,
+                                                            (
+                                                                $event.target as HTMLInputElement
+                                                            ).value,
+                                                        )
+                                                    "
+                                                    @keydown="
+                                                        handleCellKeydown(
+                                                            $event,
+                                                            row.index,
+                                                            col.index,
+                                                        )
+                                                    "
                                                 />
                                             </td>
                                         </template>
@@ -1175,33 +1584,77 @@ function renderCellMath(tex: string): string {
                     </div>
 
                     <!-- 3.5 Bottom Panel: Source, Preview, Packages, Validation -->
-                    <div class="flex h-64 shrink-0 flex-col border-t border-slate-200 bg-white">
-                        <Tabs default-value="source" class="flex h-full flex-col gap-0">
-                            <div class="flex items-center justify-between border-b border-slate-200 px-3 py-1.5">
+                    <div
+                        class="flex h-64 shrink-0 flex-col border-t border-slate-200 bg-white"
+                    >
+                        <Tabs
+                            default-value="source"
+                            class="flex h-full flex-col gap-0"
+                        >
+                            <div
+                                class="flex items-center justify-between border-b border-slate-200 px-3 py-1.5"
+                            >
                                 <TabsList class="h-8">
-                                    <TabsTrigger value="source" class="text-xs">LaTeX Source</TabsTrigger>
-                                    <TabsTrigger value="preview" class="text-xs">Rendered Preview</TabsTrigger>
-                                    <TabsTrigger value="packages" class="text-xs">
-                                        Packages ({{ generated.packages.length }})
+                                    <TabsTrigger value="source" class="text-xs"
+                                        >LaTeX Source</TabsTrigger
+                                    >
+                                    <TabsTrigger value="preview" class="text-xs"
+                                        >Rendered Preview</TabsTrigger
+                                    >
+                                    <TabsTrigger
+                                        value="packages"
+                                        class="text-xs"
+                                    >
+                                        Packages ({{
+                                            generated.packages.length
+                                        }})
                                     </TabsTrigger>
-                                    <TabsTrigger value="validation" class="text-xs">
-                                        Validation ({{ generated.issues.length }})
+                                    <TabsTrigger
+                                        value="validation"
+                                        class="text-xs"
+                                    >
+                                        Validation ({{
+                                            generated.issues.length
+                                        }})
                                     </TabsTrigger>
                                 </TabsList>
 
-                                <Button variant="outline" size="sm" @click="copyLatex">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    @click="copyLatex"
+                                >
                                     <Copy class="size-3.5" />
                                     <span>Copy LaTeX</span>
                                 </Button>
                             </div>
 
-                            <TabsContent value="source" class="flex min-h-0 flex-1 flex-col p-3">
-                                <Alert v-if="isExternallyModified" class="mb-2 border-amber-300 bg-amber-50 text-amber-900">
-                                    <AlertTriangle class="size-4 text-amber-700" />
-                                    <AlertTitle>Source externally modified</AlertTitle>
-                                    <AlertDescription class="flex items-center justify-between gap-2 text-xs">
-                                        <span>Manual edits are preserved in source mode.</span>
-                                        <Button variant="outline" size="sm" @click="resyncFromVisual">
+                            <TabsContent
+                                value="source"
+                                class="flex min-h-0 flex-1 flex-col p-3"
+                            >
+                                <Alert
+                                    v-if="isExternallyModified"
+                                    class="mb-2 border-amber-300 bg-amber-50 text-amber-900"
+                                >
+                                    <AlertTriangle
+                                        class="size-4 text-amber-700"
+                                    />
+                                    <AlertTitle
+                                        >Source externally modified</AlertTitle
+                                    >
+                                    <AlertDescription
+                                        class="flex items-center justify-between gap-2 text-xs"
+                                    >
+                                        <span
+                                            >Manual edits are preserved in
+                                            source mode.</span
+                                        >
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            @click="resyncFromVisual"
+                                        >
                                             Synchronize from Visual
                                         </Button>
                                     </AlertDescription>
@@ -1213,19 +1666,35 @@ function renderCellMath(tex: string): string {
                                 />
                             </TabsContent>
 
-                            <TabsContent value="preview" class="min-h-0 flex-1 overflow-auto p-4">
-                                <div class="mx-auto max-w-2xl rounded border border-slate-200 bg-white p-5">
-                                    <p v-if="doc.caption" class="mb-3 text-center font-serif text-sm font-medium">
+                            <TabsContent
+                                value="preview"
+                                class="min-h-0 flex-1 overflow-auto p-4"
+                            >
+                                <div
+                                    class="mx-auto max-w-2xl rounded border border-slate-200 bg-white p-5"
+                                >
+                                    <p
+                                        v-if="doc.caption"
+                                        class="mb-3 text-center font-serif text-sm font-medium"
+                                    >
                                         Table 1: {{ doc.caption }}
                                     </p>
-                                    <table class="w-full border-collapse font-serif text-sm">
+                                    <table
+                                        class="w-full border-collapse font-serif text-sm"
+                                    >
                                         <tbody>
                                             <tr
                                                 v-for="row in doc.rows"
                                                 :key="row.id"
                                                 :class="[
-                                                    row.topBorder.style !== 'none' ? 'border-t-2 border-slate-900' : '',
-                                                    row.bottomBorder.style !== 'none' ? 'border-b border-slate-900' : '',
+                                                    row.topBorder.style !==
+                                                    'none'
+                                                        ? 'border-t-2 border-slate-900'
+                                                        : '',
+                                                    row.bottomBorder.style !==
+                                                    'none'
+                                                        ? 'border-b border-slate-900'
+                                                        : '',
                                                 ]"
                                             >
                                                 <td
@@ -1233,15 +1702,52 @@ function renderCellMath(tex: string): string {
                                                     :key="col.id"
                                                     class="px-3 py-1.5"
                                                     :class="[
-                                                        row.bold || doc.cells[cellKey(row.id, col.id)]?.formatting.bold ? 'font-bold' : '',
-                                                        col.type === 'c' ? 'text-center' : col.type === 'r' ? 'text-right' : 'text-left',
+                                                        row.bold ||
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.formatting.bold
+                                                            ? 'font-bold'
+                                                            : '',
+                                                        col.type === 'c'
+                                                            ? 'text-center'
+                                                            : col.type === 'r'
+                                                              ? 'text-right'
+                                                              : 'text-left',
                                                     ]"
                                                 >
                                                     <span
-                                                        v-if="doc.cells[cellKey(row.id, col.id)]?.contentMode === 'math'"
-                                                        v-html="renderCellMath(doc.cells[cellKey(row.id, col.id)]?.content ?? '')"
+                                                        v-if="
+                                                            doc.cells[
+                                                                cellKey(
+                                                                    row.id,
+                                                                    col.id,
+                                                                )
+                                                            ]?.contentMode ===
+                                                            'math'
+                                                        "
+                                                        v-html="
+                                                            renderCellMath(
+                                                                doc.cells[
+                                                                    cellKey(
+                                                                        row.id,
+                                                                        col.id,
+                                                                    )
+                                                                ]?.content ??
+                                                                    '',
+                                                            )
+                                                        "
                                                     />
-                                                    <span v-else>{{ doc.cells[cellKey(row.id, col.id)]?.content }}</span>
+                                                    <span v-else>{{
+                                                        doc.cells[
+                                                            cellKey(
+                                                                row.id,
+                                                                col.id,
+                                                            )
+                                                        ]?.content
+                                                    }}</span>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -1249,9 +1755,16 @@ function renderCellMath(tex: string): string {
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="packages" class="min-h-0 flex-1 overflow-auto p-3">
-                                <div v-if="generated.packages.length === 0" class="text-xs text-slate-500">
-                                    No additional LaTeX packages required beyond standard tabular.
+                            <TabsContent
+                                value="packages"
+                                class="min-h-0 flex-1 overflow-auto p-3"
+                            >
+                                <div
+                                    v-if="generated.packages.length === 0"
+                                    class="text-xs text-slate-500"
+                                >
+                                    No additional LaTeX packages required beyond
+                                    standard tabular.
                                 </div>
                                 <div v-else class="space-y-2">
                                     <div
@@ -1260,33 +1773,61 @@ function renderCellMath(tex: string): string {
                                         class="flex items-center justify-between rounded-lg border border-slate-200 p-2.5 text-xs"
                                     >
                                         <div>
-                                            <span class="font-mono font-semibold text-indigo-700">
-                                                \usepackage&#123;{{ pkg.packageName }}&#125;
+                                            <span
+                                                class="font-mono font-semibold text-indigo-700"
+                                            >
+                                                \usepackage&#123;{{
+                                                    pkg.packageName
+                                                }}&#125;
                                             </span>
-                                            <p class="mt-0.5 text-slate-500">{{ pkg.reason }}</p>
+                                            <p class="mt-0.5 text-slate-500">
+                                                {{ pkg.reason }}
+                                            </p>
                                         </div>
-                                        <Badge variant="secondary">Required</Badge>
+                                        <Badge variant="secondary"
+                                            >Required</Badge
+                                        >
                                     </div>
                                 </div>
                             </TabsContent>
 
-                            <TabsContent value="validation" class="min-h-0 flex-1 overflow-auto p-3">
-                                <Alert v-if="generated.issues.length === 0" class="border-emerald-200 bg-emerald-50 text-emerald-900">
-                                    <CheckCircle2 class="size-4 text-emerald-600" />
-                                    <AlertTitle>No structural issues detected</AlertTitle>
+                            <TabsContent
+                                value="validation"
+                                class="min-h-0 flex-1 overflow-auto p-3"
+                            >
+                                <Alert
+                                    v-if="generated.issues.length === 0"
+                                    class="border-emerald-200 bg-emerald-50 text-emerald-900"
+                                >
+                                    <CheckCircle2
+                                        class="size-4 text-emerald-600"
+                                    />
+                                    <AlertTitle
+                                        >No structural issues
+                                        detected</AlertTitle
+                                    >
                                     <AlertDescription class="text-xs">
-                                        The table model and generated LaTeX passed all validation checks.
+                                        The table model and generated LaTeX
+                                        passed all validation checks.
                                     </AlertDescription>
                                 </Alert>
                                 <div v-else class="space-y-2">
                                     <Alert
                                         v-for="issue in generated.issues"
                                         :key="issue.id"
-                                        :variant="issue.severity === 'error' ? 'destructive' : 'default'"
+                                        :variant="
+                                            issue.severity === 'error'
+                                                ? 'destructive'
+                                                : 'default'
+                                        "
                                     >
                                         <AlertCircle class="size-4" />
-                                        <AlertTitle class="capitalize">{{ issue.severity }}</AlertTitle>
-                                        <AlertDescription class="text-xs">{{ issue.message }}</AlertDescription>
+                                        <AlertTitle class="capitalize">{{
+                                            issue.severity
+                                        }}</AlertTitle>
+                                        <AlertDescription class="text-xs">{{
+                                            issue.message
+                                        }}</AlertDescription>
                                     </Alert>
                                 </div>
                             </TabsContent>
@@ -1295,62 +1836,131 @@ function renderCellMath(tex: string): string {
                 </main>
 
                 <!-- 3.4 Right Sidebar: Context-Sensitive Properties Inspector -->
-                <aside class="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white">
-                    <div class="border-b border-slate-100 px-3 py-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                <aside
+                    class="flex w-72 shrink-0 flex-col border-l border-slate-200 bg-white"
+                >
+                    <div
+                        class="border-b border-slate-100 px-3 py-2 text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                    >
                         Properties Inspector
                     </div>
                     <ScrollArea class="flex-1 px-3 py-2">
-                        <Accordion type="multiple" :default-value="['context', 'table']" class="w-full">
-                            <AccordionItem v-if="selectionMode === 'cell' && activeCell" value="context">
-                                <AccordionTrigger>Cell Properties</AccordionTrigger>
+                        <Accordion
+                            type="multiple"
+                            :default-value="['context', 'table']"
+                            class="w-full"
+                        >
+                            <AccordionItem
+                                v-if="selectionMode === 'cell' && activeCell"
+                                value="context"
+                            >
+                                <AccordionTrigger
+                                    >Cell Properties</AccordionTrigger
+                                >
                                 <AccordionContent class="space-y-3">
                                     <div>
-                                        <Label class="text-[11px]">Content Mode</Label>
+                                        <Label class="text-[11px]"
+                                            >Content Mode</Label
+                                        >
                                         <select
                                             :value="activeCell.contentMode"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
-                                            @change="setCellContentMode(($event.target as HTMLSelectElement).value as ContentMode)"
+                                            @change="
+                                                setCellContentMode(
+                                                    (
+                                                        $event.target as HTMLSelectElement
+                                                    ).value as ContentMode,
+                                                )
+                                            "
                                         >
-                                            <option value="text">Plain text (auto-escaped)</option>
-                                            <option value="math">LaTeX math ($...$)</option>
-                                            <option value="latex">Raw LaTeX source</option>
+                                            <option value="text">
+                                                Plain text (auto-escaped)
+                                            </option>
+                                            <option value="math">
+                                                LaTeX math ($...$)
+                                            </option>
+                                            <option value="latex">
+                                                Raw LaTeX source
+                                            </option>
                                         </select>
                                     </div>
-                                    <div v-if="activeCell.merge?.isMaster" class="space-y-2 border-t pt-2">
-                                        <p class="text-[11px] font-semibold text-slate-600">
-                                            Merged Cell ({{ activeCell.merge.rowSpan }}x{{ activeCell.merge.colSpan }})
+                                    <div
+                                        v-if="activeCell.merge?.isMaster"
+                                        class="space-y-2 border-t pt-2"
+                                    >
+                                        <p
+                                            class="text-[11px] font-semibold text-slate-600"
+                                        >
+                                            Merged Cell ({{
+                                                activeCell.merge.rowSpan
+                                            }}x{{ activeCell.merge.colSpan }})
                                         </p>
                                         <div>
-                                            <Label class="text-[11px]">Merged Alignment</Label>
+                                            <Label class="text-[11px]"
+                                                >Merged Alignment</Label
+                                            >
                                             <select
-                                                v-model="activeCell.merge.horizontalAlignOverride"
+                                                v-model="
+                                                    activeCell.merge
+                                                        .horizontalAlignOverride
+                                                "
                                                 class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                             >
-                                                <option value="l">Left (l)</option>
-                                                <option value="c">Center (c)</option>
-                                                <option value="r">Right (r)</option>
+                                                <option value="l">
+                                                    Left (l)
+                                                </option>
+                                                <option value="c">
+                                                    Center (c)
+                                                </option>
+                                                <option value="r">
+                                                    Right (r)
+                                                </option>
                                             </select>
                                         </div>
-                                        <div v-if="activeCell.merge.rowSpan > 1">
-                                            <Label class="text-[11px]">Multirow Vertical Align</Label>
+                                        <div
+                                            v-if="activeCell.merge.rowSpan > 1"
+                                        >
+                                            <Label class="text-[11px]"
+                                                >Multirow Vertical Align</Label
+                                            >
                                             <select
-                                                v-model="activeCell.merge.multirowValign"
+                                                v-model="
+                                                    activeCell.merge
+                                                        .multirowValign
+                                                "
                                                 class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                             >
-                                                <option value="t">Top (t)</option>
-                                                <option value="c">Middle (c)</option>
-                                                <option value="b">Bottom (b)</option>
+                                                <option value="t">
+                                                    Top (t)
+                                                </option>
+                                                <option value="c">
+                                                    Middle (c)
+                                                </option>
+                                                <option value="b">
+                                                    Bottom (b)
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
 
-                            <AccordionItem v-if="selectionMode === 'row' && selectedRow" value="context">
-                                <AccordionTrigger>Row {{ selectedRow.index + 1 }} Properties</AccordionTrigger>
+                            <AccordionItem
+                                v-if="selectionMode === 'row' && selectedRow"
+                                value="context"
+                            >
+                                <AccordionTrigger
+                                    >Row
+                                    {{
+                                        selectedRow.index + 1
+                                    }}
+                                    Properties</AccordionTrigger
+                                >
                                 <AccordionContent class="space-y-3">
                                     <div>
-                                        <Label class="text-[11px]">Section</Label>
+                                        <Label class="text-[11px]"
+                                            >Section</Label
+                                        >
                                         <select
                                             v-model="selectedRow.section"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
@@ -1361,90 +1971,178 @@ function renderCellMath(tex: string): string {
                                         </select>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Top Border</Label>
+                                        <Label class="text-[11px]"
+                                            >Top Border</Label
+                                        >
                                         <select
-                                            v-model="selectedRow.topBorder.style"
+                                            v-model="
+                                                selectedRow.topBorder.style
+                                            "
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
                                             <option value="none">None</option>
-                                            <option value="booktabs_top">Booktabs \toprule</option>
-                                            <option value="booktabs_mid">Booktabs \midrule</option>
-                                            <option value="single">Single \hline</option>
-                                            <option value="double">Double \hline\hline</option>
+                                            <option value="booktabs_top">
+                                                Booktabs \toprule
+                                            </option>
+                                            <option value="booktabs_mid">
+                                                Booktabs \midrule
+                                            </option>
+                                            <option value="single">
+                                                Single \hline
+                                            </option>
+                                            <option value="double">
+                                                Double \hline\hline
+                                            </option>
                                         </select>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Bottom Border</Label>
+                                        <Label class="text-[11px]"
+                                            >Bottom Border</Label
+                                        >
                                         <select
-                                            v-model="selectedRow.bottomBorder.style"
+                                            v-model="
+                                                selectedRow.bottomBorder.style
+                                            "
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
                                             <option value="none">None</option>
-                                            <option value="booktabs_mid">Booktabs \midrule</option>
-                                            <option value="booktabs_bottom">Booktabs \bottomrule</option>
-                                            <option value="single">Single \hline</option>
-                                            <option value="double">Double \hline\hline</option>
+                                            <option value="booktabs_mid">
+                                                Booktabs \midrule
+                                            </option>
+                                            <option value="booktabs_bottom">
+                                                Booktabs \bottomrule
+                                            </option>
+                                            <option value="single">
+                                                Single \hline
+                                            </option>
+                                            <option value="double">
+                                                Double \hline\hline
+                                            </option>
                                         </select>
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
 
-                            <AccordionItem v-if="selectionMode === 'column' && selectedCol" value="context">
-                                <AccordionTrigger>Column {{ selectedCol.index + 1 }} Properties</AccordionTrigger>
+                            <AccordionItem
+                                v-if="selectionMode === 'column' && selectedCol"
+                                value="context"
+                            >
+                                <AccordionTrigger
+                                    >Column
+                                    {{
+                                        selectedCol.index + 1
+                                    }}
+                                    Properties</AccordionTrigger
+                                >
                                 <AccordionContent class="space-y-3">
                                     <div>
-                                        <Label class="text-[11px]">Alignment / Type</Label>
+                                        <Label class="text-[11px]"
+                                            >Alignment / Type</Label
+                                        >
                                         <select
                                             v-model="selectedCol.type"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
                                             <option value="l">Left (l)</option>
-                                            <option value="c">Center (c)</option>
+                                            <option value="c">
+                                                Center (c)
+                                            </option>
                                             <option value="r">Right (r)</option>
-                                            <option value="p">Paragraph top (p{})</option>
-                                            <option value="m">Paragraph middle (m{})</option>
-                                            <option value="b">Paragraph bottom (b{})</option>
-                                            <option value="S">Scientific numeric (S - siunitx)</option>
+                                            <option value="p">
+                                                Paragraph top (p{})
+                                            </option>
+                                            <option value="m">
+                                                Paragraph middle (m{})
+                                            </option>
+                                            <option value="b">
+                                                Paragraph bottom (b{})
+                                            </option>
+                                            <option value="S">
+                                                Scientific numeric (S - siunitx)
+                                            </option>
                                         </select>
                                     </div>
-                                    <div v-if="['p', 'm', 'b'].includes(selectedCol.type)">
-                                        <Label class="text-[11px]">Column Width</Label>
-                                        <Input v-model="selectedCol.width" placeholder="3cm" class="mt-1 h-7 text-xs" />
+                                    <div
+                                        v-if="
+                                            ['p', 'm', 'b'].includes(
+                                                selectedCol.type,
+                                            )
+                                        "
+                                    >
+                                        <Label class="text-[11px]"
+                                            >Column Width</Label
+                                        >
+                                        <Input
+                                            v-model="selectedCol.width"
+                                            placeholder="3cm"
+                                            class="mt-1 h-7 text-xs"
+                                        />
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Left Border</Label>
+                                        <Label class="text-[11px]"
+                                            >Left Border</Label
+                                        >
                                         <select
-                                            v-model="selectedCol.leftBorder.style"
+                                            v-model="
+                                                selectedCol.leftBorder.style
+                                            "
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
                                             <option value="none">None</option>
-                                            <option value="single">Single (|)</option>
-                                            <option value="double">Double (||)</option>
+                                            <option value="single">
+                                                Single (|)
+                                            </option>
+                                            <option value="double">
+                                                Double (||)
+                                            </option>
                                         </select>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Right Border</Label>
+                                        <Label class="text-[11px]"
+                                            >Right Border</Label
+                                        >
                                         <select
-                                            v-model="selectedCol.rightBorder.style"
+                                            v-model="
+                                                selectedCol.rightBorder.style
+                                            "
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
                                             <option value="none">None</option>
-                                            <option value="single">Single (|)</option>
-                                            <option value="double">Double (||)</option>
+                                            <option value="single">
+                                                Single (|)
+                                            </option>
+                                            <option value="double">
+                                                Double (||)
+                                            </option>
                                         </select>
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
 
                             <AccordionItem value="table">
-                                <AccordionTrigger>Table &amp; Caption</AccordionTrigger>
+                                <AccordionTrigger
+                                    >Table &amp; Caption</AccordionTrigger
+                                >
                                 <AccordionContent class="space-y-3">
-                                    <div v-if="props.styleProfiles && props.styleProfiles.length > 0">
-                                        <Label class="text-[11px]">Style Profile Preset</Label>
+                                    <div
+                                        v-if="
+                                            props.styleProfiles &&
+                                            props.styleProfiles.length > 0
+                                        "
+                                    >
+                                        <Label class="text-[11px]"
+                                            >Style Profile Preset</Label
+                                        >
                                         <select
                                             :value="doc.style.preset"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
-                                            @change="selectStyleProfile(($event.target as HTMLSelectElement).value)"
+                                            @change="
+                                                selectStyleProfile(
+                                                    (
+                                                        $event.target as HTMLSelectElement
+                                                    ).value,
+                                                )
+                                            "
                                         >
                                             <option
                                                 v-for="profile in props.styleProfiles"
@@ -1456,185 +2154,375 @@ function renderCellMath(tex: string): string {
                                         </select>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Caption</Label>
-                                        <Textarea v-model="doc.caption" rows="2" class="mt-1 text-xs" />
+                                        <Label class="text-[11px]"
+                                            >Caption</Label
+                                        >
+                                        <Textarea
+                                            v-model="doc.caption"
+                                            rows="2"
+                                            class="mt-1 text-xs"
+                                        />
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Short Caption (List of Tables)</Label>
-                                        <Input v-model="doc.shortCaption" placeholder="Optional short caption" class="mt-1 h-7 text-xs" />
+                                        <Label class="text-[11px]"
+                                            >Short Caption (List of
+                                            Tables)</Label
+                                        >
+                                        <Input
+                                            v-model="doc.shortCaption"
+                                            placeholder="Optional short caption"
+                                            class="mt-1 h-7 text-xs"
+                                        />
                                     </div>
                                     <div>
                                         <Label class="text-[11px]">Label</Label>
-                                        <Input v-model="doc.label" placeholder="tab:results" class="mt-1 h-7 font-mono text-xs" />
+                                        <Input
+                                            v-model="doc.label"
+                                            placeholder="tab:results"
+                                            class="mt-1 h-7 font-mono text-xs"
+                                        />
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Caption Position</Label>
+                                        <Label class="text-[11px]"
+                                            >Caption Position</Label
+                                        >
                                         <select
                                             v-model="doc.layout.captionPosition"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option value="top">Above table</option>
-                                            <option value="bottom">Below table</option>
+                                            <option value="top">
+                                                Above table
+                                            </option>
+                                            <option value="bottom">
+                                                Below table
+                                            </option>
                                         </select>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <Label class="text-[11px]">\tabcolsep</Label>
-                                            <Input v-model="doc.style.tabColSep" placeholder="6pt" class="mt-1 h-7 font-mono text-xs" />
+                                            <Label class="text-[11px]"
+                                                >\tabcolsep</Label
+                                            >
+                                            <Input
+                                                v-model="doc.style.tabColSep"
+                                                placeholder="6pt"
+                                                class="mt-1 h-7 font-mono text-xs"
+                                            />
                                         </div>
                                         <div>
-                                            <Label class="text-[11px]">\arraystretch</Label>
-                                            <Input v-model.number="doc.style.arrayStretch" type="number" step="0.1" min="0.5" max="3" placeholder="1.0" class="mt-1 h-7 font-mono text-xs" />
+                                            <Label class="text-[11px]"
+                                                >\arraystretch</Label
+                                            >
+                                            <Input
+                                                v-model.number="
+                                                    doc.style.arrayStretch
+                                                "
+                                                type="number"
+                                                step="0.1"
+                                                min="0.5"
+                                                max="3"
+                                                placeholder="1.0"
+                                                class="mt-1 h-7 font-mono text-xs"
+                                            />
                                         </div>
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
 
                             <AccordionItem value="layout">
-                                <AccordionTrigger>Layout &amp; Longtable</AccordionTrigger>
+                                <AccordionTrigger
+                                    >Layout &amp; Longtable</AccordionTrigger
+                                >
                                 <AccordionContent class="space-y-3">
                                     <div>
-                                        <Label class="text-[11px]">Environment</Label>
+                                        <Label class="text-[11px]"
+                                            >Environment</Label
+                                        >
                                         <select
                                             :value="doc.layout.environment"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
-                                            @change="setEnvironment(($event.target as HTMLSelectElement).value as 'tabular' | 'tabularx' | 'longtable')"
+                                            @change="
+                                                setEnvironment(
+                                                    (
+                                                        $event.target as HTMLSelectElement
+                                                    ).value as
+                                                        | 'tabular'
+                                                        | 'tabularx'
+                                                        | 'longtable',
+                                                )
+                                            "
                                         >
-                                            <option value="tabular">Standard (tabular)</option>
-                                            <option value="tabularx">Full width (tabularx)</option>
-                                            <option value="longtable">Multi-page (longtable)</option>
+                                            <option value="tabular">
+                                                Standard (tabular)
+                                            </option>
+                                            <option value="tabularx">
+                                                Full width (tabularx)
+                                            </option>
+                                            <option value="longtable">
+                                                Multi-page (longtable)
+                                            </option>
                                         </select>
                                     </div>
-                                    <div v-if="doc.layout.environment === 'longtable' && doc.layout.longtableConfig" class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2">
-                                        <label class="flex items-center gap-2 text-xs">
-                                            <input v-model="doc.layout.longtableConfig.repeatFirstHeader" type="checkbox" />
-                                            <span>Repeat header on new pages</span>
+                                    <div
+                                        v-if="
+                                            doc.layout.environment ===
+                                                'longtable' &&
+                                            doc.layout.longtableConfig
+                                        "
+                                        class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2"
+                                    >
+                                        <label
+                                            class="flex items-center gap-2 text-xs"
+                                        >
+                                            <input
+                                                v-model="
+                                                    doc.layout.longtableConfig
+                                                        .repeatFirstHeader
+                                                "
+                                                type="checkbox"
+                                            />
+                                            <span
+                                                >Repeat header on new
+                                                pages</span
+                                            >
                                         </label>
                                         <div>
-                                            <Label class="text-[11px]">Continuation Caption</Label>
-                                            <Input v-model="doc.layout.longtableConfig.continuationCaption" class="mt-1 h-7 text-xs" />
+                                            <Label class="text-[11px]"
+                                                >Continuation Caption</Label
+                                            >
+                                            <Input
+                                                v-model="
+                                                    doc.layout.longtableConfig
+                                                        .continuationCaption
+                                                "
+                                                class="mt-1 h-7 text-xs"
+                                            />
                                         </div>
                                         <div>
-                                            <Label class="text-[11px]">Intermediate Footer</Label>
-                                            <Input v-model="doc.layout.longtableConfig.footerText" class="mt-1 h-7 text-xs" />
+                                            <Label class="text-[11px]"
+                                                >Intermediate Footer</Label
+                                            >
+                                            <Input
+                                                v-model="
+                                                    doc.layout.longtableConfig
+                                                        .footerText
+                                                "
+                                                class="mt-1 h-7 text-xs"
+                                            />
                                         </div>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Orientation</Label>
+                                        <Label class="text-[11px]"
+                                            >Orientation</Label
+                                        >
                                         <select
                                             v-model="doc.layout.orientation"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option value="portrait">Portrait</option>
-                                            <option value="landscape">Landscape</option>
+                                            <option value="portrait">
+                                                Portrait
+                                            </option>
+                                            <option value="landscape">
+                                                Landscape
+                                            </option>
                                         </select>
                                     </div>
-                                    <div v-if="doc.layout.orientation === 'landscape'">
-                                        <Label class="text-[11px]">Landscape Method</Label>
+                                    <div
+                                        v-if="
+                                            doc.layout.orientation ===
+                                            'landscape'
+                                        "
+                                    >
+                                        <Label class="text-[11px]"
+                                            >Landscape Method</Label
+                                        >
                                         <select
                                             v-model="doc.layout.landscapeMethod"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option value="sidewaystable">sidewaystable (rotating)</option>
-                                            <option value="pdflscape">landscape page (pdflscape)</option>
+                                            <option value="sidewaystable">
+                                                sidewaystable (rotating)
+                                            </option>
+                                            <option value="pdflscape">
+                                                landscape page (pdflscape)
+                                            </option>
                                         </select>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Fit to Page</Label>
+                                        <Label class="text-[11px]"
+                                            >Fit to Page</Label
+                                        >
                                         <select
                                             v-model="doc.layout.fitMode"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option value="none">Natural width</option>
-                                            <option value="textwidth">Fit to text width</option>
-                                            <option value="pagewidth">Fit to page width</option>
-                                            <option value="pageheight">Fit to page height</option>
-                                            <option value="both">Fit to width &amp; height</option>
+                                            <option value="none">
+                                                Natural width
+                                            </option>
+                                            <option value="textwidth">
+                                                Fit to text width
+                                            </option>
+                                            <option value="pagewidth">
+                                                Fit to page width
+                                            </option>
+                                            <option value="pageheight">
+                                                Fit to page height
+                                            </option>
+                                            <option value="both">
+                                                Fit to width &amp; height
+                                            </option>
                                         </select>
                                     </div>
                                     <div v-if="doc.layout.fitMode !== 'none'">
-                                        <Label class="text-[11px]">Scaling Method</Label>
+                                        <Label class="text-[11px]"
+                                            >Scaling Method</Label
+                                        >
                                         <select
                                             v-model="doc.layout.fitMethod"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option value="resizebox">\resizebox (graphicx)</option>
-                                            <option value="adjustbox">adjustbox</option>
-                                            <option value="tabularx">tabularx</option>
+                                            <option value="resizebox">
+                                                \resizebox (graphicx)
+                                            </option>
+                                            <option value="adjustbox">
+                                                adjustbox
+                                            </option>
+                                            <option value="tabularx">
+                                                tabularx
+                                            </option>
                                         </select>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Table Rotation</Label>
+                                        <Label class="text-[11px]"
+                                            >Table Rotation</Label
+                                        >
                                         <select
-                                            v-model.number="doc.layout.rotationDegrees"
+                                            v-model.number="
+                                                doc.layout.rotationDegrees
+                                            "
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option :value="0">0&deg; (None)</option>
+                                            <option :value="0">
+                                                0&deg; (None)
+                                            </option>
                                             <option :value="90">90&deg;</option>
-                                            <option :value="180">180&deg;</option>
-                                            <option :value="270">270&deg;</option>
+                                            <option :value="180">
+                                                180&deg;
+                                            </option>
+                                            <option :value="270">
+                                                270&deg;
+                                            </option>
                                         </select>
                                     </div>
-                                    <label class="flex items-center gap-2 text-xs">
-                                        <input v-model="doc.layout.wideTwoColumn" type="checkbox" />
+                                    <label
+                                        class="flex items-center gap-2 text-xs"
+                                    >
+                                        <input
+                                            v-model="doc.layout.wideTwoColumn"
+                                            type="checkbox"
+                                        />
                                         <span>Two-column span (table*)</span>
                                     </label>
                                 </AccordionContent>
                             </AccordionItem>
 
                             <AccordionItem value="typography">
-                                <AccordionTrigger>Typography &amp; Colors</AccordionTrigger>
+                                <AccordionTrigger
+                                    >Typography &amp; Colors</AccordionTrigger
+                                >
                                 <AccordionContent class="space-y-3">
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
-                                            <Label class="text-[11px]">Font Size</Label>
+                                            <Label class="text-[11px]"
+                                                >Font Size</Label
+                                            >
                                             <select
                                                 v-model="doc.style.fontSize"
                                                 class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                             >
-                                                <option value="tiny">\tiny</option>
-                                                <option value="scriptsize">\scriptsize</option>
-                                                <option value="footnotesize">\footnotesize</option>
-                                                <option value="small">\small</option>
-                                                <option value="normalsize">\normalsize</option>
-                                                <option value="large">\large</option>
+                                                <option value="tiny">
+                                                    \tiny
+                                                </option>
+                                                <option value="scriptsize">
+                                                    \scriptsize
+                                                </option>
+                                                <option value="footnotesize">
+                                                    \footnotesize
+                                                </option>
+                                                <option value="small">
+                                                    \small
+                                                </option>
+                                                <option value="normalsize">
+                                                    \normalsize
+                                                </option>
+                                                <option value="large">
+                                                    \large
+                                                </option>
                                             </select>
                                         </div>
                                         <div>
-                                            <Label class="text-[11px]">Font Family</Label>
+                                            <Label class="text-[11px]"
+                                                >Font Family</Label
+                                            >
                                             <select
                                                 v-model="doc.style.fontFamily"
                                                 class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                             >
-                                                <option value="default">Default</option>
-                                                <option value="rmfamily">Roman</option>
-                                                <option value="sffamily">Sans</option>
-                                                <option value="ttfamily">Mono</option>
+                                                <option value="default">
+                                                    Default
+                                                </option>
+                                                <option value="rmfamily">
+                                                    Roman
+                                                </option>
+                                                <option value="sffamily">
+                                                    Sans
+                                                </option>
+                                                <option value="ttfamily">
+                                                    Mono
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
                                     <div>
-                                        <Label class="text-[11px]">Line Spacing</Label>
+                                        <Label class="text-[11px]"
+                                            >Line Spacing</Label
+                                        >
                                         <select
                                             v-model="doc.style.lineSpacing"
                                             class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
                                         >
-                                            <option value="1.0">Single (1.0)</option>
+                                            <option value="1.0">
+                                                Single (1.0)
+                                            </option>
                                             <option value="1.15">1.15x</option>
                                             <option value="1.5">1.5x</option>
-                                            <option value="2.0">Double (2.0)</option>
+                                            <option value="2.0">
+                                                Double (2.0)
+                                            </option>
                                         </select>
                                     </div>
-                                    <div v-if="activeCell" class="flex items-center justify-between gap-2">
-                                        <Label class="text-[11px]">Cell Background</Label>
+                                    <div
+                                        v-if="activeCell"
+                                        class="flex items-center justify-between gap-2"
+                                    >
+                                        <Label class="text-[11px]"
+                                            >Cell Background</Label
+                                        >
                                         <input
-                                            v-model="activeCell.formatting.backgroundColor"
+                                            v-model="
+                                                activeCell.formatting
+                                                    .backgroundColor
+                                            "
                                             type="color"
                                             class="h-7 w-12 cursor-pointer rounded border border-slate-200"
                                         />
                                     </div>
-                                    <div class="flex items-center justify-between gap-2">
-                                        <Label class="text-[11px]">Border Color</Label>
+                                    <div
+                                        class="flex items-center justify-between gap-2"
+                                    >
+                                        <Label class="text-[11px]"
+                                            >Border Color</Label
+                                        >
                                         <input
                                             v-model="doc.style.borderColor"
                                             type="color"
@@ -1646,40 +2534,96 @@ function renderCellMath(tex: string): string {
 
                             <AccordionItem value="notes">
                                 <AccordionTrigger>
-                                    Notes &amp; Footnotes ({{ doc.notes.length + doc.footnotes.length }})
+                                    Notes &amp; Footnotes ({{
+                                        doc.notes.length + doc.footnotes.length
+                                    }})
                                 </AccordionTrigger>
                                 <AccordionContent class="space-y-3">
                                     <div class="flex gap-2">
-                                        <Button variant="outline" size="sm" class="flex-1 text-xs" @click="addTableNote">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            class="flex-1 text-xs"
+                                            @click="addTableNote"
+                                        >
                                             + Note
                                         </Button>
-                                        <Button variant="outline" size="sm" class="flex-1 text-xs" @click="addTableFootnote">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            class="flex-1 text-xs"
+                                            @click="addTableFootnote"
+                                        >
                                             + Footnote
                                         </Button>
                                     </div>
 
-                                    <div v-for="note in doc.notes" :key="note.id" class="space-y-1.5 rounded border border-slate-200 p-2">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <select v-model="note.kind" class="rounded border border-slate-200 px-1.5 py-0.5 text-[11px]">
-                                                <option value="note">Note</option>
-                                                <option value="source">Source</option>
-                                                <option value="significance">Significance</option>
+                                    <div
+                                        v-for="note in doc.notes"
+                                        :key="note.id"
+                                        class="space-y-1.5 rounded border border-slate-200 p-2"
+                                    >
+                                        <div
+                                            class="flex items-center justify-between gap-2"
+                                        >
+                                            <select
+                                                v-model="note.kind"
+                                                class="rounded border border-slate-200 px-1.5 py-0.5 text-[11px]"
+                                            >
+                                                <option value="note">
+                                                    Note
+                                                </option>
+                                                <option value="source">
+                                                    Source
+                                                </option>
+                                                <option value="significance">
+                                                    Significance
+                                                </option>
                                             </select>
-                                            <button type="button" class="text-[11px] text-rose-600 hover:underline" @click="removeTableNote(note.id)">
+                                            <button
+                                                type="button"
+                                                class="text-[11px] text-rose-600 hover:underline"
+                                                @click="
+                                                    removeTableNote(note.id)
+                                                "
+                                            >
                                                 Remove
                                             </button>
                                         </div>
-                                        <Textarea v-model="note.text" rows="2" class="text-xs" />
+                                        <Textarea
+                                            v-model="note.text"
+                                            rows="2"
+                                            class="text-xs"
+                                        />
                                     </div>
 
-                                    <div v-for="fn in doc.footnotes" :key="fn.id" class="space-y-1.5 rounded border border-slate-200 p-2">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <Input v-model="fn.marker" class="h-6 w-14 font-mono text-xs" />
-                                            <button type="button" class="text-[11px] text-rose-600 hover:underline" @click="removeTableFootnote(fn.id)">
+                                    <div
+                                        v-for="fn in doc.footnotes"
+                                        :key="fn.id"
+                                        class="space-y-1.5 rounded border border-slate-200 p-2"
+                                    >
+                                        <div
+                                            class="flex items-center justify-between gap-2"
+                                        >
+                                            <Input
+                                                v-model="fn.marker"
+                                                class="h-6 w-14 font-mono text-xs"
+                                            />
+                                            <button
+                                                type="button"
+                                                class="text-[11px] text-rose-600 hover:underline"
+                                                @click="
+                                                    removeTableFootnote(fn.id)
+                                                "
+                                            >
                                                 Remove
                                             </button>
                                         </div>
-                                        <Textarea v-model="fn.text" rows="2" class="text-xs" />
+                                        <Textarea
+                                            v-model="fn.text"
+                                            rows="2"
+                                            class="text-xs"
+                                        />
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
@@ -1688,12 +2632,138 @@ function renderCellMath(tex: string): string {
                 </aside>
             </div>
 
-            <Dialog :open="templatesDialogOpen" @update:open="templatesDialogOpen = $event">
+            <Dialog
+                :open="insertDialogOpen"
+                @update:open="insertDialogOpen = $event"
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Insert Table into Document</DialogTitle>
+                        <DialogDescription>
+                            Select the target LaTeX file and review any missing
+                            preamble packages before inserting.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="space-y-4 py-2 text-xs">
+                        <div>
+                            <Label class="text-xs">Target .tex file</Label>
+                            <select
+                                v-model="targetFilePublicId"
+                                class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs"
+                            >
+                                <option
+                                    v-for="file in projectFiles"
+                                    :key="file.public_id"
+                                    :value="file.public_id"
+                                >
+                                    {{ file.path }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div
+                            v-if="missingPackages.length > 0"
+                            class="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3"
+                        >
+                            <p class="font-semibold text-amber-900">
+                                Missing preamble packages
+                            </p>
+                            <label
+                                v-for="pkg in missingPackages"
+                                :key="pkg.packageName"
+                                class="flex items-center gap-2 text-amber-900"
+                            >
+                                <input
+                                    type="checkbox"
+                                    :checked="
+                                        approvedPackages.has(pkg.packageName)
+                                    "
+                                    @change="
+                                        ($event.target as HTMLInputElement)
+                                            .checked
+                                            ? approvedPackages.add(
+                                                  pkg.packageName,
+                                              )
+                                            : approvedPackages.delete(
+                                                  pkg.packageName,
+                                              )
+                                    "
+                                />
+                                <span class="font-mono"
+                                    >\usepackage{{
+                                        pkg.options?.length
+                                            ? `[${pkg.options.join(',')}]`
+                                            : ''
+                                    }}{{ '{' + pkg.packageName + '}' }}</span
+                                >
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            @click="insertDialogOpen = false"
+                            >Cancel</Button
+                        >
+                        <Button
+                            size="sm"
+                            :disabled="isInsertingIntoFile"
+                            @click="confirmInsertIntoDocument"
+                        >
+                            {{
+                                isInsertingIntoFile
+                                    ? 'Inserting...'
+                                    : 'Insert & Save Revision'
+                            }}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                :open="importLatexDialogOpen"
+                @update:open="importLatexDialogOpen = $event"
+            >
+                <DialogContent class="max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Import Existing LaTeX Table</DialogTitle>
+                        <DialogDescription>
+                            Paste a LaTeX table or tabular environment to edit
+                            visually (unsupported syntax opens in source-only
+                            mode).
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        v-model="rawLatexImportInput"
+                        rows="8"
+                        placeholder="\begin{tabular}{lc}..."
+                        class="font-mono text-xs"
+                    />
+                    <div class="flex justify-end gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            @click="importLatexDialogOpen = false"
+                            >Cancel</Button
+                        >
+                        <Button size="sm" @click="handleParseLatexImport"
+                            >Parse Table</Button
+                        >
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                :open="templatesDialogOpen"
+                @update:open="templatesDialogOpen = $event"
+            >
                 <DialogContent class="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Table Templates &amp; Presets</DialogTitle>
                         <DialogDescription>
-                            Apply an academic table template or import a saved JSON table preset.
+                            Apply an academic table template or import a saved
+                            JSON table preset.
                         </DialogDescription>
                     </DialogHeader>
                     <div class="grid gap-3 py-2 sm:grid-cols-2">
@@ -1703,60 +2773,104 @@ function renderCellMath(tex: string): string {
                             class="flex flex-col justify-between rounded-lg border border-slate-200 p-3"
                         >
                             <div>
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-sm font-semibold text-slate-900">{{ tpl.name }}</span>
-                                    <Badge variant="secondary" class="text-[10px]">{{ tpl.category }}</Badge>
+                                <div
+                                    class="flex items-center justify-between gap-2"
+                                >
+                                    <span
+                                        class="text-sm font-semibold text-slate-900"
+                                        >{{ tpl.name }}</span
+                                    >
+                                    <Badge
+                                        variant="secondary"
+                                        class="text-[10px]"
+                                        >{{ tpl.category }}</Badge
+                                    >
                                 </div>
-                                <p class="mt-1 text-xs text-slate-500">{{ tpl.description }}</p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ tpl.description }}
+                                </p>
                             </div>
-                            <Button variant="outline" size="sm" class="mt-3 w-full" @click="applyTemplate(tpl)">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                class="mt-3 w-full"
+                                @click="applyTemplate(tpl)"
+                            >
                                 Apply Template
                             </Button>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between border-t pt-3 text-xs">
-                        <label class="cursor-pointer font-medium text-indigo-600 hover:underline">
+                    <div
+                        class="flex items-center justify-between border-t pt-3 text-xs"
+                    >
+                        <label
+                            class="cursor-pointer font-medium text-indigo-600 hover:underline"
+                        >
                             Import JSON Preset
-                            <input type="file" accept=".json,application/json" class="hidden" @change="importJsonPreset" />
+                            <input
+                                type="file"
+                                accept=".json,application/json"
+                                class="hidden"
+                                @change="importJsonPreset"
+                            />
                         </label>
-                        <Button variant="ghost" size="sm" @click="exportJsonPreset">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            @click="exportJsonPreset"
+                        >
                             Export Current JSON
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog :open="splitDialogOpen" @update:open="splitDialogOpen = $event">
+            <AlertDialog
+                :open="splitDialogOpen"
+                @update:open="splitDialogOpen = $event"
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Split merged cell</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This merged cell contains multiple words. Choose how to preserve its content when splitting:
+                            This merged cell contains multiple words. Choose how
+                            to preserve its content when splitting:
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="executeSplitCell('keep_first')">
+                        <AlertDialogAction
+                            @click="executeSplitCell('keep_first')"
+                        >
                             Keep in top-left cell
                         </AlertDialogAction>
-                        <AlertDialogAction @click="executeSplitCell('distribute_words')">
+                        <AlertDialogAction
+                            @click="executeSplitCell('distribute_words')"
+                        >
                             Distribute words
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
 
-            <AlertDialog :open="deleteDialogOpen" @update:open="deleteDialogOpen = $event">
+            <AlertDialog
+                :open="deleteDialogOpen"
+                @update:open="deleteDialogOpen = $event"
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete table design</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete <strong>{{ doc.name }}</strong>?
+                            Are you sure you want to delete
+                            <strong>{{ doc.name }}</strong>?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction class="bg-destructive text-white hover:bg-destructive/90" @click="confirmDeleteDesign">
+                        <AlertDialogAction
+                            class="bg-destructive text-white hover:bg-destructive/90"
+                            @click="confirmDeleteDesign"
+                        >
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
