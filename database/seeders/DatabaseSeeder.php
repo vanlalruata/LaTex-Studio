@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::query()->firstOrCreate(
-            ['email' => 'admin@latexstudio.local'],
+            ['email' => 'admin@latexstudio.com'],
             [
                 'name' => 'Platform Admin',
                 'password' => Hash::make('password'),
@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::query()->firstOrCreate(
-            ['email' => 'researcher@latexstudio.local'],
+            ['email' => 'researcher@latexstudio.com'],
             [
                 'name' => 'Dr. Researcher',
                 'password' => Hash::make('password'),
@@ -35,7 +35,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::query()->firstOrCreate(
-            ['email' => 'coauthor@latexstudio.local'],
+            ['email' => 'coauthor@latexstudio.com'],
             [
                 'name' => 'Co-Author',
                 'password' => Hash::make('password'),
