@@ -819,6 +819,14 @@ onBeforeUnmount(() => {
                     <span>ZIP</span>
                 </a>
 
+                <Link
+                    :href="projectsRoutes.tables.index(project.public_id).url"
+                    class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                    <Wrench class="size-3.5" />
+                    <span>Table Designer</span>
+                </Link>
+
                 <button
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"

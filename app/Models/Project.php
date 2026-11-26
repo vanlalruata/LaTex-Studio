@@ -140,6 +140,14 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<TableDesign, $this>
+     */
+    public function tableDesigns(): HasMany
+    {
+        return $this->hasMany(TableDesign::class);
+    }
+
+    /**
      * @return BelongsTo<Compilation, $this>
      */
     public function lastSuccessfulCompilation(): BelongsTo
