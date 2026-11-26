@@ -9,13 +9,26 @@ use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectIndexController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectRevisionController;
+use App\Http\Controllers\PublicSite\AboutController;
+use App\Http\Controllers\PublicSite\FaqController;
+use App\Http\Controllers\PublicSite\FeatureController;
 use App\Http\Controllers\PublicSite\HomeController;
+use App\Http\Controllers\PublicSite\HowItWorksController;
+use App\Http\Controllers\PublicSite\LegalController;
+use App\Http\Controllers\PublicSite\TemplateController;
 use App\Http\Controllers\SuggestionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/features', FeatureController::class)->name('public.features');
+Route::get('/how-it-works', HowItWorksController::class)->name('public.how-it-works');
+Route::get('/templates', TemplateController::class)->name('public.templates');
+Route::get('/about', AboutController::class)->name('public.about');
+Route::get('/faq', FaqController::class)->name('public.faq');
+Route::get('/privacy', [LegalController::class, 'privacy'])->name('public.privacy');
+Route::get('/terms', [LegalController::class, 'terms'])->name('public.terms');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

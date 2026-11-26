@@ -25,7 +25,16 @@ export interface FeatureItem {
     category?: string;
     status: Exclude<FeatureStatus, 'disabled'>;
     iconKey?: string;
+    featured?: boolean;
     href?: string;
+}
+
+export interface TemplateItem {
+    slug: string;
+    title: string;
+    category: string;
+    description: string | null;
+    compilerEngine: string;
 }
 
 export interface FaqItem {

@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import PublicContainer from '@/components/public/PublicContainer.vue';
 import { dashboard, home, login, register } from '@/routes';
+import { about, features, howItWorks, templates } from '@/routes/public';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
@@ -15,16 +16,16 @@ const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
 
 const navLinks = computed(() => {
     const items = [
-        { label: 'Features', href: '/#features' },
-        { label: 'How it works', href: '/#how-it-works' },
-        { label: 'Templates', href: '/#templates' },
+        { label: 'Features', href: features.url() },
+        { label: 'How it works', href: howItWorks.url() },
+        { label: 'Templates', href: templates.url() },
     ];
 
     if (publicSite.value?.pricingVisible) {
         items.push({ label: 'Pricing', href: '/pricing' });
     }
 
-    items.push({ label: 'FAQ', href: '/#faq' });
+    items.push({ label: 'About', href: about.url() });
 
     return items;
 });

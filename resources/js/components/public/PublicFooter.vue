@@ -4,6 +4,15 @@ import { computed } from 'vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import PublicContainer from '@/components/public/PublicContainer.vue';
 import { home, login, register } from '@/routes';
+import {
+    about,
+    faq,
+    features,
+    howItWorks,
+    privacy,
+    templates,
+    terms,
+} from '@/routes/public';
 
 const page = usePage();
 const publicSite = computed(() => page.props.publicSite);
@@ -11,9 +20,9 @@ const currentYear = new Date().getFullYear();
 
 const productLinks = computed(() => {
     const links = [
-        { label: 'Features', href: '/#features' },
-        { label: 'How it works', href: '/#how-it-works' },
-        { label: 'Templates', href: '/#templates' },
+        { label: 'Features', href: features.url() },
+        { label: 'How it works', href: howItWorks.url() },
+        { label: 'Templates', href: templates.url() },
     ];
     if (publicSite.value?.pricingVisible) {
         links.push({ label: 'Pricing', href: '/pricing' });
@@ -23,7 +32,7 @@ const productLinks = computed(() => {
 
 const resourceLinks = computed(() => {
     const links = [
-        { label: 'FAQ', href: '/#faq' },
+        { label: 'FAQ', href: faq.url() },
         { label: 'Sign in', href: login.url() },
     ];
     if (publicSite.value?.registrationMode === 'open') {
@@ -104,15 +113,31 @@ const resourceLinks = computed(() => {
                         <h3
                             class="text-xs font-semibold tracking-wider text-ink uppercase"
                         >
-                            Workspace
+                            Company &amp; Legal
                         </h3>
                         <ul class="mt-4 space-y-2.5">
                             <li>
                                 <Link
-                                    :href="home()"
+                                    :href="about()"
                                     class="text-sm text-ink-muted transition-colors hover:text-ink"
                                 >
-                                    Overview
+                                    About
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    :href="privacy()"
+                                    class="text-sm text-ink-muted transition-colors hover:text-ink"
+                                >
+                                    Privacy Policy
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    :href="terms()"
+                                    class="text-sm text-ink-muted transition-colors hover:text-ink"
+                                >
+                                    Terms of Service
                                 </Link>
                             </li>
                             <li v-if="publicSite?.supportEmail">

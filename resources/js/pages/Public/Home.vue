@@ -1,81 +1,57 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    ArrowRight,
     BookOpen,
     CheckCircle2,
     FileCode2,
     FileText,
     GitBranch,
+    LayoutGrid,
+    ScanLine,
+    Sigma,
     Sparkles,
     Users,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import FaqAccordion from '@/components/public/FaqAccordion.vue';
 import FeatureCard from '@/components/public/FeatureCard.vue';
 import PublicContainer from '@/components/public/PublicContainer.vue';
 import SectionHeading from '@/components/public/SectionHeading.vue';
 import SeoHead from '@/components/public/SeoHead.vue';
 import { dashboard, login, register } from '@/routes';
-import type { FeatureItem } from '@/types/public';
+import {
+    faq,
+    features as featuresRoute,
+    howItWorks,
+    templates,
+} from '@/routes/public';
+import type { FaqItem, FeatureItem } from '@/types/public';
 
+type Props = {
+    canRegister: boolean;
+    features: FeatureItem[];
+    faqs: FaqItem[];
+};
+
+const props = defineProps<Props>();
 const page = usePage();
 const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
 const registrationMode = computed(
     () => page.props.publicSite?.registrationMode ?? 'open',
 );
 
-const coreCapabilities: FeatureItem[] = [
-    {
-        slug: 'latex-workspace',
-        title: 'LaTeX workspace',
-        summary:
-            'Organize project files, bibliography entries, and figures in a focused source editor.',
-        status: 'available',
-    },
-    {
-        slug: 'pdf-preview',
-        title: 'Live PDF compilation',
-        summary:
-            'Compile manuscripts in a managed TeX Live environment and inspect diagnostics alongside your PDF.',
-        status: 'available',
-    },
-    {
-        slug: 'bibliography-workflow',
-        title: 'Bibliography & citations',
-        summary:
-            'Keep BibTeX references, citation keys, and label outlines close to the sections they support.',
-        status: 'available',
-    },
-    {
-        slug: 'coauthor-review',
-        title: 'Co-author review',
-        summary:
-            'Coordinate comments, review threads, and change suggestions with collaborators in one place.',
-        status: 'available',
-    },
-    {
-        slug: 'ai-assistance',
-        title: 'Human-reviewed AI assistance',
-        summary:
-            'Use your own API key for error explanations and focused revision suggestions that require explicit approval.',
-        status: 'available',
-    },
-    {
-        slug: 'revisions-export',
-        title: 'Revisions & portable export',
-        summary:
-            'Save named project snapshots and export complete source archives whenever you need them.',
-        status: 'available',
-    },
-];
-
-const featureIcons = [
-    FileCode2,
-    FileText,
-    BookOpen,
-    Users,
-    Sparkles,
-    GitBranch,
-];
+const iconMap: Record<string, typeof FileCode2> = {
+    code: FileCode2,
+    'file-text': FileText,
+    book: BookOpen,
+    users: Users,
+    sparkles: Sparkles,
+    'git-branch': GitBranch,
+    sigma: Sigma,
+    layout: LayoutGrid,
+    scan: ScanLine,
+};
 
 const workflowSteps = [
     {
@@ -132,7 +108,9 @@ const workflowSteps = [
                     >
                         Write in LaTeX, organize your research files, compile
                         with a managed TeX Live workflow, and review your PDF in
-                        one focused workspace.
+                        one focused workspace. Bring co-authors and optional
+                        human-reviewed AI assistance into the process as your
+                        work grows.
                     </p>
 
                     <div class="mt-8 flex flex-wrap items-center gap-3.5">
@@ -145,17 +123,20 @@ const workflowSteps = [
                         </Link>
                         <template v-else>
                             <Link
-                                v-if="registrationMode === 'open'"
+                                v-if="
+                                    registrationMode === 'open' &&
+                                    props.canRegister
+                                "
                                 :href="register()"
                                 class="inline-flex items-center justify-center rounded-lg bg-academic-primary px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-academic-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-academic-primary"
                             >
                                 Get started
                             </Link>
                             <Link
-                                :href="login()"
+                                :href="howItWorks()"
                                 class="inline-flex items-center justify-center rounded-lg border border-academic-border bg-surface px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-academic-primary"
                             >
-                                Sign in
+                                See how it works
                             </Link>
                         </template>
                     </div>
@@ -260,41 +241,174 @@ const workflowSteps = [
         </PublicContainer>
     </section>
 
+    <section class="border-b border-academic-border bg-surface py-6">
+        <PublicContainer>
+            <div
+                class="grid gap-4 text-sm text-ink-muted sm:grid-cols-2 lg:grid-cols-4"
+            >
+                <div class="flex items-center gap-2.5">
+                    <CheckCircle2
+                        class="size-4 shrink-0 text-academic-accent"
+                        aria-hidden="true"
+                    />
+                    <span>Sandboxed TeX Live compilation</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <CheckCircle2
+                        class="size-4 shrink-0 text-academic-accent"
+                        aria-hidden="true"
+                    />
+                    <span>pdfLaTeX, XeLaTeX &amp; LuaLaTeX</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <CheckCircle2
+                        class="size-4 shrink-0 text-academic-accent"
+                        aria-hidden="true"
+                    />
+                    <span>Human-reviewed AI suggestions</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <CheckCircle2
+                        class="size-4 shrink-0 text-academic-accent"
+                        aria-hidden="true"
+                    />
+                    <span>Portable ZIP source export</span>
+                </div>
+            </div>
+        </PublicContainer>
+    </section>
+
     <section id="features" class="py-16 sm:py-20">
         <PublicContainer>
-            <SectionHeading
-                eyebrow="Capabilities"
-                title="Everything around the writing workflow"
-                description="The work behind a research paper involves more than typing. Keep source files, references, compilation, and review connected in one place."
-            />
+            <div
+                class="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"
+            >
+                <SectionHeading
+                    eyebrow="Capabilities"
+                    title="Everything around the writing workflow"
+                    description="The work behind a research paper involves more than typing. Keep source files, references, compilation, and review connected in one place."
+                />
+                <Link
+                    :href="featuresRoute()"
+                    class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-academic-primary hover:text-academic-primary-hover"
+                >
+                    <span>Explore all features</span>
+                    <ArrowRight class="size-4" aria-hidden="true" />
+                </Link>
+            </div>
 
             <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <FeatureCard
-                    v-for="(feature, idx) in coreCapabilities"
+                    v-for="feature in props.features"
                     :key="feature.slug"
                     :feature="feature"
-                    :icon="featureIcons[idx]"
+                    :icon="iconMap[feature.iconKey || 'code']"
                 />
             </div>
         </PublicContainer>
     </section>
 
-    <section
-        id="how-it-works"
-        class="border-y border-academic-border bg-surface py-16 sm:py-20"
-    >
+    <section class="border-y border-academic-border bg-surface py-16 sm:py-20">
         <PublicContainer>
-            <SectionHeading
-                eyebrow="Workflow"
-                title="From first draft to a review-ready PDF"
-                description="A transparent writing pipeline built around standard LaTeX projects."
-            />
+            <div class="grid items-center gap-10 lg:grid-cols-12">
+                <div class="lg:col-span-6">
+                    <SectionHeading
+                        eyebrow="Human-reviewed AI"
+                        title="AI that assists. You stay in control."
+                        description="Ask for help understanding a compilation error, reviewing a section, or proposing a focused revision. Connect your own Gemini, OpenAI, or Anthropic API key in settings—every suggestion is presented for explicit approval."
+                    />
+                    <ul class="mt-6 space-y-3 text-sm text-ink-muted">
+                        <li class="flex items-start gap-2.5">
+                            <CheckCircle2
+                                class="mt-0.5 size-4 shrink-0 text-academic-accent"
+                                aria-hidden="true"
+                            />
+                            <span
+                                >API keys are stored encrypted per user and
+                                never shared across accounts.</span
+                            >
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <CheckCircle2
+                                class="mt-0.5 size-4 shrink-0 text-academic-accent"
+                                aria-hidden="true"
+                            />
+                            <span
+                                >No automatic document overwrites; review diffs
+                                before accepting any edit.</span
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-6">
+                    <div
+                        class="rounded-2xl border border-academic-border bg-canvas p-6 shadow-(--shadow-soft)"
+                    >
+                        <div
+                            class="flex items-center justify-between border-b border-academic-border pb-3"
+                        >
+                            <span class="text-xs font-semibold text-ink"
+                                >AI Assistant — Review Proposal</span
+                            >
+                            <span
+                                class="rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-medium text-academic-primary"
+                            >
+                                Requires approval
+                            </span>
+                        </div>
+                        <p class="mt-4 text-xs font-medium text-ink-muted">
+                            Suggested fix for
+                            <code class="font-mono text-ink"
+                                >Undefined control sequence</code
+                            >
+                            on line 28:
+                        </p>
+                        <pre
+                            class="mt-3 overflow-x-auto rounded-lg border border-academic-border bg-surface p-3 font-mono text-xs text-ink"
+                        ><code>- \hat\bolsymbol&#123;\theta&#125;
++ \hat&#123;\boldsymbol&#123;\theta&#125;&#125;</code></pre>
+                        <div class="mt-4 flex gap-2">
+                            <span
+                                class="rounded-md bg-academic-primary px-3 py-1.5 text-xs font-medium text-white"
+                            >
+                                Apply suggestion
+                            </span>
+                            <span
+                                class="rounded-md border border-academic-border bg-surface px-3 py-1.5 text-xs font-medium text-ink-muted"
+                            >
+                                Dismiss
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </PublicContainer>
+    </section>
+
+    <section id="how-it-works" class="py-16 sm:py-20">
+        <PublicContainer>
+            <div
+                class="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"
+            >
+                <SectionHeading
+                    eyebrow="Workflow"
+                    title="From first draft to a review-ready PDF"
+                    description="A transparent writing pipeline built around standard LaTeX projects."
+                />
+                <Link
+                    :href="howItWorks()"
+                    class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-academic-primary hover:text-academic-primary-hover"
+                >
+                    <span>See full workflow</span>
+                    <ArrowRight class="size-4" aria-hidden="true" />
+                </Link>
+            </div>
 
             <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 <div
                     v-for="item in workflowSteps"
                     :key="item.step"
-                    class="rounded-2xl border border-academic-border bg-canvas p-6"
+                    class="rounded-2xl border border-academic-border bg-surface p-6 shadow-(--shadow-soft)"
                 >
                     <span
                         class="text-xs font-semibold tracking-wider text-academic-primary"
@@ -312,16 +426,30 @@ const workflowSteps = [
         </PublicContainer>
     </section>
 
-    <section id="templates" class="py-16 sm:py-20">
+    <section
+        id="templates"
+        class="border-t border-academic-border bg-surface py-16 sm:py-20"
+    >
         <PublicContainer>
-            <SectionHeading
-                eyebrow="Templates & Documents"
-                title="Structured starting points for academic manuscripts"
-                description="Begin with clean, reproducible templates for journal articles, conference papers, theses, and technical reports."
-            />
+            <div
+                class="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"
+            >
+                <SectionHeading
+                    eyebrow="Templates & Documents"
+                    title="Structured starting points for academic manuscripts"
+                    description="Begin with clean, reproducible templates for journal articles, conference papers, theses, and technical reports."
+                />
+                <Link
+                    :href="templates()"
+                    class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-academic-primary hover:text-academic-primary-hover"
+                >
+                    <span>Browse templates</span>
+                    <ArrowRight class="size-4" aria-hidden="true" />
+                </Link>
+            </div>
             <div class="mt-8 grid gap-6 sm:grid-cols-3">
                 <div
-                    class="rounded-2xl border border-academic-border bg-surface p-6"
+                    class="rounded-2xl border border-academic-border bg-canvas p-6"
                 >
                     <h3 class="text-base font-semibold text-ink">
                         Journal &amp; Article
@@ -332,7 +460,7 @@ const workflowSteps = [
                     </p>
                 </div>
                 <div
-                    class="rounded-2xl border border-academic-border bg-surface p-6"
+                    class="rounded-2xl border border-academic-border bg-canvas p-6"
                 >
                     <h3 class="text-base font-semibold text-ink">
                         Thesis &amp; Dissertation
@@ -343,7 +471,7 @@ const workflowSteps = [
                     </p>
                 </div>
                 <div
-                    class="rounded-2xl border border-academic-border bg-surface p-6"
+                    class="rounded-2xl border border-academic-border bg-canvas p-6"
                 >
                     <h3 class="text-base font-semibold text-ink">
                         Technical Report
@@ -359,7 +487,7 @@ const workflowSteps = [
 
     <section
         id="faq"
-        class="border-t border-academic-border bg-surface py-16 sm:py-20"
+        class="border-t border-academic-border bg-canvas py-16 sm:py-20"
     >
         <PublicContainer narrow>
             <SectionHeading
@@ -367,29 +495,55 @@ const workflowSteps = [
                 title="Frequently asked questions"
                 align="center"
             />
-            <div
-                class="mt-10 divide-y divide-academic-border rounded-2xl border border-academic-border bg-canvas"
-            >
-                <div class="p-6">
-                    <h3 class="text-base font-semibold text-ink">
-                        Which LaTeX compilers are supported?
-                    </h3>
-                    <p class="mt-2 text-sm leading-relaxed text-ink-muted">
-                        Manuscripts compile inside a managed, sandboxed TeX Live
-                        environment supporting standard engines such as
-                        pdfLaTeX, XeLaTeX, and LuaLaTeX.
-                    </p>
-                </div>
-                <div class="p-6">
-                    <h3 class="text-base font-semibold text-ink">
-                        Are AI edits applied automatically?
-                    </h3>
-                    <p class="mt-2 text-sm leading-relaxed text-ink-muted">
-                        No. AI assistance uses your own configured API key and
-                        proposes suggestions or error explanations that you
-                        inspect and explicitly accept or reject.
-                    </p>
-                </div>
+            <div class="mt-10">
+                <FaqAccordion :items="props.faqs" />
+            </div>
+            <div class="mt-6 text-center">
+                <Link
+                    :href="faq()"
+                    class="inline-flex items-center gap-1.5 text-sm font-medium text-academic-primary hover:text-academic-primary-hover"
+                >
+                    <span>View all questions</span>
+                    <ArrowRight class="size-4" aria-hidden="true" />
+                </Link>
+            </div>
+        </PublicContainer>
+    </section>
+
+    <section
+        class="border-t border-academic-border bg-ink py-16 text-white sm:py-20"
+    >
+        <PublicContainer narrow class="text-center">
+            <h2 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Give your research a more focused writing space.
+            </h2>
+            <p class="mx-auto mt-4 max-w-xl text-base text-slate-300">
+                Start a project, explore the workflow, and keep full control
+                over your LaTeX source files.
+            </p>
+            <div class="mt-8 flex flex-wrap justify-center gap-3.5">
+                <Link
+                    v-if="isAuthenticated"
+                    :href="dashboard()"
+                    class="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-slate-100"
+                >
+                    Open workspace
+                </Link>
+                <template v-else>
+                    <Link
+                        v-if="registrationMode === 'open' && props.canRegister"
+                        :href="register()"
+                        class="inline-flex items-center justify-center rounded-lg bg-white px-5 py-3 text-sm font-medium text-ink transition-colors hover:bg-slate-100"
+                    >
+                        Get started
+                    </Link>
+                    <Link
+                        :href="login()"
+                        class="inline-flex items-center justify-center rounded-lg border border-white/25 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                    >
+                        Sign in
+                    </Link>
+                </template>
             </div>
         </PublicContainer>
     </section>

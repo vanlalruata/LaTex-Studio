@@ -1,0 +1,558 @@
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../wayfinder'
+/**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+export const features = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: features.url(options),
+    method: 'get',
+})
+
+features.definition = {
+    methods: ["get","head"],
+    url: '/features',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+features.url = (options?: RouteQueryOptions) => {
+    return features.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+features.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: features.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+features.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: features.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+    const featuresForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: features.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+        featuresForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: features.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\FeatureController::__invoke
+ * @see app/Http/Controllers/PublicSite/FeatureController.php:12
+ * @route '/features'
+ */
+        featuresForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: features.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    features.form = featuresForm
+/**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+export const howItWorks = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: howItWorks.url(options),
+    method: 'get',
+})
+
+howItWorks.definition = {
+    methods: ["get","head"],
+    url: '/how-it-works',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+howItWorks.url = (options?: RouteQueryOptions) => {
+    return howItWorks.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+howItWorks.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: howItWorks.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+howItWorks.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: howItWorks.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+    const howItWorksForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: howItWorks.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+        howItWorksForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: howItWorks.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\HowItWorksController::__invoke
+ * @see app/Http/Controllers/PublicSite/HowItWorksController.php:11
+ * @route '/how-it-works'
+ */
+        howItWorksForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: howItWorks.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    howItWorks.form = howItWorksForm
+/**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+export const templates = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: templates.url(options),
+    method: 'get',
+})
+
+templates.definition = {
+    methods: ["get","head"],
+    url: '/templates',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+templates.url = (options?: RouteQueryOptions) => {
+    return templates.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+templates.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: templates.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+templates.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: templates.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+    const templatesForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: templates.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+        templatesForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: templates.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\TemplateController::__invoke
+ * @see app/Http/Controllers/PublicSite/TemplateController.php:12
+ * @route '/templates'
+ */
+        templatesForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: templates.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    templates.form = templatesForm
+/**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+export const about = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: about.url(options),
+    method: 'get',
+})
+
+about.definition = {
+    methods: ["get","head"],
+    url: '/about',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+about.url = (options?: RouteQueryOptions) => {
+    return about.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+about.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: about.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+about.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: about.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+    const aboutForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: about.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+        aboutForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: about.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\AboutController::__invoke
+ * @see app/Http/Controllers/PublicSite/AboutController.php:11
+ * @route '/about'
+ */
+        aboutForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: about.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    about.form = aboutForm
+/**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+export const faq = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: faq.url(options),
+    method: 'get',
+})
+
+faq.definition = {
+    methods: ["get","head"],
+    url: '/faq',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+faq.url = (options?: RouteQueryOptions) => {
+    return faq.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+faq.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: faq.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+faq.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: faq.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+    const faqForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: faq.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+        faqForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: faq.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\FaqController::__invoke
+ * @see app/Http/Controllers/PublicSite/FaqController.php:12
+ * @route '/faq'
+ */
+        faqForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: faq.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    faq.form = faqForm
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+export const privacy = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: privacy.url(options),
+    method: 'get',
+})
+
+privacy.definition = {
+    methods: ["get","head"],
+    url: '/privacy',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+privacy.url = (options?: RouteQueryOptions) => {
+    return privacy.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+privacy.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: privacy.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+privacy.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: privacy.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+    const privacyForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: privacy.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+        privacyForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: privacy.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\LegalController::privacy
+ * @see app/Http/Controllers/PublicSite/LegalController.php:11
+ * @route '/privacy'
+ */
+        privacyForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: privacy.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    privacy.form = privacyForm
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+export const terms = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: terms.url(options),
+    method: 'get',
+})
+
+terms.definition = {
+    methods: ["get","head"],
+    url: '/terms',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+terms.url = (options?: RouteQueryOptions) => {
+    return terms.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+terms.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: terms.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+terms.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: terms.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+    const termsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: terms.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+        termsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: terms.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\LegalController::terms
+ * @see app/Http/Controllers/PublicSite/LegalController.php:16
+ * @route '/terms'
+ */
+        termsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: terms.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    terms.form = termsForm
+const publicMethod = {
+    features: Object.assign(features, features),
+howItWorks: Object.assign(howItWorks, howItWorks),
+templates: Object.assign(templates, templates),
+about: Object.assign(about, about),
+faq: Object.assign(faq, faq),
+privacy: Object.assign(privacy, privacy),
+terms: Object.assign(terms, terms),
+}
+
+export default publicMethod
