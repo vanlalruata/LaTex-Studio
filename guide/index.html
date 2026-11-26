@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Complete implementation plan, architecture, tier-wise and phase-wise roadmap for an independent LaTeX research writing platform.">
+<title>Independent LaTeX Research Platform — Implementation Guide</title>
+<style>
+:root{--ink:#1d2939;--muted:#667085;--blue:#315fbd;--line:#e4e9f1;--green:#18794e}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f6f8fb;color:var(--ink);font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(120deg,#14233b,#243f68);color:#fff;padding:52px max(24px,calc((100% - 1180px)/2)) 44px}
+header .eyebrow{color:#b8c9e7;text-transform:uppercase;letter-spacing:.13em;font-size:.78rem;font-weight:700}
+header h1{font-size:clamp(2rem,5vw,3.35rem);line-height:1.12;max-width:950px;margin:14px 0}
+header p{color:#d8e2f2;max-width:850px;font-size:1.08rem}
+.meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}.meta span{border:1px solid #526887;border-radius:99px;padding:5px 12px;font-size:.82rem;color:#e7edf8}
+.layout{max-width:1440px;margin:auto;display:grid;grid-template-columns:285px minmax(0,1fr);gap:30px;padding:28px 24px}
+nav{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 8px 30px #1b2d4a0a}
+nav strong{display:block;margin:0 0 10px;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:#718096}
+nav a{display:block;color:#45536a;text-decoration:none;font-size:.87rem;padding:6px 8px;border-radius:7px}nav a:hover{background:#eef3fc;color:var(--blue)}
+main{min-width:0;background:#fff;border:1px solid var(--line);border-radius:16px;padding:clamp(22px,4vw,52px);box-shadow:0 8px 30px #1b2d4a0a}
+section{padding:0 0 34px;margin:0 0 34px;border-bottom:1px solid var(--line);scroll-margin-top:18px}section:last-child{border:0;margin:0}
+h2{font-size:1.7rem;line-height:1.25;margin:0 0 18px;color:#1c2b43}h3{font-size:1.12rem;margin:24px 0 8px;color:#263b5c}p{margin:10px 0 14px}li{margin:6px 0}
+.callout{background:#eff5ff;border-left:4px solid var(--blue);padding:15px 18px;border-radius:8px;margin:18px 0}
+figure{margin:22px 0 26px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#f5f7fb}figure img{display:block;width:100%;height:auto}figcaption{font-size:.84rem;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
+.table-wrap{overflow-x:auto;margin:18px 0}table{border-collapse:collapse;width:100%;font-size:.91rem}th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f2f5fa;color:#34445e}
+.tier{border:1px solid var(--line);border-radius:11px;padding:15px 18px;margin:14px 0;background:#fbfcfe}.tier h3{margin:0 0 5px}.tier p{margin:5px 0}
+.diagram{display:flex;flex-direction:column;align-items:center;gap:7px;margin:25px auto;max-width:670px}.node{width:100%;padding:16px;border:1px solid #cad7eb;background:#f5f8ff;border-radius:12px;text-align:center;display:flex;flex-direction:column;gap:3px}.node b{color:#254b91}.node span{font-size:.9rem;color:#596b86}.arrow{font-weight:700;color:#7890b4}
+.state-flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f6f8fb;border:1px solid var(--line);padding:14px;border-radius:10px}.state-flow span{background:#fff;border:1px solid #dfe6f0;padding:7px 10px;border-radius:8px;font-size:.83rem}.state-flow .success{background:#eaf7ef;color:var(--green)}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#182338;color:#e5edf8;border-radius:12px;padding:20px;font:13px/1.6 ui-monospace,Consolas,monospace;overflow-x:auto}code{background:#f0f3f8;border-radius:4px;padding:2px 5px;font-size:.9em}
+footer{max-width:1440px;margin:0 auto;padding:0 24px 36px;color:var(--muted);font-size:.86rem}
+@media(max-width:900px){.layout{grid-template-columns:1fr;padding:14px}nav{position:relative;top:auto;max-height:none}nav div{columns:2}main{padding:22px}header{padding:38px 22px}}
+@media(max-width:520px){nav div{columns:1}.state-flow{gap:5px}.state-flow b{display:none}header h1{font-size:2rem}}
+@media print{body{background:#fff;font-size:11pt}header{padding:25px;background:#fff;color:#111;border-bottom:2px solid #333}header p,header .eyebrow,.meta span{color:#333}.layout{display:block;padding:0}nav{display:none}main{border:0;box-shadow:none;padding:0}section{break-inside:avoid}figure{break-inside:avoid}footer{padding:10px}}
+</style></head><body>
+<header><div class="eyebrow">Architecture · Implementation · Delivery roadmap</div>
+<h1>Independent LaTeX Research Writing Platform</h1>
+<p>Complete implementation plan, system architecture, tier-wise product roadmap, phase-wise engineering sequence, illustrative UI screenshots, security model and master development prompt.</p>
+<div class="meta"><span>Version 1.0</span><span>26 November 2026</span><span>Laravel 13 · Vue 3 · TypeScript</span><span>Self-hosted architecture</span></div></header>
+<div class="layout"><nav><strong>Guide contents</strong><div><a href="#overview">1. Product vision and implementation principles</a>
+<a href="#stack">2. Technology baseline</a>
+<a href="#architecture">3. System architecture</a>
+<a href="#engines">4. First-party engines and replaceable adapters</a>
+<a href="#workspace">5. Workspace and editor design</a>
+<a href="#compilation">6. Compilation pipeline and PDF lifecycle</a>
+<a href="#math">7. Formula hover and mathematical engine</a>
+<a href="#conversion">8. Document conversion architecture</a>
+<a href="#ocr">9. Image-to-LaTeX recognition</a>
+<a href="#tiers">10. Tier-wise product roadmap</a>
+<a href="#phases">11. Phase-wise implementation roadmap</a>
+<a href="#data">12. Data model, APIs and events</a>
+<a href="#security">13. Security, reliability and operations</a>
+<a href="#testing">14. Testing and release gates</a>
+<a href="#prompt">15. Master development prompt for an AI coding agent</a>
+<a href="#references">16. Research references and governance</a>
+<a href="#next">17. Immediate next actions and first-release definition</a></div></nav><main><section id="overview"><h2>1. Product vision and implementation principles</h2>
+<p>This guide defines a staged route to an independently engineered, self-hosted, browser-based LaTeX research-writing platform. The application, workflows, project model, orchestration, editor intelligence, diagnostics, math/document models and conversion framework should be first-party code.</p>
+<p><strong>Important boundary:</strong> an independent application does not require implementing a complete TeX-compatible typesetting engine before the first release. Use a secure, replaceable TeX Live compatibility backend for real manuscript compilation while progressively building the platform's own LaTeX analysis, math, document and orchestration engines. A full TeX engine is a separate long-term research programme.</p>
+<div class="callout"><strong>Guiding rule:</strong> own the product and its interfaces; use mature compatibility components behind replaceable adapters; replace them only when the independent implementation passes documented tests.</div></section>
+<section id="stack"><h2>2. Technology baseline</h2>
+<div class="table-wrap"><table><thead><tr><th>Layer</th><th>Baseline</th><th>Role</th></tr></thead><tbody>
+<tr><td>Backend</td><td>Laravel 13 / PHP</td><td>Identity, projects, policies, APIs, orchestration and administration.</td></tr>
+<tr><td>Frontend</td><td>Inertia.js 3, Vue 3.5, TypeScript, Tailwind CSS 4.1</td><td>Workspace UI, editor/viewer integration and client-side services.</td></tr>
+<tr><td>Editor</td><td>Monaco Editor</td><td>Source editing and custom LaTeX providers.</td></tr><tr><td>PDF viewer</td><td>PDF.js</td><td>Rendering, search, zoom and navigation.</td></tr>
+<tr><td>Data/queue</td><td>MySQL + Redis</td><td>Metadata, jobs, locks, cache and throttling.</td></tr><tr><td>Realtime</td><td>Laravel Reverb</td><td>Build status and later collaboration events.</td></tr>
+<tr><td>Workers</td><td>Docker on Ubuntu</td><td>Isolated compilation, conversion and OCR.</td></tr><tr><td>Compiler</td><td>TeX Live; optional Tectonic adapter</td><td>Compatibility backend during independent engine development.</td></tr>
+<tr><td>Conversion</td><td>First-party framework; optional Pandoc adapter</td><td>DOCX, LaTeX, Markdown, HTML, EPUB and ODT.</td></tr></tbody></table></div>
+<p>Use PHP for application logic and orchestration; TypeScript for browser editor services, parsers and math AST; Python only if required by OCR model ecosystems. Consider Rust/C++ only for measured bottlenecks.</p></section>
+<section id="architecture"><h2>3. System architecture</h2>
+<p>Separate the product into presentation, control, execution and engine planes. Never compile LaTeX inside an HTTP request or directly from a Laravel controller.</p>
+<div class="diagram"><div class="node"><b>Browser / Presentation</b><span>Vue + Inertia + TypeScript</span><span>Monaco · PDF.js · Workspace UI</span></div><div class="arrow">⇅ HTTPS / authorized APIs</div><div class="node"><b>Laravel Control Plane</b><span>Auth · Organizations · Projects · Policies</span><span>Files · Revisions · Build orchestration · Audit</span></div><div class="arrow">⇅ Redis queues · MySQL · Reverb</div><div class="node"><b>Isolated Execution Plane</b><span>Compiler · Conversion · OCR workers</span><span>Per-job container, quotas, no secrets</span></div><div class="arrow">⇅ Private artifact storage</div><div class="node"><b>First-party Engine Plane</b><span>LaTeX analysis · Math AST · Document model</span><span>Diagnostics · Dependency analysis · Build manager</span></div></div>
+<h3>Trust boundaries</h3><ul><li>All uploaded projects are untrusted.</li><li>Workers receive immutable snapshots, not live project directories.</li><li>Workers receive no application secrets or Docker socket.</li><li>Artifacts are private and served only after authorization.</li><li>Jobs have strict time, memory, CPU, process and disk limits.</li></ul></section>
+<section id="engines"><h2>4. First-party engines and replaceable adapters</h2>
+<div class="table-wrap"><table><thead><tr><th>Engine</th><th>First-party responsibility</th><th>Initial boundary</th></tr></thead><tbody>
+<tr><td>Platform/orchestration</td><td>Snapshots, scheduling, build state machine, logs, diagnostics and artifact publishing.</td><td>Build first; no need to implement TeX.</td></tr>
+<tr><td>LaTeX language</td><td>Lexer, source-preserving syntax tree, command/environment registry, symbols and diagnostics.</td><td>Editor-analysis subset, not full TeX interpreter.</td></tr>
+<tr><td>Mathematics</td><td>Math lexer/parser, AST, validation and renderer interface.</td><td>Common constructs first; renderer can initially be an adapter.</td></tr>
+<tr><td>Document model</td><td>Structured academic model and loss-aware import/export pipeline.</td><td>Common structures; preserve unknown TeX as raw nodes.</td></tr>
+<tr><td>Dependency analysis</td><td>Index inputs, images, classes, packages and bibliography resources.</td><td>Static analysis, not complete CTAN resolver.</td></tr>
+<tr><td>Typesetting</td><td>Long-term TeX-compatible layout, font, box/glue, page and PDF engine.</td><td>Research only; not an MVP dependency.</td></tr></tbody></table></div>
+<p>LaTeX is a macro language with catcodes, expansion, conditionals and package-defined syntax. A parser that highlights source and finds labels must not be described as a complete TeX interpreter.</p></section>
+<section id="workspace"><h2>5. Workspace and editor design</h2>
+<p>The desktop workspace uses three resizable regions: left project explorer, centre source editor and right PDF preview. On narrow screens, use stacked or tabbed panels.</p>
+<figure><img src="assets/02-editor-pdf-workspace.svg" alt="Illustrative editor and PDF workspace"><figcaption>Figure 1. Illustrative workspace mockup, not a screenshot of a deployed application.</figcaption></figure>
+<ul><li>Project tree, folders, upload/download, rename, move and delete.</li><li>Monaco tabs, dirty state, acknowledged autosave, snippets, search and folding.</li><li>LaTeX highlighting for .tex, .bib, .cls, .sty and related files.</li><li>Project-aware completion for citations, labels, references, macros and file paths.</li><li>Diagnostics with severity, source range and click-to-navigate.</li><li>PDF preview with thumbnails, zoom, page navigation, search and download.</li></ul></section>
+<section id="compilation"><h2>6. Compilation pipeline and PDF lifecycle</h2>
+<figure><img src="assets/03-compilation-diagnostics.svg" alt="Compilation output and diagnostics mockup"><figcaption>Figure 2. Illustrative build result and diagnostics screen.</figcaption></figure>
+<p>Each build is bound to an immutable source revision and a pinned worker image. Recommended lifecycle:</p><div class="state-flow"><span>Requested</span><b>→</b><span>Snapshotting</span><b>→</b><span>Queued</span><b>→</b><span>Compiling</span><b>→</b><span>Validating</span><b>→</b><span class="success">Succeeded / Failed / Timed out</span></div>
+<p>Use latexmk for multi-pass runs. Support pdfLaTeX, XeLaTeX and LuaLaTeX after testing. Add BibTeX/Biber, MakeIndex and MakeGlossaries through explicit worker capabilities.</p>
+<div class="callout"><strong>Critical invariant:</strong> a failed build must never replace the last successful PDF. The viewer points to a successful build ID, not a mutable main.pdf path.</div>
+<p>Validate output existence, non-zero size, PDF structure and artifact storage before publishing success. Retain logs, diagnostics, compiler version, source revision, image digest, duration and resource metrics.</p></section>
+<section id="math"><h2>7. Formula hover and mathematical engine</h2>
+<figure><img src="assets/04-math-hover.svg" alt="Formula hover preview mockup"><figcaption>Figure 3. Illustrative formula hover preview.</figcaption></figure>
+<p>Build math support separately from the general LaTeX parser. Start with math-region detection and a parser for groups, scripts, fractions, roots, matrices, delimiters, accents, operators and AMS environments.</p>
+<ul><li>Detect the complete formula range under the pointer.</li><li>Cache by source hash and renderer version.</li><li>Debounce hover work and never block typing.</li><li>Handle malformed expressions gracefully.</li><li>Allow pinning or disabling previews.</li><li>Never change source text during preview.</li></ul>
+<p>Initial environments: inline/display math, equation/equation*, align/align*, gather, multline, split, cases and matrix families. The first renderer can be a replaceable adapter; develop an independent renderer for a defined subset only after visual regression tests exist.</p></section>
+<section id="conversion"><h2>8. Document conversion architecture</h2>
+<figure><img src="assets/05-conversion.svg" alt="Document conversion workflow mockup"><figcaption>Figure 4. Illustrative conversion pipeline and report.</figcaption></figure>
+<p>Define a platform-owned intermediate document model (IDM) for metadata, headings, paragraphs, citations, references, equations, figures, tables, algorithms, footnotes and appendices. Use import → IDM → export, with a report that records preserved, transformed, unsupported and omitted content.</p>
+<p>Target DOCX ↔ LaTeX, Markdown ↔ LaTeX, then HTML, EPUB and ODT. Conversion is best-effort unless the exact format pair passes a round-trip test. Complex publisher classes, custom macros, floats, tracked changes and advanced tables may not convert exactly. Always retain the original and write output separately.</p></section>
+<section id="ocr"><h2>9. Image-to-LaTeX recognition</h2>
+<figure><img src="assets/06-ocr.svg" alt="Image to LaTeX OCR workflow mockup"><figcaption>Figure 5. Human-reviewed equation recognition workflow.</figcaption></figure>
+<ol><li>Upload or crop a formula image.</li><li>Validate type, size, dimensions and ownership.</li><li>Preprocess rotation, contrast and crop.</li><li>Run an OCR provider and return candidate LaTeX.</li><li>Show confidence metadata where available and render a preview.</li><li>Let the user edit and approve.</li><li>Insert as inline, display or numbered equation only after confirmation.</li></ol>
+<p>Benchmark CPU inference on the actual VPS. A Python service may be justified by model availability, but it must be isolated and replaceable. Do not silently overwrite source or transmit entire projects when only a cropped formula is needed.</p></section>
+<section id="tiers"><h2>10. Tier-wise product roadmap</h2>
+<div class="tier"><h3>Tier 0 — Engineering foundation</h3><p>Repository conventions, CI, auth skeleton, MySQL/Redis, Docker worker proof, Monaco/PDF.js prototypes, real manuscript compilation and VPS benchmarks.</p><b>Exit:</b> multi-file project compiles securely and PDF is displayed.</div>
+<div class="tier"><h3>Tier 1 — Core authoring platform</h3><p>Dashboard, project/file CRUD, Monaco, autosave, revisions, manual compile, logs, PDF.js, three TeX engines, ZIP import/export and sandbox quotas.</p><b>Exit:</b> create/import, edit, compile, inspect diagnostics and download reliably.</div>
+<div class="tier"><h3>Tier 2 — Research-grade environment</h3><p>Project-aware completion, LaTeX parser v1, math hover, bibliography workflows, SyncTeX, build history, common packages and publisher templates.</p><b>Exit:</b> representative research manuscripts pass the compatibility corpus.</div>
+<div class="tier"><h3>Tier 3 — Conversion and AI assistance</h3><p>IDM v1, DOCX/Markdown conversion reports, OCR review workflow, formula AST improvements and optional AI provider abstraction.</p><b>Exit:</b> conversion limitations are transparent and OCR requires approval.</div>
+<div class="tier"><h3>Tier 4 — Collaboration and advanced authoring</h3><p>Realtime collaboration, comments, review threads, Git/branching, organization administration and structured visual editing.</p><b>Exit:</b> concurrency, authorization and audit tests pass.</div>
+<div class="tier"><h3>Tier 5 — Independent engine research</h3><p>First-party math renderer subset, richer LaTeX analysis, document exporters, deterministic dependency resolution and typesetting research.</p><b>Exit:</b> each engine has scope, regression tests, benchmarks and a compatibility matrix.</div></section>
+<section id="phases"><h2>11. Phase-wise implementation roadmap</h2>
+<div class="table-wrap"><table><thead><tr><th>Phase</th><th>Focus</th><th>Deliverables</th><th>Gate</th></tr></thead><tbody>
+<tr><td>P0</td><td>Discovery/specification</td><td>Requirements, use cases, threat model, licence register, test corpus and risk register.</td><td>Approved spec</td></tr>
+<tr><td>P1</td><td>Feasibility prototypes</td><td>Monaco, PDF.js, Docker TeX Live, bibliography, SyncTeX, conversion and OCR benchmarks.</td><td>Feasibility report</td></tr>
+<tr><td>P2</td><td>Application foundation</td><td>Laravel structure, auth, project-scoped policies, organizations, storage, queues, audit and CI.</td><td>Secure skeleton</td></tr>
+<tr><td>P3</td><td>Workspace</td><td>Dashboard, projects, file tree, tabs, Monaco, autosave and revision snapshots.</td><td>Editing workflow</td></tr>
+<tr><td>P4</td><td>Compilation v1</td><td>Snapshots, worker protocol, TeX Live, latexmk, logs and artifact lifecycle.</td><td>Reproducible builds</td></tr>
+<tr><td>P5</td><td>PDF and diagnostics</td><td>PDF.js, build status, error parser, stale state and last-successful PDF.</td><td>End-to-end loop</td></tr>
+<tr><td>P6</td><td>Language/math v1</td><td>Lexer, source spans, parser subset, completion, references and formula hover.</td><td>Editor intelligence</td></tr>
+<tr><td>P7</td><td>Research workflows</td><td>BibTeX/Biber, index/glossary, TikZ/PGFPlots, templates and SyncTeX.</td><td>Corpus pass</td></tr>
+<tr><td>P8</td><td>Conversion/OCR</td><td>IDM, DOCX/Markdown adapters, reports and OCR approval workflow.</td><td>Conversion/OCR QA</td></tr>
+<tr><td>P9</td><td>Collaboration</td><td>Realtime, comments, roles, audit and Git/branch strategy.</td><td>Concurrency/security pass</td></tr>
+<tr><td>P10</td><td>Independent engines</td><td>Math renderer subset, richer analysis, IDM exporters and typesetting research.</td><td>Evidence-based gate</td></tr>
+</tbody></table></div>
+<h3>Phase 0 — Discovery and specification</h3><ul><li>Define personas: researcher, student, supervisor, group and administrator.</li><li>Build requirements traceability matrix and acceptance criteria.</li><li>Research public products for feature expectations; do not copy code by default.</li><li>Collect real and synthetic test projects.</li><li>Record VPS CPU, RAM, disk, concurrency and backup expectations.</li></ul>
+<h3>Phase 1 — Feasibility prototypes</h3><ol><li>Monaco in Vue with custom LaTeX language definition.</li><li>PDF.js viewer.</li><li>Dockerized TeX Live compiling a multi-file publisher-style project.</li><li>latexmk plus BibTeX/Biber and cross-references.</li><li>SyncTeX forward/inverse navigation.</li><li>DOCX ↔ LaTeX conversion quality test.</li><li>CPU OCR latency/memory benchmark.</li><li>Concurrent build, disk and peak-memory benchmark.</li></ol>
+<h3>Phase 2 — Foundation</h3><p>Implement identity, optional MFA, organization and project membership, project-scoped policies, private storage, queues, audit events, CI, static analysis and deployment.</p>
+<h3>Phase 3 — Workspace</h3><p>Implement file operations, tabs, Monaco, dirty state, acknowledged autosave and immutable source revisions. A build may only compile a committed snapshot.</p>
+<h3>Phase 4–5 — Compilation and PDF</h3><p>Implement worker protocol, state machine, quotas, artifacts, diagnostics and PDF viewer. Failed builds preserve the previous successful PDF.</p>
+<h3>Phase 6–7 — Language and research support</h3><p>Add deterministic parser diagnostics, project index, completion, bibliography, indexes/glossaries, template validation and manuscript corpus.</p>
+<h3>Phase 8–10 — Conversion, OCR, collaboration and independent engines</h3><p>Introduce these only after source persistence and compilation are dependable. Treat each independent engine as a separate tested programme.</p></section>
+<section id="data"><h2>12. Data model, APIs and events</h2>
+<p>Core entities: User, Organization, OrganizationMember, Project, ProjectMember, ProjectFile, ProjectRevision, Compilation, BuildArtifact, Diagnostic, ConversionJob, OcrJob, Template, Comment/ReviewThread, AuditEvent and UsageRecord.</p>
+<p>Keep file contents in private storage rather than database blobs. Store checksums, logical paths, storage keys, sizes and revision manifests. Every file, build, conversion and artifact endpoint must check project membership.</p>
+<p>Suggested API groups: <code>/api/v1/projects</code>, <code>/api/v1/projects/{project}/files</code>, <code>/api/v1/projects/{project}/revisions</code>, <code>/api/v1/projects/{project}/compilations</code>, <code>/api/v1/compilations/{id}</code>, <code>/api/v1/projects/{project}/conversions</code>, and <code>/api/v1/projects/{project}/ocr-jobs</code>.</p>
+<p>Realtime events: CompilationQueued, CompilationStarted, CompilationProgress, CompilationCompleted, CompilationFailed, ProjectFileUpdated, ConversionCompleted and OcrRecognitionCompleted. Authorize every private channel.</p></section>
+<section id="security"><h2>13. Security, reliability and operations</h2>
+<ul><li>Run workers non-root; no Docker socket, app secrets or unrestricted network.</li><li>Disable unrestricted shell escape; external execution requires separately reviewed capability.</li><li>Use read-only base images and per-build writable workspaces.</li><li>Enforce CPU, memory, process, wall-time, disk, file-count and output limits at container boundary.</li><li>Validate ZIP extraction against traversal, symlink and archive-bomb attacks.</li><li>Use Laravel policies on every project and artifact operation; an unguessable ID is not authorization.</li><li>Back up MySQL and artifacts off-server; perform restore drills.</li><li>Use bounded retries, idempotent jobs, dead-letter handling, health checks and orphan cleanup.</li><li>Keep manuscript contents private; disclose external AI/OCR data transfer.</li></ul>
+<p>Operational profiles may include Personal, Researcher, Group and Institution. Set quotas only after benchmarking the target VPS.</p></section>
+<section id="testing"><h2>14. Testing and release gates</h2>
+<ul><li>Unit tests: parser, AST, path validation, state transitions, diagnostics and conversion mapping.</li><li>Feature tests: authorization, project/file operations, revisions and build requests.</li><li>Integration tests: Redis, worker protocol, storage and realtime events.</li><li>Compiler corpus: articles, thesis, Beamer, BibTeX/Biber, TikZ/PGFPlots, Unicode, glossaries and supplementary files.</li><li>Browser E2E: edit → save → compile → view PDF; include failed build and recovery.</li><li>Security tests: path traversal, archive bombs, symlinks, shell escape, IDOR and resource exhaustion.</li><li>Load tests: concurrent autosaves, queue depth and parallel builds.</li><li>Visual tests: math rendering and workspace layout.</li></ul>
+<p>A phase is complete only when acceptance criteria, automated tests, security review, failure/recovery tests and documentation are complete. UI polish alone is not a release gate.</p></section>
+<section id="prompt"><h2>15. Master development prompt for an AI coding agent</h2>
+<p>Use this prompt after reviewing and approving the architecture. It directs the coding agent to work in bounded, reviewable slices.</p>
+<pre class="prompt">ROLE
+Act as a principal software architect, senior Laravel/PHP engineer, senior Vue/TypeScript engineer, compiler-systems engineer and application-security engineer.
+
+OBJECTIVE
+Design and implement an independent self-hosted browser-based LaTeX research-writing platform. Do not fork or clone Overleaf or another complete editor. Build first-party project workflows, authorization, orchestration, diagnostics, editor intelligence, LaTeX analysis, math/document models and conversion workflows.
+
+FIXED STACK
+Laravel 13/PHP; Inertia.js 3; Vue 3.5; TypeScript; Tailwind CSS 4.1; MySQL; Redis; Laravel Reverb when needed; Monaco Editor; PDF.js; Docker-isolated workers on Ubuntu. Respect exact versions in lockfiles.
+
+OWNERSHIP AND ADAPTERS
+Own the application, project/file/revision model, build orchestration, diagnostics, editor providers, LaTeX lexer/parser, math AST, document intermediate model and conversion workflow. Keep compiler, conversion, OCR, storage and renderer behind replaceable interfaces. TeX Live is initially a compatibility backend. Pandoc and OCR models are optional adapters. Do not claim a custom parser compiles arbitrary LaTeX. A full TeX-compatible engine is long-term research.
+
+ARCHITECTURE
+Separate presentation, Laravel control plane, isolated execution plane and first-party engine plane. Never compile in an HTTP request. Compile immutable snapshots. Every build is tied to a source revision and pinned worker image. A failed build must never replace the last successful PDF.
+
+SECURITY
+Treat uploaded source as untrusted. Run workers non-root, with no app secrets, no Docker socket, network disabled by default, unrestricted shell escape disabled, and strict CPU/memory/process/time/disk/file/output quotas. Validate archives, paths and symlinks. Authorize every project/file/build/conversion/artifact endpoint. Prevent IDOR. Keep artifacts private.
+
+RELEASE ORDER
+R1: authentication, projects/files, Monaco, autosave, revisions, TeX Live workers, latexmk, build logs, PDF.js, private artifacts.
+R2: LaTeX parser subset, project-aware completion, diagnostics, math hover, bibliography, common workflows, SyncTeX.
+R3: document model, DOCX/LaTeX/Markdown conversion reports, image-to-LaTeX OCR with explicit user approval.
+R4: collaboration, comments, Git/branching, visual editor.
+Research: first-party math renderer, richer LaTeX analysis, exporters and typesetting prototype.
+
+IMPLEMENTATION RULES
+1. Do not generate the entire codebase in one response or commit.
+2. Inspect repository and installed dependency versions first.
+3. Before each phase, list files/modules, migrations, APIs, security implications and acceptance tests.
+4. Implement one bounded vertical slice at a time.
+5. Use typed DTOs, enums, policies, form requests and clear domain boundaries.
+6. Keep controllers thin; avoid giant services and duplicated logic.
+7. Make jobs idempotent; define retries, timeouts, cancellation and failure states.
+8. Add automated positive, negative and authorization tests with each feature.
+9. Do not invent dependency APIs; inspect installed version and documentation.
+10. Explain each new dependency's purpose, licence, maintenance and alternatives.
+11. Do not copy code from research repositories without a separate licence review.
+12. Preserve originals during conversion and OCR; never silently overwrite source.
+13. Do not expose filesystem paths, secrets or private artifact identifiers.
+14. Provide runnable code for each approved slice, not pseudocode presented as production code.
+15. Update architecture, deployment instructions, environment examples and tests.
+
+FIRST TASK — NO CODING YET
+Produce a requirements traceability matrix, component/service boundary diagram, untrusted-compilation threat model, initial ER model, compiler-worker protocol, Phase 0/1 feasibility checklist, unresolved decisions and acceptance criteria for the first end-to-end milestone. Then wait for approval. The first proof must compile a representative multi-file academic manuscript in a resource-limited Docker worker and display the successful PDF in the browser.</pre></section>
+<section id="references"><h2>16. Research references and governance</h2>
+<p>Potential references for feature discovery include Overleaf Community Edition/Toolkit, Aldine, ColTex, TeXlyre, Fidus Writer, SwiftLaTeX, CoCalc, TeXstudio, LyX, TeXmacs, LaTeX Workshop, TexLab, Monaco, PDF.js, KaTeX, MathJax, Pandoc, Tectonic and relevant OCR projects.</p>
+<p>These are not an approved dependency list. Verify repository ownership, maintenance, exact commit/tag, licence, package provenance and operational fit before adoption. Maintain a licence register. Do not copy source or assets simply because a repository is public. Obtain legal review for distribution and copyleft obligations.</p></section>
+<section id="next"><h2>17. Immediate next actions and first-release definition</h2>
+<ol><li>Approve or amend this architecture baseline.</li><li>Record actual VPS CPU, RAM, disk and expected concurrency.</li><li>Choose a test corpus: simple article, publisher manuscript, thesis, bibliography-heavy paper and TikZ/PGFPlots project.</li><li>Complete Phase 1 prototypes and benchmark report.</li><li>Freeze first-release scope and acceptance criteria.</li><li>Start Laravel implementation only after compilation and storage architecture are validated.</li></ol>
+<p><strong>First public release is successful when:</strong> users can securely create/import projects, edit and autosave, compile common multi-file academic manuscripts, use bibliography and references in the tested corpus, view the latest successful PDF, inspect diagnostics, retain the last successful PDF after failure, and rely on isolated workers with enforced quotas and tested backups.</p>
+<div class="callout"><strong>Final recommendation:</strong> build a usable authoring and compilation platform early. Own the workflows, interfaces, data model and progressively replaceable engines. Do not delay the product by attempting to reproduce the complete TeX ecosystem before the first release.</div></section></main></div>
+<footer>Prepared as an architecture and implementation blueprint. All included product screens are illustrative SVG mockups, not screenshots of an existing deployed application. Technical versions, package licences and worker image contents must be revalidated before implementation.</footer>
+</body></html>
