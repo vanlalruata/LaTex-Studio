@@ -58,6 +58,27 @@ export function validateTableDocument(doc: TableDocument): ValidationIssue[] {
         });
     }
 
+    if (
+        doc.layout.fitMode !== 'none' &&
+        (doc.style.fontSize === 'tiny' || doc.style.fontSize === 'scriptsize')
+    ) {
+        issues.push({
+            id: 'tiny-font-with-scaling',
+            severity: 'warning',
+            message:
+                'Combining Fit-to-Page scaling with \\tiny or \\scriptsize may produce unreadable text.',
+        });
+    }
+
+    if (doc.layout.fitMode !== 'none' && doc.columns.length > 8) {
+        issues.push({
+            id: 'wide-table-scaling',
+            severity: 'info',
+            message:
+                'Wide table with many columns may scale aggressively; consider landscape orientation or smaller \\tabcolsep.',
+        });
+    }
+
     // Check cells for unbalanced braces in raw latex/math mode
     for (const row of doc.rows) {
         for (const col of doc.columns) {

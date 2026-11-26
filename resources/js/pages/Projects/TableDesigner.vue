@@ -17,6 +17,7 @@ import {
     MoveUp,
     Plus,
     Redo2,
+    RotateCw,
     Rows3,
     Save,
     Split,
@@ -730,6 +731,15 @@ function renderCellMath(tex: string): string {
                         <span>Split</span>
                     </Button>
 
+                    <Button
+                        :variant="doc.layout.orientation === 'landscape' ? 'default' : 'outline'"
+                        size="sm"
+                        @click="doc.layout.orientation = doc.layout.orientation === 'landscape' ? 'portrait' : 'landscape'"
+                    >
+                        <RotateCw class="size-3.5" />
+                        <span>Landscape</span>
+                    </Button>
+
                     <Button variant="outline" size="sm" @click="downloadTex">
                         <Download class="size-3.5" />
                         <span>Export .tex</span>
@@ -982,6 +992,12 @@ function renderCellMath(tex: string): string {
                                                 :rowspan="doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster ? doc.cells[cellKey(row.id, col.id)]?.merge?.rowSpan : 1"
                                                 :colspan="doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster ? doc.cells[cellKey(row.id, col.id)]?.merge?.colSpan : 1"
                                                 class="relative border border-slate-200 p-0 transition-colors"
+                                                :style="{
+                                                    backgroundColor:
+                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.backgroundColor ||
+                                                        row.backgroundColor ||
+                                                        undefined,
+                                                }"
                                                 :class="[
                                                     selectedCellKeys.has(cellKey(row.id, col.id))
                                                         ? 'ring-2 ring-indigo-500 ring-inset bg-indigo-50/30'
@@ -1308,6 +1324,134 @@ function renderCellMath(tex: string): string {
                                             <Label class="text-[11px]">\arraystretch</Label>
                                             <Input v-model.number="doc.style.arrayStretch" type="number" step="0.1" min="0.5" max="3" placeholder="1.0" class="mt-1 h-7 font-mono text-xs" />
                                         </div>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="layout">
+                                <AccordionTrigger>Layout &amp; Fit to Page</AccordionTrigger>
+                                <AccordionContent class="space-y-3">
+                                    <div>
+                                        <Label class="text-[11px]">Orientation</Label>
+                                        <select
+                                            v-model="doc.layout.orientation"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                        >
+                                            <option value="portrait">Portrait</option>
+                                            <option value="landscape">Landscape</option>
+                                        </select>
+                                    </div>
+                                    <div v-if="doc.layout.orientation === 'landscape'">
+                                        <Label class="text-[11px]">Landscape Method</Label>
+                                        <select
+                                            v-model="doc.layout.landscapeMethod"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                        >
+                                            <option value="sidewaystable">sidewaystable (rotating)</option>
+                                            <option value="pdflscape">landscape page (pdflscape)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <Label class="text-[11px]">Fit to Page</Label>
+                                        <select
+                                            v-model="doc.layout.fitMode"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                        >
+                                            <option value="none">Natural width</option>
+                                            <option value="textwidth">Fit to text width</option>
+                                            <option value="pagewidth">Fit to page width</option>
+                                            <option value="pageheight">Fit to page height</option>
+                                            <option value="both">Fit to width &amp; height</option>
+                                        </select>
+                                    </div>
+                                    <div v-if="doc.layout.fitMode !== 'none'">
+                                        <Label class="text-[11px]">Scaling Method</Label>
+                                        <select
+                                            v-model="doc.layout.fitMethod"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                        >
+                                            <option value="resizebox">\resizebox (graphicx)</option>
+                                            <option value="adjustbox">adjustbox</option>
+                                            <option value="tabularx">tabularx</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <Label class="text-[11px]">Table Rotation</Label>
+                                        <select
+                                            v-model.number="doc.layout.rotationDegrees"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                        >
+                                            <option :value="0">0&deg; (None)</option>
+                                            <option :value="90">90&deg;</option>
+                                            <option :value="180">180&deg;</option>
+                                            <option :value="270">270&deg;</option>
+                                        </select>
+                                    </div>
+                                    <label class="flex items-center gap-2 text-xs">
+                                        <input v-model="doc.layout.wideTwoColumn" type="checkbox" />
+                                        <span>Two-column span (table*)</span>
+                                    </label>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="typography">
+                                <AccordionTrigger>Typography &amp; Colors</AccordionTrigger>
+                                <AccordionContent class="space-y-3">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <Label class="text-[11px]">Font Size</Label>
+                                            <select
+                                                v-model="doc.style.fontSize"
+                                                class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                            >
+                                                <option value="tiny">\tiny</option>
+                                                <option value="scriptsize">\scriptsize</option>
+                                                <option value="footnotesize">\footnotesize</option>
+                                                <option value="small">\small</option>
+                                                <option value="normalsize">\normalsize</option>
+                                                <option value="large">\large</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <Label class="text-[11px]">Font Family</Label>
+                                            <select
+                                                v-model="doc.style.fontFamily"
+                                                class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                            >
+                                                <option value="default">Default</option>
+                                                <option value="rmfamily">Roman</option>
+                                                <option value="sffamily">Sans</option>
+                                                <option value="ttfamily">Mono</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label class="text-[11px]">Line Spacing</Label>
+                                        <select
+                                            v-model="doc.style.lineSpacing"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                        >
+                                            <option value="1.0">Single (1.0)</option>
+                                            <option value="1.15">1.15x</option>
+                                            <option value="1.5">1.5x</option>
+                                            <option value="2.0">Double (2.0)</option>
+                                        </select>
+                                    </div>
+                                    <div v-if="activeCell" class="flex items-center justify-between gap-2">
+                                        <Label class="text-[11px]">Cell Background</Label>
+                                        <input
+                                            v-model="activeCell.formatting.backgroundColor"
+                                            type="color"
+                                            class="h-7 w-12 cursor-pointer rounded border border-slate-200"
+                                        />
+                                    </div>
+                                    <div class="flex items-center justify-between gap-2">
+                                        <Label class="text-[11px]">Border Color</Label>
+                                        <input
+                                            v-model="doc.style.borderColor"
+                                            type="color"
+                                            class="h-7 w-12 cursor-pointer rounded border border-slate-200"
+                                        />
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
