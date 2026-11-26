@@ -195,6 +195,30 @@ export function resolveTablePackages(doc: TableDocument): PackageRequirement[] {
         });
     }
 
+    if (doc.columns.some((c) => c.type === 'S')) {
+        reqs.set('siunitx', {
+            packageName: 'siunitx',
+            reason: 'Required for decimal-aligned S columns',
+            required: true,
+        });
+    }
+
+    if (doc.notes.length > 0 || doc.footnotes.length > 0) {
+        if (doc.layout.environment === 'longtable') {
+            reqs.set('threeparttablex', {
+                packageName: 'threeparttablex',
+                reason: 'Required for TableNotes inside longtable',
+                required: true,
+            });
+        } else {
+            reqs.set('threeparttable', {
+                packageName: 'threeparttable',
+                reason: 'Required for tablenotes and \\tnote footnotes',
+                required: true,
+            });
+        }
+    }
+
     const usesArrayCols =
         doc.columns.some((c) => c.type === 'm' || c.type === 'b') ||
         Boolean(doc.style.extraRowHeight);
@@ -331,9 +355,20 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
         }
     }
 
+    const useNotes = doc.notes.length > 0 || doc.footnotes.length > 0;
+    const useThreePartTable = useNotes && doc.layout.environment !== 'longtable';
+    const useThreePartTableX = useNotes && doc.layout.environment === 'longtable';
+
     const colSpec = columnSpecString(doc.columns);
     const tabIndent = useFloat ? indent : '';
     const innerIndent = useFloat ? indent.repeat(2) : indent;
+
+    if (useThreePartTable) {
+        lines.push(`${tabIndent}\\begin{threeparttable}`);
+    }
+    if (useThreePartTableX) {
+        lines.push(`${tabIndent}\\begin{ThreePartTable}`);
+    }
 
     const hasFitWrapper =
         doc.layout.environment !== 'longtable' &&
@@ -358,25 +393,11 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
         lines.push(`${tabIndent}\\rotatebox{${doc.layout.rotationDegrees}}{%`);
     }
 
-    if (doc.layout.environment === 'tabularx') {
-        lines.push(`${tabIndent}\\begin{tabularx}{\\textwidth}{${colSpec}}`);
-    } else if (doc.layout.environment === 'longtable') {
-        lines.push(`${tabIndent}\\begin{longtable}{${colSpec}}`);
-        if (doc.caption) {
-            const shortPart = doc.shortCaption ? `[${doc.shortCaption}]` : '';
-            lines.push(`${innerIndent}\\caption${shortPart}{${doc.caption}}\\\\`);
-        }
-        if (doc.label) {
-            lines.push(`${innerIndent}\\label{${doc.label}}\\\\`);
-        }
-    } else {
-        lines.push(`${tabIndent}\\begin{tabular}{${colSpec}}`);
-    }
-
-    doc.rows.forEach((row, rIdx) => {
+    const formatRowLine = (row: TableRow, rIdx: number): string[] => {
+        const out: string[] = [];
         const topRule = horizontalRuleCommand(row.topBorder.style);
         if (topRule && (rIdx === 0 || doc.rows[rIdx - 1]?.bottomBorder.style !== row.topBorder.style)) {
-            lines.push(`${innerIndent}${topRule}`);
+            out.push(`${innerIndent}${topRule}`);
         }
 
         const cellStrings: string[] = [];
@@ -384,7 +405,6 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
             const col = doc.columns[cIdx];
             const cell = doc.cells[cellKey(row.id, col.id)];
             if (cell?.merge && !cell.merge.isMaster) {
-                // Skip spanned columns horizontally; keep empty placeholder for multirow-only spans
                 const master = cell.merge.masterRowId && cell.merge.masterColId
                     ? doc.cells[cellKey(cell.merge.masterRowId, cell.merge.masterColId)]
                     : undefined;
@@ -408,15 +428,72 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
             ? `\\rowcolor[HTML]{${hexToLatexColor(row.backgroundColor)}} `
             : '';
         const rowEnd = row.height ? `\\\\[${row.height}]` : '\\\\';
-        lines.push(`${innerIndent}${rowColorCmd}${cellStrings.join(' & ')} ${rowEnd}`);
+        out.push(`${innerIndent}${rowColorCmd}${cellStrings.join(' & ')} ${rowEnd}`);
 
         const bottomRule = horizontalRuleCommand(row.bottomBorder.style);
         if (bottomRule) {
-            lines.push(`${innerIndent}${bottomRule}`);
+            out.push(`${innerIndent}${bottomRule}`);
         }
-    });
+        return out;
+    };
 
-    lines.push(`${tabIndent}\\end{${doc.layout.environment}}`);
+    if (doc.layout.environment === 'tabularx') {
+        lines.push(`${tabIndent}\\begin{tabularx}{\\textwidth}{${colSpec}}`);
+        doc.rows.forEach((row, rIdx) => lines.push(...formatRowLine(row, rIdx)));
+        lines.push(`${tabIndent}\\end{tabularx}`);
+    } else if (doc.layout.environment === 'longtable') {
+        if (useThreePartTableX) {
+            lines.push(`${tabIndent}\\begin{TableNotes}`);
+            for (const note of doc.notes) {
+                lines.push(`${innerIndent}\\item ${escapeLatexText(note.text)}`);
+            }
+            for (const fn of doc.footnotes) {
+                lines.push(`${innerIndent}\\item[${escapeLatexText(fn.marker)}] ${escapeLatexText(fn.text)}`);
+            }
+            lines.push(`${tabIndent}\\end{TableNotes}`);
+        }
+
+        lines.push(`${tabIndent}\\begin{longtable}{${colSpec}}`);
+        if (doc.caption) {
+            const shortPart = doc.shortCaption ? `[${doc.shortCaption}]` : '';
+            lines.push(`${innerIndent}\\caption${shortPart}{${doc.caption}}\\\\`);
+        }
+        if (doc.label) {
+            lines.push(`${innerIndent}\\label{${doc.label}}\\\\`);
+        }
+
+        const headRows = doc.rows.filter((r) => r.section === 'head');
+        const bodyRows = doc.rows.filter((r) => r.section === 'body');
+        const footRows = doc.rows.filter((r) => r.section === 'foot');
+
+        headRows.forEach((row, idx) => lines.push(...formatRowLine(row, idx)));
+        lines.push(`${innerIndent}\\endfirsthead`);
+
+        if (doc.layout.longtableConfig?.repeatFirstHeader !== false) {
+            const cont = doc.layout.longtableConfig?.continuationCaption || '\\tablename\\ \\thetable\\ -- Continued from previous page';
+            lines.push(`${innerIndent}\\multicolumn{${doc.columns.length}}{c}{${cont}} \\\\`);
+            headRows.forEach((row, idx) => lines.push(...formatRowLine(row, idx)));
+        }
+        lines.push(`${innerIndent}\\endhead`);
+
+        if (doc.layout.longtableConfig?.footerText) {
+            lines.push(`${innerIndent}\\multicolumn{${doc.columns.length}}{r}{\\textit{${escapeLatexText(doc.layout.longtableConfig.footerText)}}} \\\\`);
+        }
+        lines.push(`${innerIndent}\\endfoot`);
+
+        footRows.forEach((row, idx) => lines.push(...formatRowLine(row, idx)));
+        if (useThreePartTableX) {
+            lines.push(`${innerIndent}\\insertTableNotes`);
+        }
+        lines.push(`${innerIndent}\\endlastfoot`);
+
+        bodyRows.forEach((row, idx) => lines.push(...formatRowLine(row, idx)));
+        lines.push(`${tabIndent}\\end{longtable}`);
+    } else {
+        lines.push(`${tabIndent}\\begin{tabular}{${colSpec}}`);
+        doc.rows.forEach((row, rIdx) => lines.push(...formatRowLine(row, rIdx)));
+        lines.push(`${tabIndent}\\end{tabular}`);
+    }
 
     if (doc.layout.rotationDegrees !== 0 && doc.layout.environment !== 'longtable') {
         lines.push(`${tabIndent}}`);
@@ -428,6 +505,23 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
         } else {
             lines.push(`${tabIndent}}`);
         }
+    }
+
+    if (useThreePartTable) {
+        lines.push(`${tabIndent}\\begin{tablenotes}[flushleft]`);
+        lines.push(`${innerIndent}\\footnotesize`);
+        for (const note of doc.notes) {
+            const prefix = note.kind === 'source' ? '\\textit{Source:} ' : note.kind === 'significance' ? '\\textit{Notes:} ' : '';
+            lines.push(`${innerIndent}\\item ${prefix}${escapeLatexText(note.text)}`);
+        }
+        for (const fn of doc.footnotes) {
+            lines.push(`${innerIndent}\\item[${escapeLatexText(fn.marker)}] ${escapeLatexText(fn.text)}`);
+        }
+        lines.push(`${tabIndent}\\end{tablenotes}`);
+        lines.push(`${tabIndent}\\end{threeparttable}`);
+    }
+    if (useThreePartTableX) {
+        lines.push(`${tabIndent}\\end{ThreePartTable}`);
     }
 
     if (useFloat) {

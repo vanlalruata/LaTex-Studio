@@ -284,6 +284,52 @@ function handleClearSelectedCells(): void {
     clearCells(doc.value, selectedCellKeys.value);
 }
 
+function setEnvironment(env: 'tabular' | 'tabularx' | 'longtable'): void {
+    pushUndoSnapshot();
+    doc.value.layout.environment = env;
+    if (env === 'longtable') {
+        doc.value.layout.floatingWrapper = 'none';
+        if (!doc.value.layout.longtableConfig) {
+            doc.value.layout.longtableConfig = {
+                repeatFirstHeader: true,
+                continuationCaption: '\\tablename\\ \\thetable\\ -- Continued from previous page',
+                footerText: 'Continued on next page',
+            };
+        }
+    } else if (doc.value.layout.floatingWrapper === 'none') {
+        doc.value.layout.floatingWrapper = 'table';
+    }
+}
+
+function addTableNote(): void {
+    pushUndoSnapshot();
+    doc.value.notes.push({
+        id: makeId('note'),
+        kind: 'note',
+        text: 'Values represent mean ± SD across runs.',
+    });
+}
+
+function removeTableNote(noteId: string): void {
+    pushUndoSnapshot();
+    doc.value.notes = doc.value.notes.filter((n) => n.id !== noteId);
+}
+
+function addTableFootnote(): void {
+    pushUndoSnapshot();
+    const nextMarker = String.fromCharCode(97 + doc.value.footnotes.length);
+    doc.value.footnotes.push({
+        id: makeId('fn'),
+        marker: nextMarker,
+        text: 'Footnote explanation.',
+    });
+}
+
+function removeTableFootnote(fnId: string): void {
+    pushUndoSnapshot();
+    doc.value.footnotes = doc.value.footnotes.filter((f) => f.id !== fnId);
+}
+
 function getCsrfToken(): string {
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : '';
@@ -1263,6 +1309,7 @@ function renderCellMath(tex: string): string {
                                             <option value="p">Paragraph top (p{})</option>
                                             <option value="m">Paragraph middle (m{})</option>
                                             <option value="b">Paragraph bottom (b{})</option>
+                                            <option value="S">Scientific numeric (S - siunitx)</option>
                                         </select>
                                     </div>
                                     <div v-if="['p', 'm', 'b'].includes(selectedCol.type)">
@@ -1302,6 +1349,10 @@ function renderCellMath(tex: string): string {
                                         <Textarea v-model="doc.caption" rows="2" class="mt-1 text-xs" />
                                     </div>
                                     <div>
+                                        <Label class="text-[11px]">Short Caption (List of Tables)</Label>
+                                        <Input v-model="doc.shortCaption" placeholder="Optional short caption" class="mt-1 h-7 text-xs" />
+                                    </div>
+                                    <div>
                                         <Label class="text-[11px]">Label</Label>
                                         <Input v-model="doc.label" placeholder="tab:results" class="mt-1 h-7 font-mono text-xs" />
                                     </div>
@@ -1329,8 +1380,34 @@ function renderCellMath(tex: string): string {
                             </AccordionItem>
 
                             <AccordionItem value="layout">
-                                <AccordionTrigger>Layout &amp; Fit to Page</AccordionTrigger>
+                                <AccordionTrigger>Layout &amp; Longtable</AccordionTrigger>
                                 <AccordionContent class="space-y-3">
+                                    <div>
+                                        <Label class="text-[11px]">Environment</Label>
+                                        <select
+                                            :value="doc.layout.environment"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                            @change="setEnvironment(($event.target as HTMLSelectElement).value as 'tabular' | 'tabularx' | 'longtable')"
+                                        >
+                                            <option value="tabular">Standard (tabular)</option>
+                                            <option value="tabularx">Full width (tabularx)</option>
+                                            <option value="longtable">Multi-page (longtable)</option>
+                                        </select>
+                                    </div>
+                                    <div v-if="doc.layout.environment === 'longtable' && doc.layout.longtableConfig" class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2">
+                                        <label class="flex items-center gap-2 text-xs">
+                                            <input v-model="doc.layout.longtableConfig.repeatFirstHeader" type="checkbox" />
+                                            <span>Repeat header on new pages</span>
+                                        </label>
+                                        <div>
+                                            <Label class="text-[11px]">Continuation Caption</Label>
+                                            <Input v-model="doc.layout.longtableConfig.continuationCaption" class="mt-1 h-7 text-xs" />
+                                        </div>
+                                        <div>
+                                            <Label class="text-[11px]">Intermediate Footer</Label>
+                                            <Input v-model="doc.layout.longtableConfig.footerText" class="mt-1 h-7 text-xs" />
+                                        </div>
+                                    </div>
                                     <div>
                                         <Label class="text-[11px]">Orientation</Label>
                                         <select
@@ -1452,6 +1529,46 @@ function renderCellMath(tex: string): string {
                                             type="color"
                                             class="h-7 w-12 cursor-pointer rounded border border-slate-200"
                                         />
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+
+                            <AccordionItem value="notes">
+                                <AccordionTrigger>
+                                    Notes &amp; Footnotes ({{ doc.notes.length + doc.footnotes.length }})
+                                </AccordionTrigger>
+                                <AccordionContent class="space-y-3">
+                                    <div class="flex gap-2">
+                                        <Button variant="outline" size="sm" class="flex-1 text-xs" @click="addTableNote">
+                                            + Note
+                                        </Button>
+                                        <Button variant="outline" size="sm" class="flex-1 text-xs" @click="addTableFootnote">
+                                            + Footnote
+                                        </Button>
+                                    </div>
+
+                                    <div v-for="note in doc.notes" :key="note.id" class="space-y-1.5 rounded border border-slate-200 p-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <select v-model="note.kind" class="rounded border border-slate-200 px-1.5 py-0.5 text-[11px]">
+                                                <option value="note">Note</option>
+                                                <option value="source">Source</option>
+                                                <option value="significance">Significance</option>
+                                            </select>
+                                            <button type="button" class="text-[11px] text-rose-600 hover:underline" @click="removeTableNote(note.id)">
+                                                Remove
+                                            </button>
+                                        </div>
+                                        <Textarea v-model="note.text" rows="2" class="text-xs" />
+                                    </div>
+
+                                    <div v-for="fn in doc.footnotes" :key="fn.id" class="space-y-1.5 rounded border border-slate-200 p-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <Input v-model="fn.marker" class="h-6 w-14 font-mono text-xs" />
+                                            <button type="button" class="text-[11px] text-rose-600 hover:underline" @click="removeTableFootnote(fn.id)">
+                                                Remove
+                                            </button>
+                                        </div>
+                                        <Textarea v-model="fn.text" rows="2" class="text-xs" />
                                     </div>
                                 </AccordionContent>
                             </AccordionItem>
