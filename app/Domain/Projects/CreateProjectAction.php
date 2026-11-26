@@ -31,7 +31,7 @@ class CreateProjectAction
         ?CompilerEngine $engine = null,
     ): Project {
         return DB::transaction(function () use ($owner, $title, $description, $template, $engine): Project {
-            $resolvedEngine = $engine ?? $template?->compiler_engine ?? CompilerEngine::PdfLaTeX;
+            $resolvedEngine = $engine ?? $template->compiler_engine ?? CompilerEngine::PdfLaTeX;
 
             $project = Project::query()->create([
                 'owner_id' => $owner->id,
