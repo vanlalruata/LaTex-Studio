@@ -63,4 +63,18 @@ class ProjectPolicy
 
         return $role !== null && $role->canManage();
     }
+
+    public function comment(User $user, Project $project): bool
+    {
+        $role = $project->roleFor($user);
+
+        return $role !== null && $role->canComment();
+    }
+
+    public function proposeSuggestion(User $user, Project $project): bool
+    {
+        $role = $project->roleFor($user);
+
+        return $role !== null && $role->canExport();
+    }
 }

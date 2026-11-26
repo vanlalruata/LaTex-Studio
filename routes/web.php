@@ -1,11 +1,15 @@
 <?php
 
+use App\Http\Controllers\AiAssistantController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectIndexController;
+use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectRevisionController;
+use App\Http\Controllers\SuggestionController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -31,6 +35,25 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('projects/{project}/compilations', [CompilationController::class, 'store'])->name('projects.compilations.store');
     Route::get('compilations/{compilation}', [CompilationController::class, 'show'])->name('compilations.show');
     Route::get('compilations/{compilation}/artifacts/{type}', [CompilationController::class, 'artifact'])->name('compilations.artifacts.show');
+
+    // Phase 8: Collaboration, Comments & Track Changes
+    Route::get('projects/{project}/members', [ProjectMemberController::class, 'index'])->name('projects.members.index');
+    Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
+    Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+
+    Route::get('projects/{project}/comments', [CommentController::class, 'index'])->name('projects.comments.index');
+    Route::post('projects/{project}/comments', [CommentController::class, 'store'])->name('projects.comments.store');
+    Route::post('projects/{project}/comments/{thread}/reply', [CommentController::class, 'reply'])->name('projects.comments.reply');
+    Route::post('projects/{project}/comments/{thread}/resolve', [CommentController::class, 'resolve'])->name('projects.comments.resolve');
+
+    Route::get('projects/{project}/suggestions', [SuggestionController::class, 'index'])->name('projects.suggestions.index');
+    Route::post('projects/{project}/suggestions', [SuggestionController::class, 'store'])->name('projects.suggestions.store');
+    Route::post('projects/{project}/suggestions/{suggestion}/accept', [SuggestionController::class, 'accept'])->name('projects.suggestions.accept');
+    Route::post('projects/{project}/suggestions/{suggestion}/reject', [SuggestionController::class, 'reject'])->name('projects.suggestions.reject');
+
+    // Phase 9: AI Research Assistant
+    Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');
+    Route::post('projects/{project}/ai/ask', [AiAssistantController::class, 'ask'])->name('projects.ai.ask');
 });
 
 require __DIR__.'/settings.php';

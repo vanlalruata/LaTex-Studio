@@ -66,6 +66,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     }
 
     /**
+     * @return HasMany<UserAiCredential, $this>
+     */
+    public function aiCredentials(): HasMany
+    {
+        return $this->hasMany(UserAiCredential::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

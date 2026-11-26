@@ -1,4 +1,8 @@
 import * as monaco from 'monaco-editor';
+import {
+    latexToSvgDataUrl,
+    latexToUnicodeFormatted,
+} from '@/lib/mathRenderer';
 import { parseLatexDocument } from '@/services/latex/latexParser';
 
 export interface ProjectSymbolContext {
@@ -129,6 +133,51 @@ export function registerLatexProviders(): void {
 
     monaco.languages.registerHoverProvider('latex', {
         provideHover(model, position) {
+            // Check if cursor is inside a math region on the current line or equation block
+            const lineContent = model.getLineContent(position.lineNumber);
+            const colZero = position.column - 1;
+
+            const mathPatterns = [
+                /\$\$([^$]+)\$\$/g,
+                /\$([^$]+)\$/g,
+                /\\\[([^\]]+)\\\]/g,
+                /\\\(([^)]+)\\\)/g,
+            ];
+
+            for (const regex of mathPatterns) {
+                let m: RegExpExecArray | null;
+                while ((m = regex.exec(lineContent)) !== null) {
+                    const start = m.index;
+                    const end = start + m[0].length;
+                    if (colZero >= start && colZero <= end) {
+                        const svgUrl = latexToSvgDataUrl(m[0], false);
+                        const unicode = latexToUnicodeFormatted(m[0]);
+                        const contents: monaco.IMarkdownString[] = [];
+
+                        if (svgUrl) {
+                            contents.push({
+                                value: `![Formula Preview](${svgUrl})`,
+                                isTrusted: true,
+                            });
+                        } else if (unicode) {
+                            contents.push({ value: `\`${unicode}\`` });
+                        }
+
+                        if (contents.length > 0) {
+                            return {
+                                range: new monaco.Range(
+                                    position.lineNumber,
+                                    start + 1,
+                                    position.lineNumber,
+                                    end + 1,
+                                ),
+                                contents,
+                            };
+                        }
+                    }
+                }
+            }
+
             const word = model.getWordAtPosition(position);
             if (!word) {
                 return null;

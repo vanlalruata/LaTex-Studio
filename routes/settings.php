@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\AiCredentialController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -24,6 +25,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-password.update');
 
     Route::inertia('settings/appearance', 'settings/Appearance')->name('appearance.edit');
+
+    Route::get('settings/ai-keys', [AiCredentialController::class, 'edit'])->name('ai-credentials.edit');
+    Route::post('settings/ai-keys', [AiCredentialController::class, 'store'])->name('ai-credentials.store');
+    Route::delete('settings/ai-keys/{credential}', [AiCredentialController::class, 'destroy'])->name('ai-credentials.destroy');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

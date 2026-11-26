@@ -2,6 +2,10 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import files from './files'
 import revisions from './revisions'
 import compilations from './compilations'
+import members from './members'
+import comments from './comments'
+import suggestions from './suggestions'
+import ai from './ai'
 /**
 * @see \App\Http\Controllers\ProjectController::store
  * @see app/Http/Controllers/ProjectController.php:24
@@ -551,6 +555,10 @@ files: Object.assign(files, files),
 revisions: Object.assign(revisions, revisions),
 index: Object.assign(index, index),
 compilations: Object.assign(compilations, compilations),
+members: Object.assign(members, members),
+comments: Object.assign(comments, comments),
+suggestions: Object.assign(suggestions, suggestions),
+ai: Object.assign(ai, ai),
 }
 
 export default projects

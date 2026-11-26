@@ -15,16 +15,26 @@ import {
     Italic,
     ListTree,
     Loader2,
+    MessageSquare,
     Play,
     Plus,
     Save,
     Search,
     Sigma,
+    Sparkles,
     Terminal,
     Trash2,
     X,
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import AiAssistantPanel, {
+    type AiActionItem,
+    type AiCredentialSummary,
+} from '@/components/ai/AiAssistantPanel.vue';
+import ReviewPanel, {
+    type CommentThreadItem,
+    type SuggestionItem,
+} from '@/components/collaboration/ReviewPanel.vue';
 import BibliographyPanel from '@/components/editor/BibliographyPanel.vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
 import SymbolPalette from '@/components/editor/SymbolPalette.vue';
@@ -111,8 +121,14 @@ const openTabs = ref<FileNode[]>(
 );
 const revisionList = ref<RevisionItem[]>([...props.revisions]);
 const fileSearch = ref('');
-const leftSidebarTab = ref<'explorer' | 'symbols' | 'bibliography' | 'revisions'>('explorer');
+const leftSidebarTab = ref<'explorer' | 'symbols' | 'bibliography' | 'review' | 'ai' | 'revisions'>('explorer');
 const bibEntries = ref<BibEntry[]>([]);
+const reviewThreads = ref<CommentThreadItem[]>([]);
+const reviewSuggestions = ref<SuggestionItem[]>([]);
+const aiCredentials = ref<AiCredentialSummary[]>([]);
+const aiActions = ref<AiActionItem[]>([]);
+const isAiAsking = ref(false);
+const aiError = ref<string | null>(null);
 const showBottomDrawer = ref(false);
 const saveStatus = ref<'saved' | 'saving' | 'dirty' | 'conflict' | 'error'>('saved');
 const cursorPos = ref({ lineNumber: 1, column: 1 });
@@ -493,8 +509,157 @@ async function refreshProjectIndex(): Promise<void> {
     editorRef.value?.refreshMarkers();
 }
 
+async function loadCollaborationData(): Promise<void> {
+    const [commentsRes, suggestionsRes, aiRes] = await Promise.all([
+        fetch(projectsRoutes.comments.index(props.project.public_id).url, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        }),
+        fetch(projectsRoutes.suggestions.index(props.project.public_id).url, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        }),
+        fetch(projectsRoutes.ai.index(props.project.public_id).url, {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        }),
+    ]);
+
+    if (commentsRes.ok) {
+        const cData = (await commentsRes.json()) as { threads: CommentThreadItem[] };
+        reviewThreads.value = cData.threads;
+    }
+    if (suggestionsRes.ok) {
+        const sData = (await suggestionsRes.json()) as { suggestions: SuggestionItem[] };
+        reviewSuggestions.value = sData.suggestions;
+    }
+    if (aiRes.ok) {
+        const aData = (await aiRes.json()) as {
+            credentials: AiCredentialSummary[];
+            actions: AiActionItem[];
+        };
+        aiCredentials.value = aData.credentials;
+        aiActions.value = aData.actions;
+    }
+}
+
+async function handleCreateThread(body: string): Promise<void> {
+    if (!currentFile.value) {
+        return;
+    }
+
+    const res = await fetch(projectsRoutes.comments.store(props.project.public_id).url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-XSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify({
+            file_id: currentFile.value.public_id,
+            start_line: cursorPos.value.lineNumber,
+            end_line: cursorPos.value.lineNumber,
+            body,
+        }),
+    });
+
+    if (res.ok) {
+        await loadCollaborationData();
+    }
+}
+
+async function handleResolveThread(threadId: string): Promise<void> {
+    const res = await fetch(
+        projectsRoutes.comments.resolve({ project: props.project.public_id, thread: threadId }).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+        },
+    );
+    if (res.ok) {
+        await loadCollaborationData();
+    }
+}
+
+async function handleAcceptSuggestion(suggestionId: string): Promise<void> {
+    const res = await fetch(
+        projectsRoutes.suggestions.accept({ project: props.project.public_id, suggestion: suggestionId }).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+        },
+    );
+
+    if (res.ok) {
+        await loadCollaborationData();
+        if (currentFile.value) {
+            const active = fileList.value.find((f) => f.public_id === currentFile.value?.public_id);
+            if (active) {
+                currentFile.value = null;
+                await openFile(active);
+            }
+        }
+    }
+}
+
+async function handleRejectSuggestion(suggestionId: string): Promise<void> {
+    const res = await fetch(
+        projectsRoutes.suggestions.reject({ project: props.project.public_id, suggestion: suggestionId }).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+        },
+    );
+    if (res.ok) {
+        await loadCollaborationData();
+    }
+}
+
+async function handleAskAi(payload: {
+    credentialId: string;
+    kind: 'chat' | 'compile_fix' | 'paper_review';
+    prompt: string;
+}): Promise<void> {
+    isAiAsking.value = true;
+    aiError.value = null;
+
+    const res = await fetch(projectsRoutes.ai.ask(props.project.public_id).url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-XSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify({
+            credential_id: payload.credentialId || null,
+            file_id: currentFile.value?.public_id ?? null,
+            kind: payload.kind,
+            prompt: payload.prompt,
+            context_excerpt: currentFile.value?.content.slice(0, 6000) ?? null,
+        }),
+    });
+
+    isAiAsking.value = false;
+
+    if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { message?: string };
+        aiError.value = err.message ?? 'AI request failed.';
+        return;
+    }
+
+    const action = (await res.json()) as AiActionItem;
+    aiActions.value.unshift(action);
+    await loadCollaborationData();
+}
+
 onMounted(() => {
     void refreshProjectIndex();
+    void loadCollaborationData();
 });
 
 onBeforeUnmount(() => {
@@ -604,6 +769,24 @@ onBeforeUnmount(() => {
                     @click="leftSidebarTab = 'bibliography'"
                 >
                     <BookOpen class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="leftSidebarTab === 'review' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    title="Comments & Track Changes"
+                    @click="leftSidebarTab = 'review'"
+                >
+                    <MessageSquare class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="leftSidebarTab === 'ai' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    title="AI Research Assistant"
+                    @click="leftSidebarTab = 'ai'"
+                >
+                    <Sparkles class="size-4" />
                 </button>
                 <button
                     type="button"
@@ -724,6 +907,30 @@ onBeforeUnmount(() => {
                     v-else-if="leftSidebarTab === 'bibliography'"
                     :entries="bibEntries"
                     @insert-cite="insertSnippet"
+                />
+
+                <!-- Review & Track Changes -->
+                <ReviewPanel
+                    v-else-if="leftSidebarTab === 'review'"
+                    :threads="reviewThreads"
+                    :suggestions="reviewSuggestions"
+                    :can-comment="project.role !== 'viewer'"
+                    :can-edit="project.can_edit"
+                    @create-thread="handleCreateThread"
+                    @resolve-thread="handleResolveThread"
+                    @accept-suggestion="handleAcceptSuggestion"
+                    @reject-suggestion="handleRejectSuggestion"
+                    @jump-to-line="jumpToLine"
+                />
+
+                <!-- AI Research Assistant -->
+                <AiAssistantPanel
+                    v-else-if="leftSidebarTab === 'ai'"
+                    :credentials="aiCredentials"
+                    :actions="aiActions"
+                    :is-asking="isAiAsking"
+                    :error-message="aiError"
+                    @ask="handleAskAi"
                 />
 
                 <!-- Revisions Sidebar -->
