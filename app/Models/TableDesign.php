@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -88,5 +89,13 @@ class TableDesign extends Model
     public function sourceRevision(): BelongsTo
     {
         return $this->belongsTo(ProjectRevision::class, 'source_revision_id');
+    }
+
+    /**
+     * @return HasMany<TableDesignVersion, $this>
+     */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(TableDesignVersion::class);
     }
 }

@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{booktabs,multirow,xcolor,siunitx,longtable,threeparttable,threeparttablex,rotating}
+\begin{document}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Representative Booktabs and Multirow/Multicolumn Table}
+    \label{tab:corpus-multirow}
+    \begin{tabular}{lcc}
+        \toprule
+        \multirow{2}{*}{Model} & \multicolumn{2}{c}{Metrics} \\
+        & Precision & Recall \\
+        \midrule
+        Baseline & 0.81 & 0.78 \\
+        Proposed & 0.92 & 0.89 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{sidewaystable}[htbp]
+    \centering
+    \caption{Representative Landscape Table}
+    \label{tab:corpus-landscape}
+    \begin{tabular}{lSS}
+        \toprule
+        Dataset & {RMSE} & {MAE} \\
+        \midrule
+        Corpus A & 0.142 & 0.098 \\
+        \bottomrule
+    \end{tabular}
+\end{sidewaystable}
+
+\begin{ThreePartTable}
+    \begin{TableNotes}
+        \item Representative supplementary longtable note.
+    \end{TableNotes}
+    \begin{longtable}{lcc}
+        \caption{Representative Multi-Page Longtable}\\
+        \label{tab:corpus-longtable}\\
+        \toprule
+        Sample & Metric A & Metric B \\
+        \midrule
+        \endfirsthead
+        \toprule
+        Sample & Metric A & Metric B \\
+        \midrule
+        \endhead
+        \endfoot
+        \insertTableNotes
+        \endlastfoot
+        S-001 & 0.84 & 0.79 \\
+        \bottomrule
+    \end{longtable}
+\end{ThreePartTable}
+
+\end{document}

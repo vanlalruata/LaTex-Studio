@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateTableDesignRequest;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\TableDesign;
+use App\Models\TableDesignVersion;
 use App\Models\TableStyleProfile;
 use App\Services\Storage\PrivateStorageService;
 use Illuminate\Http\JsonResponse;
@@ -101,6 +102,8 @@ class TableDesignController extends Controller
             'status' => (string) ($validated['status'] ?? 'visual'),
         ]);
 
+        $this->recordVersion($design, $user->id);
+
         return response()->json([
             'tableDesign' => $this->formatDesign($design),
         ], 201);
@@ -123,6 +126,11 @@ class TableDesignController extends Controller
             'generated_latex' => (string) $validated['generated_latex'],
             'status' => (string) ($validated['status'] ?? $tableDesign->status),
         ]);
+
+        $user = $request->user();
+        if ($user !== null) {
+            $this->recordVersion($tableDesign, $user->id);
+        }
 
         return response()->json([
             'tableDesign' => $this->formatDesign($tableDesign),
@@ -340,5 +348,25 @@ class TableDesignController extends Controller
         }
 
         return $block.$contents;
+    }
+
+    private function recordVersion(TableDesign $design, int $userId): void
+    {
+        $checksum = hash('sha256', $design->generated_latex);
+        $latest = $design->versions()->orderByDesc('version_number')->first();
+        if ($latest !== null && $latest->checksum === $checksum) {
+            return;
+        }
+
+        $nextVersion = ($latest?->version_number ?? 0) + 1;
+
+        TableDesignVersion::query()->create([
+            'table_design_id' => $design->id,
+            'version_number' => $nextVersion,
+            'document_json' => $design->document_json,
+            'generated_latex' => $design->generated_latex,
+            'checksum' => $checksum,
+            'created_by' => $userId,
+        ]);
     }
 }

@@ -339,6 +339,20 @@ function handleMoveColumn(delta: -1 | 1): void {
     }
 }
 
+function focusValidationIssue(rowId?: string, colId?: string): void {
+    if (rowId && colId) {
+        selectCell(rowId, colId);
+        const el = document.querySelector<HTMLInputElement>(
+            `[data-cell-input="${rowId}:${colId}"]`,
+        );
+        el?.focus();
+    } else if (colId) {
+        selectColumn(colId);
+    } else if (rowId) {
+        selectRow(rowId);
+    }
+}
+
 function handleClearSelectedCells(): void {
     if (selectedCellKeys.value.size === 0) {
         return;
@@ -1951,9 +1965,7 @@ function renderCellMath(tex: string): string {
                             >
                                 <AccordionTrigger
                                     >Row
-                                    {{
-                                        selectedRow.index + 1
-                                    }}
+                                    {{ selectedRow.index + 1 }}
                                     Properties</AccordionTrigger
                                 >
                                 <AccordionContent class="space-y-3">
@@ -2029,9 +2041,7 @@ function renderCellMath(tex: string): string {
                             >
                                 <AccordionTrigger
                                     >Column
-                                    {{
-                                        selectedCol.index + 1
-                                    }}
+                                    {{ selectedCol.index + 1 }}
                                     Properties</AccordionTrigger
                                 >
                                 <AccordionContent class="space-y-3">

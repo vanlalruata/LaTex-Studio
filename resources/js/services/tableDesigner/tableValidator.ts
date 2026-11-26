@@ -26,8 +26,7 @@ export function validateTableDocument(doc: TableDocument): ValidationIssue[] {
     }
 
     const hasVerticalRule = doc.columns.some(
-        (c) =>
-            c.leftBorder.style !== 'none' || c.rightBorder.style !== 'none',
+        (c) => c.leftBorder.style !== 'none' || c.rightBorder.style !== 'none',
     );
     const usesBooktabs =
         doc.style.preset === 'booktabs' ||
@@ -56,6 +55,43 @@ export function validateTableDocument(doc: TableDocument): ValidationIssue[] {
             message:
                 'longtable cannot be wrapped inside a floating table environment.',
         });
+    }
+
+    if (
+        doc.layout.environment === 'longtable' &&
+        doc.layout.orientation === 'landscape' &&
+        doc.layout.landscapeMethod === 'sidewaystable'
+    ) {
+        issues.push({
+            id: 'longtable-sidewaystable-conflict',
+            severity: 'error',
+            message:
+                'longtable is incompatible with sidewaystable; switch Landscape Method to pdflscape.',
+        });
+    }
+
+    if (doc.label && !doc.caption?.trim()) {
+        issues.push({
+            id: 'label-without-caption',
+            severity: 'warning',
+            message:
+                'A \\label without a \\caption will reference the enclosing section rather than the table.',
+        });
+    }
+
+    for (const col of doc.columns) {
+        if (col.type === 'custom' && col.customSpec) {
+            const open = (col.customSpec.match(/\{/g) || []).length;
+            const close = (col.customSpec.match(/\}/g) || []).length;
+            if (open !== close) {
+                issues.push({
+                    id: `invalid-col-spec-${col.id}`,
+                    severity: 'error',
+                    message: `Unbalanced braces in custom column ${col.index + 1} specification.`,
+                    colId: col.id,
+                });
+            }
+        }
     }
 
     if (
