@@ -19,6 +19,12 @@ const page = usePage();
 const brandName = computed(
     () => page.props.publicSite?.brandName || page.props.name || 'LaTeX Studio',
 );
+const resolvedCanonical = computed(() => {
+    if (props.noindex) {
+        return null;
+    }
+    return props.canonical || page.props.canonicalUrl || null;
+});
 </script>
 
 <template>
@@ -55,10 +61,10 @@ const brandName = computed(
             :content="props.description"
         />
         <link
-            v-if="props.canonical"
+            v-if="resolvedCanonical"
             head-key="canonical"
             rel="canonical"
-            :href="props.canonical"
+            :href="resolvedCanonical"
         />
         <meta
             v-if="props.noindex"

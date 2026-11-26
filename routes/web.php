@@ -20,6 +20,7 @@ use App\Http\Controllers\PublicSite\HomeController;
 use App\Http\Controllers\PublicSite\HowItWorksController;
 use App\Http\Controllers\PublicSite\LegalController;
 use App\Http\Controllers\PublicSite\PricingController;
+use App\Http\Controllers\PublicSite\SitemapController;
 use App\Http\Controllers\PublicSite\TemplateController;
 use App\Http\Controllers\SuggestionController;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ Route::post('/contact', [ContactController::class, 'store'])
 Route::get('/faq', FaqController::class)->name('public.faq');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('public.privacy');
 Route::get('/terms', [LegalController::class, 'terms'])->name('public.terms');
+Route::get('/sitemap.xml', SitemapController::class)->name('public.sitemap');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

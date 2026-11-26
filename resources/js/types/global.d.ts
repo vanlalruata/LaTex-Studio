@@ -21,6 +21,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            canonicalUrl: string;
             publicSite: PublicSiteProps;
             [key: string]: unknown;
         };

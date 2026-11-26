@@ -8,6 +8,7 @@ import AboutController from './AboutController'
 import ContactController from './ContactController'
 import FaqController from './FaqController'
 import LegalController from './LegalController'
+import SitemapController from './SitemapController'
 const PublicSite = {
     HomeController: Object.assign(HomeController, HomeController),
 FeatureController: Object.assign(FeatureController, FeatureController),
@@ -19,6 +20,7 @@ AboutController: Object.assign(AboutController, AboutController),
 ContactController: Object.assign(ContactController, ContactController),
 FaqController: Object.assign(FaqController, FaqController),
 LegalController: Object.assign(LegalController, LegalController),
+SitemapController: Object.assign(SitemapController, SitemapController),
 }
 
 export default PublicSite
