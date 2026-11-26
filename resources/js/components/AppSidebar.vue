@@ -2,12 +2,16 @@
 import { Link } from '@inertiajs/vue3';
 import {
     BookOpen,
+    Building,
     ClipboardList,
+    Activity,
     FolderGit2,
     LayoutGrid,
+    ScrollText,
     Settings2,
     Sparkles,
     Files,
+    Users,
 } from '@lucide/vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
@@ -28,6 +32,12 @@ import { index as publicSiteIndex } from '@/routes/admin/public-site';
 import { index as featuresIndex } from '@/routes/admin/public-site/features';
 import { index as enquiriesIndex } from '@/routes/admin/public-site/enquiries';
 import { index as templatesIndex } from '@/routes/admin/public-site/templates';
+import { dashboard as adminDashboard } from '@/routes/admin';
+import { index as usersIndex } from '@/routes/admin/users';
+import { index as projectsIndex } from '@/routes/admin/projects';
+import { index as organizationsIndex } from '@/routes/admin/organizations';
+import { index as auditIndex } from '@/routes/admin/audit';
+import { index as usageIndex } from '@/routes/admin/usage';
 import type { NavItem } from '@/types';
 
 const page = usePage();
@@ -41,6 +51,26 @@ const mainNavItems: NavItem[] = [
 ];
 
 const adminNavItems: NavItem[] = [
+    {
+        title: 'Overview',
+        href: adminDashboard(),
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Users',
+        href: usersIndex(),
+        icon: Users,
+    },
+    {
+        title: 'Projects',
+        href: projectsIndex(),
+        icon: FolderGit2,
+    },
+    {
+        title: 'Organizations',
+        href: organizationsIndex(),
+        icon: Building,
+    },
     {
         title: 'Public site settings',
         href: publicSiteIndex(),
@@ -60,6 +90,16 @@ const adminNavItems: NavItem[] = [
         title: 'Contact enquiries',
         href: enquiriesIndex(),
         icon: ClipboardList,
+    },
+    {
+        title: 'Audit log',
+        href: auditIndex(),
+        icon: ScrollText,
+    },
+    {
+        title: 'Usage & builds',
+        href: usageIndex(),
+        icon: Activity,
     },
 ];
 
