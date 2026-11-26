@@ -2,6 +2,7 @@ import DashboardController from './DashboardController'
 import ProjectController from './ProjectController'
 import ProjectFileController from './ProjectFileController'
 import ProjectRevisionController from './ProjectRevisionController'
+import ProjectIndexController from './ProjectIndexController'
 import CompilationController from './CompilationController'
 import Settings from './Settings'
 const Controllers = {
@@ -9,6 +10,7 @@ const Controllers = {
 ProjectController: Object.assign(ProjectController, ProjectController),
 ProjectFileController: Object.assign(ProjectFileController, ProjectFileController),
 ProjectRevisionController: Object.assign(ProjectRevisionController, ProjectRevisionController),
+ProjectIndexController: Object.assign(ProjectIndexController, ProjectIndexController),
 CompilationController: Object.assign(CompilationController, CompilationController),
 Settings: Object.assign(Settings, Settings),
 }

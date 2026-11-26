@@ -4,6 +4,7 @@ import {
     AlertCircle,
     ArrowLeftRight,
     Bold,
+    BookOpen,
     CheckCircle2,
     Download,
     FileCode,
@@ -23,13 +24,17 @@ import {
     Trash2,
     X,
 } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import BibliographyPanel from '@/components/editor/BibliographyPanel.vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
+import SymbolPalette from '@/components/editor/SymbolPalette.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
 import { dashboard } from '@/routes';
 import compilationsRoutes from '@/routes/compilations';
 import projectsRoutes from '@/routes/projects';
+import { parseBibtex, type BibEntry } from '@/services/latex/bibtexParser';
 import { inferMonacoLanguage } from '@/services/latex/monacoLatexLanguage';
+import { updateProjectSymbolContext } from '@/services/latex/monacoLatexProviders';
 
 interface ProjectDetail {
     public_id: string;
@@ -106,7 +111,8 @@ const openTabs = ref<FileNode[]>(
 );
 const revisionList = ref<RevisionItem[]>([...props.revisions]);
 const fileSearch = ref('');
-const leftSidebarTab = ref<'explorer' | 'revisions'>('explorer');
+const leftSidebarTab = ref<'explorer' | 'symbols' | 'bibliography' | 'revisions'>('explorer');
+const bibEntries = ref<BibEntry[]>([]);
 const showBottomDrawer = ref(false);
 const saveStatus = ref<'saved' | 'saving' | 'dirty' | 'conflict' | 'error'>('saved');
 const cursorPos = ref({ lineNumber: 1, column: 1 });
@@ -290,6 +296,7 @@ async function saveCurrentFile(): Promise<void> {
     }
 
     saveStatus.value = 'saved';
+    void refreshProjectIndex();
 }
 
 async function createFile(): Promise<void> {
@@ -460,6 +467,36 @@ async function pollCompilation(compilationId: string): Promise<void> {
     }
 }
 
+async function refreshProjectIndex(): Promise<void> {
+    const response = await fetch(projectsRoutes.index(props.project.public_id).url, {
+        headers: { Accept: 'application/json' },
+        credentials: 'same-origin',
+    });
+
+    if (!response.ok) {
+        return;
+    }
+
+    const data = (await response.json()) as {
+        labels: string[];
+        citations: string[];
+        files: string[];
+        bib_source: string;
+    };
+
+    updateProjectSymbolContext({
+        labels: data.labels,
+        citations: data.citations,
+        files: data.files,
+    });
+    bibEntries.value = parseBibtex(data.bib_source);
+    editorRef.value?.refreshMarkers();
+}
+
+onMounted(() => {
+    void refreshProjectIndex();
+});
+
 onBeforeUnmount(() => {
     if (autosaveTimer) {
         clearTimeout(autosaveTimer);
@@ -549,6 +586,24 @@ onBeforeUnmount(() => {
                     @click="leftSidebarTab = 'explorer'"
                 >
                     <Files class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="leftSidebarTab === 'symbols' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    title="Symbol Palette"
+                    @click="leftSidebarTab = 'symbols'"
+                >
+                    <Sigma class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="leftSidebarTab === 'bibliography' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    title="Bibliography Search"
+                    @click="leftSidebarTab = 'bibliography'"
+                >
+                    <BookOpen class="size-4" />
                 </button>
                 <button
                     type="button"
@@ -657,6 +712,19 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
                 </template>
+
+                <!-- Symbol Palette -->
+                <SymbolPalette
+                    v-else-if="leftSidebarTab === 'symbols'"
+                    @insert="insertSnippet"
+                />
+
+                <!-- Bibliography Search -->
+                <BibliographyPanel
+                    v-else-if="leftSidebarTab === 'bibliography'"
+                    :entries="bibEntries"
+                    @insert-cite="insertSnippet"
+                />
 
                 <!-- Revisions Sidebar -->
                 <template v-else>

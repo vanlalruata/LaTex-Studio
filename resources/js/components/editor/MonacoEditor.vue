@@ -2,6 +2,10 @@
 import * as monaco from 'monaco-editor';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { registerLatexLanguage } from '@/services/latex/monacoLatexLanguage';
+import {
+    applyLiveMarkers,
+    registerLatexProviders,
+} from '@/services/latex/monacoLatexProviders';
 
 const props = withDefaults(
     defineProps<{
@@ -55,9 +59,17 @@ function revealLine(lineNumber: number): void {
     editorInstance.focus();
 }
 
+function refreshMarkers(): void {
+    const model = editorInstance?.getModel();
+    if (model && props.language === 'latex') {
+        applyLiveMarkers(model);
+    }
+}
+
 defineExpose({
     insertText,
     revealLine,
+    refreshMarkers,
 });
 
 onMounted(() => {
@@ -66,6 +78,7 @@ onMounted(() => {
     }
 
     registerLatexLanguage();
+    registerLatexProviders();
 
     editorInstance = monaco.editor.create(containerRef.value, {
         value: props.modelValue,
@@ -87,8 +100,11 @@ onMounted(() => {
         if (ignoreNextChange || !editorInstance) {
             return;
         }
+        refreshMarkers();
         emit('update:modelValue', editorInstance.getValue());
     });
+
+    refreshMarkers();
 
     editorInstance.onDidChangeCursorPosition((event) => {
         emit('cursorChange', {

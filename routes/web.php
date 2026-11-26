@@ -4,6 +4,7 @@ use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectIndexController;
 use App\Http\Controllers\ProjectRevisionController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::get('projects/{project}/revisions', [ProjectRevisionController::class, 'index'])->name('projects.revisions.index');
     Route::post('projects/{project}/revisions', [ProjectRevisionController::class, 'store'])->name('projects.revisions.store');
+    Route::get('projects/{project}/index', ProjectIndexController::class)->name('projects.index');
 
     Route::post('projects/{project}/compilations', [CompilationController::class, 'store'])->name('projects.compilations.store');
     Route::get('compilations/{compilation}', [CompilationController::class, 'show'])->name('compilations.show');

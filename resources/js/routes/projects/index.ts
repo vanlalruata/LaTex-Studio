@@ -439,6 +439,108 @@ exportMethod.head = (args: { project: string | { public_id: string } } | [projec
         })
     
     exportMethod.form = exportMethodForm
+/**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: index.url(args, options),
+    method: 'get',
+})
+
+index.definition = {
+    methods: ["get","head"],
+    url: '/projects/{project}/index',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { project: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+            args = { project: args.public_id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    project: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        project: typeof args.project === 'object'
+                ? args.project.public_id
+                : args.project,
+                }
+
+    return index.definition.url
+            .replace('{project}', parsedArgs.project.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: index.url(args, options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: index.url(args, options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+    const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+        indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ProjectIndexController::__invoke
+ * @see app/Http/Controllers/ProjectIndexController.php:12
+ * @route '/projects/{project}/index'
+ */
+        indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 const projects = {
     store: Object.assign(store, store),
 show: Object.assign(show, show),
@@ -447,6 +549,7 @@ destroy: Object.assign(destroy, destroy),
 export: Object.assign(exportMethod, exportMethod),
 files: Object.assign(files, files),
 revisions: Object.assign(revisions, revisions),
+index: Object.assign(index, index),
 compilations: Object.assign(compilations, compilations),
 }
 
