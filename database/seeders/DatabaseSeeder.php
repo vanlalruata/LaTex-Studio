@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             ProjectManagementSeeder::class,
             AiSeeder::class,
             ActivitySeeder::class,
+            TableStyleProfileSeeder::class,
         ]);
     }
 

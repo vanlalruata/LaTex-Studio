@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTableDesignRequest;
 use App\Http\Requests\UpdateTableDesignRequest;
 use App\Models\Project;
 use App\Models\TableDesign;
+use App\Models\TableStyleProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class TableDesignController extends Controller
             ],
             'tableDesigns' => $designs,
             'activeDesign' => $designs->first(),
+            'styleProfiles' => $this->styleProfiles(),
         ]);
     }
 
@@ -65,6 +67,7 @@ class TableDesignController extends Controller
             ],
             'tableDesigns' => $designs,
             'activeDesign' => $this->formatDesign($tableDesign),
+            'styleProfiles' => $this->styleProfiles(),
         ]);
     }
 
@@ -152,5 +155,31 @@ class TableDesignController extends Controller
             'status' => $design->status,
             'updated_at' => $design->updated_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * @return list<array{
+     *     public_id: string,
+     *     name: string,
+     *     slug: string,
+     *     description: string|null,
+     *     configuration_json: array<string, mixed>
+     * }>
+     */
+    private function styleProfiles(): array
+    {
+        return TableStyleProfile::query()
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get(['public_id', 'name', 'slug', 'description', 'configuration_json'])
+            ->map(static fn (TableStyleProfile $p): array => [
+                'public_id' => $p->public_id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'description' => $p->description,
+                'configuration_json' => $p->configuration_json,
+            ])
+            ->values()
+            ->all();
     }
 }

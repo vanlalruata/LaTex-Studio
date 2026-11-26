@@ -48,6 +48,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -78,6 +85,11 @@ import {
 } from '@/services/tableDesigner/cellOperations';
 import { generateTableLatex } from '@/services/tableDesigner/latexGenerator';
 import {
+    applyStyleProfileConfig,
+    BUILT_IN_TABLE_TEMPLATES,
+    type TableTemplateDefinition,
+} from '@/services/tableDesigner/tableTemplates';
+import {
     cellKey,
     createDefaultTableDocument,
     makeId,
@@ -100,6 +112,14 @@ interface SavedDesign {
     updated_at: string | null;
 }
 
+interface StyleProfileItem {
+    public_id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    configuration_json: Record<string, unknown>;
+}
+
 const props = defineProps<{
     project: {
         public_id: string;
@@ -108,6 +128,7 @@ const props = defineProps<{
     };
     tableDesigns: SavedDesign[];
     activeDesign: SavedDesign | null;
+    styleProfiles?: StyleProfileItem[];
 }>();
 
 const activePublicId = ref<string | null>(props.activeDesign?.public_id ?? null);
@@ -123,6 +144,7 @@ const isSaving = ref(false);
 const hasUnsavedChanges = ref(false);
 const deleteDialogOpen = ref(false);
 const splitDialogOpen = ref(false);
+const templatesDialogOpen = ref(false);
 const isDraggingRange = ref(false);
 const dragAnchor = ref<{ rowIdx: number; colIdx: number } | null>(null);
 
@@ -328,6 +350,72 @@ function addTableFootnote(): void {
 function removeTableFootnote(fnId: string): void {
     pushUndoSnapshot();
     doc.value.footnotes = doc.value.footnotes.filter((f) => f.id !== fnId);
+}
+
+function applyTemplate(tpl: TableTemplateDefinition): void {
+    pushUndoSnapshot();
+    const built = tpl.build();
+    doc.value = built;
+    selectedRowId.value = built.rows[0]?.id ?? null;
+    selectedColId.value = built.columns[0]?.id ?? null;
+    selectedCellKeys.value = new Set(
+        built.rows[0] && built.columns[0]
+            ? [cellKey(built.rows[0].id, built.columns[0].id)]
+            : [],
+    );
+    isExternallyModified.value = false;
+    templatesDialogOpen.value = false;
+    toast.success(`Applied "${tpl.name}" template.`);
+}
+
+function selectStyleProfile(slug: string): void {
+    const profile = props.styleProfiles?.find((p) => p.slug === slug);
+    if (!profile) {
+        return;
+    }
+    pushUndoSnapshot();
+    doc.value.style.profileId = profile.public_id;
+    applyStyleProfileConfig(doc.value, profile.configuration_json);
+    toast.success(`Applied "${profile.name}" style preset.`);
+}
+
+function exportJsonPreset(): void {
+    const blob = new Blob([JSON.stringify(doc.value, null, 2)], {
+        type: 'application/json;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${doc.value.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'table'}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+function importJsonPreset(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const parsed = JSON.parse(String(reader.result)) as TableDocument;
+            if (parsed.schemaVersion !== 1 || !Array.isArray(parsed.rows) || !Array.isArray(parsed.columns)) {
+                toast.error('Invalid table preset JSON format.');
+                return;
+            }
+            pushUndoSnapshot();
+            doc.value = parsed;
+            isExternallyModified.value = false;
+            templatesDialogOpen.value = false;
+            toast.success('Imported table preset.');
+        } catch {
+            toast.error('Unable to parse JSON preset file.');
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
 }
 
 function getCsrfToken(): string {
@@ -786,6 +874,10 @@ function renderCellMath(tex: string): string {
                         <span>Landscape</span>
                     </Button>
 
+                    <Button variant="outline" size="sm" @click="templatesDialogOpen = true">
+                        <span>Templates</span>
+                    </Button>
+
                     <Button variant="outline" size="sm" @click="downloadTex">
                         <Download class="size-3.5" />
                         <span>Export .tex</span>
@@ -808,6 +900,9 @@ function renderCellMath(tex: string): string {
                             </DropdownMenuItem>
                             <DropdownMenuItem @click="copyLatex">
                                 <Copy class="mr-2 size-3.5" /> Copy LaTeX
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @click="exportJsonPreset">
+                                <Download class="mr-2 size-3.5" /> Export JSON Preset
                             </DropdownMenuItem>
                             <DropdownMenuSeparator v-if="activePublicId && project.can_edit" />
                             <DropdownMenuItem
@@ -1344,6 +1439,22 @@ function renderCellMath(tex: string): string {
                             <AccordionItem value="table">
                                 <AccordionTrigger>Table &amp; Caption</AccordionTrigger>
                                 <AccordionContent class="space-y-3">
+                                    <div v-if="props.styleProfiles && props.styleProfiles.length > 0">
+                                        <Label class="text-[11px]">Style Profile Preset</Label>
+                                        <select
+                                            :value="doc.style.preset"
+                                            class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                            @change="selectStyleProfile(($event.target as HTMLSelectElement).value)"
+                                        >
+                                            <option
+                                                v-for="profile in props.styleProfiles"
+                                                :key="profile.public_id"
+                                                :value="profile.slug"
+                                            >
+                                                {{ profile.name }}
+                                            </option>
+                                        </select>
+                                    </div>
                                     <div>
                                         <Label class="text-[11px]">Caption</Label>
                                         <Textarea v-model="doc.caption" rows="2" class="mt-1 text-xs" />
@@ -1576,6 +1687,44 @@ function renderCellMath(tex: string): string {
                     </ScrollArea>
                 </aside>
             </div>
+
+            <Dialog :open="templatesDialogOpen" @update:open="templatesDialogOpen = $event">
+                <DialogContent class="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Table Templates &amp; Presets</DialogTitle>
+                        <DialogDescription>
+                            Apply an academic table template or import a saved JSON table preset.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div class="grid gap-3 py-2 sm:grid-cols-2">
+                        <div
+                            v-for="tpl in BUILT_IN_TABLE_TEMPLATES"
+                            :key="tpl.id"
+                            class="flex flex-col justify-between rounded-lg border border-slate-200 p-3"
+                        >
+                            <div>
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-sm font-semibold text-slate-900">{{ tpl.name }}</span>
+                                    <Badge variant="secondary" class="text-[10px]">{{ tpl.category }}</Badge>
+                                </div>
+                                <p class="mt-1 text-xs text-slate-500">{{ tpl.description }}</p>
+                            </div>
+                            <Button variant="outline" size="sm" class="mt-3 w-full" @click="applyTemplate(tpl)">
+                                Apply Template
+                            </Button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between border-t pt-3 text-xs">
+                        <label class="cursor-pointer font-medium text-indigo-600 hover:underline">
+                            Import JSON Preset
+                            <input type="file" accept=".json,application/json" class="hidden" @change="importJsonPreset" />
+                        </label>
+                        <Button variant="ghost" size="sm" @click="exportJsonPreset">
+                            Export Current JSON
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog :open="splitDialogOpen" @update:open="splitDialogOpen = $event">
                 <AlertDialogContent>
