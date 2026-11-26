@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PublicFooter from '@/components/public/PublicFooter.vue';
 import PublicHeader from '@/components/public/PublicHeader.vue';
+import { Toaster } from '@/components/ui/sonner';
 </script>
 
 <template>
@@ -19,5 +20,6 @@ import PublicHeader from '@/components/public/PublicHeader.vue';
         </main>
 
         <PublicFooter />
+        <Toaster />
     </div>
 </template>

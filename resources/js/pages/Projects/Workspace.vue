@@ -39,6 +39,17 @@ import BibliographyPanel from '@/components/editor/BibliographyPanel.vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
 import SymbolPalette from '@/components/editor/SymbolPalette.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Toaster } from '@/components/ui/sonner';
 import { dashboard } from '@/routes';
 import compilationsRoutes from '@/routes/compilations';
 import projectsRoutes from '@/routes/projects';
@@ -113,7 +124,9 @@ const props = defineProps<{
 }>();
 
 const fileList = ref<FileNode[]>([...props.files]);
-const currentFile = ref<ActiveFileState | null>(props.activeFile ? { ...props.activeFile } : null);
+const currentFile = ref<ActiveFileState | null>(
+    props.activeFile ? { ...props.activeFile } : null,
+);
 const openTabs = ref<FileNode[]>(
     props.activeFile
         ? props.files.filter((f) => f.public_id === props.activeFile?.public_id)
@@ -121,7 +134,9 @@ const openTabs = ref<FileNode[]>(
 );
 const revisionList = ref<RevisionItem[]>([...props.revisions]);
 const fileSearch = ref('');
-const leftSidebarTab = ref<'explorer' | 'symbols' | 'bibliography' | 'review' | 'ai' | 'revisions'>('explorer');
+const leftSidebarTab = ref<
+    'explorer' | 'symbols' | 'bibliography' | 'review' | 'ai' | 'revisions'
+>('explorer');
 const bibEntries = ref<BibEntry[]>([]);
 const reviewThreads = ref<CommentThreadItem[]>([]);
 const reviewSuggestions = ref<SuggestionItem[]>([]);
@@ -130,13 +145,17 @@ const aiActions = ref<AiActionItem[]>([]);
 const isAiAsking = ref(false);
 const aiError = ref<string | null>(null);
 const showBottomDrawer = ref(false);
-const saveStatus = ref<'saved' | 'saving' | 'dirty' | 'conflict' | 'error'>('saved');
+const saveStatus = ref<'saved' | 'saving' | 'dirty' | 'conflict' | 'error'>(
+    'saved',
+);
 const cursorPos = ref({ lineNumber: 1, column: 1 });
 const newFileName = ref('');
 const showNewFileInput = ref(false);
 const isStalePdf = ref(false);
 const isCompiling = ref(false);
-const latestCompilationState = ref<CompilationSummary | null>(props.latestCompilation);
+const latestCompilationState = ref<CompilationSummary | null>(
+    props.latestCompilation,
+);
 const lastSuccessfulCompilationId = ref<string | null>(
     props.project.last_successful_compilation_id,
 );
@@ -164,7 +183,9 @@ const outlineHeadings = computed(() => {
     const headings: Array<{ level: number; title: string; line: number }> = [];
 
     lines.forEach((line, index) => {
-        const match = line.match(/\\(part|chapter|section|subsection|subsubsection)\*?\{([^}]+)\}/);
+        const match = line.match(
+            /\\(part|chapter|section|subsection|subsubsection)\*?\{([^}]+)\}/,
+        );
         if (match) {
             const depthMap: Record<string, number> = {
                 part: 0,
@@ -210,7 +231,10 @@ async function openFile(file: FileNode): Promise<void> {
     }
 
     const response = await fetch(
-        projectsRoutes.files.show({ project: props.project.public_id, file: file.public_id }).url,
+        projectsRoutes.files.show({
+            project: props.project.public_id,
+            file: file.public_id,
+        }).url,
         {
             headers: { Accept: 'application/json' },
             credentials: 'same-origin',
@@ -302,10 +326,15 @@ async function saveCurrentFile(): Promise<void> {
         return;
     }
 
-    const updated = (await response.json()) as { version: number; size_bytes: number };
+    const updated = (await response.json()) as {
+        version: number;
+        size_bytes: number;
+    };
     currentFile.value.version = updated.version;
 
-    const listEntry = fileList.value.find((f) => f.public_id === currentFile.value?.public_id);
+    const listEntry = fileList.value.find(
+        (f) => f.public_id === currentFile.value?.public_id,
+    );
     if (listEntry) {
         listEntry.version = updated.version;
         listEntry.size_bytes = updated.size_bytes;
@@ -346,13 +375,18 @@ async function createFile(): Promise<void> {
     await openFile(created);
 }
 
+const fileToDelete = ref<FileNode | null>(null);
+
 async function deleteFile(file: FileNode): Promise<void> {
     if (!props.project.can_edit || file.path === props.project.root_file_path) {
         return;
     }
 
     const response = await fetch(
-        projectsRoutes.files.destroy({ project: props.project.public_id, file: file.public_id }).url,
+        projectsRoutes.files.destroy({
+            project: props.project.public_id,
+            file: file.public_id,
+        }).url,
         {
             method: 'DELETE',
             credentials: 'same-origin',
@@ -367,7 +401,9 @@ async function deleteFile(file: FileNode): Promise<void> {
         return;
     }
 
-    fileList.value = fileList.value.filter((f) => f.public_id !== file.public_id);
+    fileList.value = fileList.value.filter(
+        (f) => f.public_id !== file.public_id,
+    );
     closeTab(file.public_id);
 }
 
@@ -484,10 +520,13 @@ async function pollCompilation(compilationId: string): Promise<void> {
 }
 
 async function refreshProjectIndex(): Promise<void> {
-    const response = await fetch(projectsRoutes.index(props.project.public_id).url, {
-        headers: { Accept: 'application/json' },
-        credentials: 'same-origin',
-    });
+    const response = await fetch(
+        projectsRoutes.index(props.project.public_id).url,
+        {
+            headers: { Accept: 'application/json' },
+            credentials: 'same-origin',
+        },
+    );
 
     if (!response.ok) {
         return;
@@ -526,11 +565,15 @@ async function loadCollaborationData(): Promise<void> {
     ]);
 
     if (commentsRes.ok) {
-        const cData = (await commentsRes.json()) as { threads: CommentThreadItem[] };
+        const cData = (await commentsRes.json()) as {
+            threads: CommentThreadItem[];
+        };
         reviewThreads.value = cData.threads;
     }
     if (suggestionsRes.ok) {
-        const sData = (await suggestionsRes.json()) as { suggestions: SuggestionItem[] };
+        const sData = (await suggestionsRes.json()) as {
+            suggestions: SuggestionItem[];
+        };
         reviewSuggestions.value = sData.suggestions;
     }
     if (aiRes.ok) {
@@ -548,21 +591,24 @@ async function handleCreateThread(body: string): Promise<void> {
         return;
     }
 
-    const res = await fetch(projectsRoutes.comments.store(props.project.public_id).url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-XSRF-TOKEN': getCsrfToken(),
+    const res = await fetch(
+        projectsRoutes.comments.store(props.project.public_id).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                file_id: currentFile.value.public_id,
+                start_line: cursorPos.value.lineNumber,
+                end_line: cursorPos.value.lineNumber,
+                body,
+            }),
         },
-        body: JSON.stringify({
-            file_id: currentFile.value.public_id,
-            start_line: cursorPos.value.lineNumber,
-            end_line: cursorPos.value.lineNumber,
-            body,
-        }),
-    });
+    );
 
     if (res.ok) {
         await loadCollaborationData();
@@ -571,11 +617,17 @@ async function handleCreateThread(body: string): Promise<void> {
 
 async function handleResolveThread(threadId: string): Promise<void> {
     const res = await fetch(
-        projectsRoutes.comments.resolve({ project: props.project.public_id, thread: threadId }).url,
+        projectsRoutes.comments.resolve({
+            project: props.project.public_id,
+            thread: threadId,
+        }).url,
         {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+            headers: {
+                Accept: 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken(),
+            },
         },
     );
     if (res.ok) {
@@ -585,18 +637,26 @@ async function handleResolveThread(threadId: string): Promise<void> {
 
 async function handleAcceptSuggestion(suggestionId: string): Promise<void> {
     const res = await fetch(
-        projectsRoutes.suggestions.accept({ project: props.project.public_id, suggestion: suggestionId }).url,
+        projectsRoutes.suggestions.accept({
+            project: props.project.public_id,
+            suggestion: suggestionId,
+        }).url,
         {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+            headers: {
+                Accept: 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken(),
+            },
         },
     );
 
     if (res.ok) {
         await loadCollaborationData();
         if (currentFile.value) {
-            const active = fileList.value.find((f) => f.public_id === currentFile.value?.public_id);
+            const active = fileList.value.find(
+                (f) => f.public_id === currentFile.value?.public_id,
+            );
             if (active) {
                 currentFile.value = null;
                 await openFile(active);
@@ -607,11 +667,17 @@ async function handleAcceptSuggestion(suggestionId: string): Promise<void> {
 
 async function handleRejectSuggestion(suggestionId: string): Promise<void> {
     const res = await fetch(
-        projectsRoutes.suggestions.reject({ project: props.project.public_id, suggestion: suggestionId }).url,
+        projectsRoutes.suggestions.reject({
+            project: props.project.public_id,
+            suggestion: suggestionId,
+        }).url,
         {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { Accept: 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
+            headers: {
+                Accept: 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken(),
+            },
         },
     );
     if (res.ok) {
@@ -627,27 +693,33 @@ async function handleAskAi(payload: {
     isAiAsking.value = true;
     aiError.value = null;
 
-    const res = await fetch(projectsRoutes.ai.ask(props.project.public_id).url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-XSRF-TOKEN': getCsrfToken(),
+    const res = await fetch(
+        projectsRoutes.ai.ask(props.project.public_id).url,
+        {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                credential_id: payload.credentialId || null,
+                file_id: currentFile.value?.public_id ?? null,
+                kind: payload.kind,
+                prompt: payload.prompt,
+                context_excerpt:
+                    currentFile.value?.content.slice(0, 6000) ?? null,
+            }),
         },
-        body: JSON.stringify({
-            credential_id: payload.credentialId || null,
-            file_id: currentFile.value?.public_id ?? null,
-            kind: payload.kind,
-            prompt: payload.prompt,
-            context_excerpt: currentFile.value?.content.slice(0, 6000) ?? null,
-        }),
-    });
+    );
 
     isAiAsking.value = false;
 
     if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { message?: string };
+        const err = (await res.json().catch(() => ({}))) as {
+            message?: string;
+        };
         aiError.value = err.message ?? 'AI request failed.';
         return;
     }
@@ -673,11 +745,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="flex h-screen w-screen flex-col overflow-hidden bg-slate-50 text-slate-900">
+    <div
+        class="flex h-screen w-screen flex-col overflow-hidden bg-slate-50 text-slate-900"
+    >
         <Head :title="`${project.title} — Workspace`" />
 
         <!-- Top IDE Header -->
-        <header class="flex h-11 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3">
+        <header
+            class="flex h-11 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-3"
+        >
             <div class="flex items-center gap-3">
                 <Link
                     :href="dashboard().url"
@@ -688,10 +764,14 @@ onBeforeUnmount(() => {
                     <span>Projects</span>
                 </Link>
                 <span class="text-slate-300">/</span>
-                <h1 class="max-w-xs truncate text-sm font-semibold text-slate-900">
+                <h1
+                    class="max-w-xs truncate text-sm font-semibold text-slate-900"
+                >
                     {{ project.title }}
                 </h1>
-                <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 capitalize">
+                <span
+                    class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 capitalize"
+                >
                     {{ project.role }}
                 </span>
             </div>
@@ -742,11 +822,17 @@ onBeforeUnmount(() => {
         <!-- Main 3-Pane Workspace -->
         <div class="flex min-h-0 flex-1">
             <!-- Activity Bar -->
-            <aside class="flex w-11 shrink-0 flex-col items-center gap-2 border-r border-slate-200 bg-slate-100/70 py-2">
+            <aside
+                class="flex w-11 shrink-0 flex-col items-center gap-2 border-r border-slate-200 bg-slate-100/70 py-2"
+            >
                 <button
                     type="button"
                     class="rounded-lg p-2 transition"
-                    :class="leftSidebarTab === 'explorer' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    :class="
+                        leftSidebarTab === 'explorer'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
                     title="Explorer & Outline"
                     @click="leftSidebarTab = 'explorer'"
                 >
@@ -755,7 +841,11 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     class="rounded-lg p-2 transition"
-                    :class="leftSidebarTab === 'symbols' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    :class="
+                        leftSidebarTab === 'symbols'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
                     title="Symbol Palette"
                     @click="leftSidebarTab = 'symbols'"
                 >
@@ -764,7 +854,11 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     class="rounded-lg p-2 transition"
-                    :class="leftSidebarTab === 'bibliography' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    :class="
+                        leftSidebarTab === 'bibliography'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
                     title="Bibliography Search"
                     @click="leftSidebarTab = 'bibliography'"
                 >
@@ -773,7 +867,11 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     class="rounded-lg p-2 transition"
-                    :class="leftSidebarTab === 'review' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    :class="
+                        leftSidebarTab === 'review'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
                     title="Comments & Track Changes"
                     @click="leftSidebarTab = 'review'"
                 >
@@ -782,7 +880,11 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     class="rounded-lg p-2 transition"
-                    :class="leftSidebarTab === 'ai' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    :class="
+                        leftSidebarTab === 'ai'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
                     title="AI Research Assistant"
                     @click="leftSidebarTab = 'ai'"
                 >
@@ -791,7 +893,11 @@ onBeforeUnmount(() => {
                 <button
                     type="button"
                     class="rounded-lg p-2 transition"
-                    :class="leftSidebarTab === 'revisions' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                    :class="
+                        leftSidebarTab === 'revisions'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
                     title="Revision History"
                     @click="leftSidebarTab = 'revisions'"
                 >
@@ -800,10 +906,17 @@ onBeforeUnmount(() => {
             </aside>
 
             <!-- Left Explorer + Outline Panel -->
-            <aside class="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+            <aside
+                class="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white"
+            >
                 <template v-if="leftSidebarTab === 'explorer'">
-                    <div class="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-                        <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Explorer</span>
+                    <div
+                        class="flex items-center justify-between border-b border-slate-100 px-3 py-2"
+                    >
+                        <span
+                            class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                            >Explorer</span
+                        >
                         <button
                             v-if="project.can_edit"
                             type="button"
@@ -817,7 +930,9 @@ onBeforeUnmount(() => {
 
                     <div class="border-b border-slate-100 p-2">
                         <div class="relative">
-                            <Search class="pointer-events-none absolute top-2 left-2.5 size-3.5 text-slate-400" />
+                            <Search
+                                class="pointer-events-none absolute top-2 left-2.5 size-3.5 text-slate-400"
+                            />
                             <input
                                 v-model="fileSearch"
                                 type="search"
@@ -825,7 +940,11 @@ onBeforeUnmount(() => {
                                 class="w-full rounded-md border border-slate-200 bg-slate-50 py-1 pr-2 pl-7 text-xs outline-none focus:border-indigo-500 focus:bg-white"
                             />
                         </div>
-                        <form v-if="showNewFileInput" class="mt-2 flex gap-1" @submit.prevent="createFile">
+                        <form
+                            v-if="showNewFileInput"
+                            class="mt-2 flex gap-1"
+                            @submit.prevent="createFile"
+                        >
                             <input
                                 v-model="newFileName"
                                 type="text"
@@ -857,15 +976,20 @@ onBeforeUnmount(() => {
                                 class="flex min-w-0 flex-1 items-center gap-2 text-left"
                                 @click="openFile(file)"
                             >
-                                <FileCode class="size-3.5 shrink-0 text-slate-400" />
+                                <FileCode
+                                    class="size-3.5 shrink-0 text-slate-400"
+                                />
                                 <span class="truncate">{{ file.path }}</span>
                             </button>
                             <button
-                                v-if="project.can_edit && file.path !== project.root_file_path"
+                                v-if="
+                                    project.can_edit &&
+                                    file.path !== project.root_file_path
+                                "
                                 type="button"
-                                class="hidden rounded p-0.5 text-slate-400 hover:text-rose-600 group-hover:block"
+                                class="hidden rounded p-0.5 text-slate-400 group-hover:block hover:text-rose-600"
                                 title="Delete file"
-                                @click="deleteFile(file)"
+                                @click="fileToDelete = file"
                             >
                                 <Trash2 class="size-3" />
                             </button>
@@ -874,12 +998,20 @@ onBeforeUnmount(() => {
 
                     <!-- Document Outline -->
                     <div class="flex h-48 flex-col border-t border-slate-200">
-                        <div class="flex items-center gap-1.5 border-b border-slate-100 px-3 py-1.5">
+                        <div
+                            class="flex items-center gap-1.5 border-b border-slate-100 px-3 py-1.5"
+                        >
                             <ListTree class="size-3.5 text-slate-400" />
-                            <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Outline</span>
+                            <span
+                                class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                                >Outline</span
+                            >
                         </div>
                         <div class="flex-1 overflow-y-auto p-2">
-                            <p v-if="outlineHeadings.length === 0" class="text-xs text-slate-400">
+                            <p
+                                v-if="outlineHeadings.length === 0"
+                                class="text-xs text-slate-400"
+                            >
                                 No section headings in current file.
                             </p>
                             <button
@@ -887,7 +1019,9 @@ onBeforeUnmount(() => {
                                 :key="idx"
                                 type="button"
                                 class="block w-full truncate rounded px-2 py-1 text-left text-xs text-slate-700 hover:bg-slate-100"
-                                :style="{ paddingLeft: `${8 + h.level * 10}px` }"
+                                :style="{
+                                    paddingLeft: `${8 + h.level * 10}px`,
+                                }"
                                 @click="jumpToLine(h.line)"
                             >
                                 {{ h.title }}
@@ -936,7 +1070,10 @@ onBeforeUnmount(() => {
                 <!-- Revisions Sidebar -->
                 <template v-else>
                     <div class="border-b border-slate-100 px-3 py-2">
-                        <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Revisions</span>
+                        <span
+                            class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
+                            >Revisions</span
+                        >
                     </div>
                     <div class="flex-1 space-y-2 overflow-y-auto p-2">
                         <div
@@ -944,9 +1081,14 @@ onBeforeUnmount(() => {
                             :key="rev.public_id"
                             class="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 text-xs"
                         >
-                            <p class="font-medium text-slate-800">{{ rev.message || 'Snapshot' }}</p>
-                            <p class="mt-1 font-mono text-[10px] text-slate-500">
-                                {{ rev.revision_hash.slice(0, 12) }} · {{ rev.creator_name }}
+                            <p class="font-medium text-slate-800">
+                                {{ rev.message || 'Snapshot' }}
+                            </p>
+                            <p
+                                class="mt-1 font-mono text-[10px] text-slate-500"
+                            >
+                                {{ rev.revision_hash.slice(0, 12) }} ·
+                                {{ rev.creator_name }}
                             </p>
                         </div>
                     </div>
@@ -954,9 +1096,13 @@ onBeforeUnmount(() => {
             </aside>
 
             <!-- Center Monaco Editor Column -->
-            <main class="flex min-w-0 flex-1 flex-col border-r border-slate-200 bg-white">
+            <main
+                class="flex min-w-0 flex-1 flex-col border-r border-slate-200 bg-white"
+            >
                 <!-- Tabs + Formatting Toolbar -->
-                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2">
+                <div
+                    class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-2"
+                >
                     <div class="flex items-center overflow-x-auto">
                         <div
                             v-for="tab in openTabs"
@@ -981,7 +1127,10 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div v-if="project.can_edit" class="flex items-center gap-1 py-1">
+                    <div
+                        v-if="project.can_edit"
+                        class="flex items-center gap-1 py-1"
+                    >
                         <button
                             type="button"
                             class="rounded p-1 text-slate-600 hover:bg-slate-200"
@@ -1002,7 +1151,11 @@ onBeforeUnmount(() => {
                             type="button"
                             class="rounded p-1 text-slate-600 hover:bg-slate-200"
                             title="Equation environment"
-                            @click="insertSnippet('\\begin{equation}\n    \n\\end{equation}\n')"
+                            @click="
+                                insertSnippet(
+                                    '\\begin{equation}\n    \n\\end{equation}\n',
+                                )
+                            "
                         >
                             <Sigma class="size-3.5" />
                         </button>
@@ -1038,9 +1191,16 @@ onBeforeUnmount(() => {
                 </div>
 
                 <!-- Bottom Logs & Diagnostics Drawer -->
-                <div v-if="showBottomDrawer" class="flex h-48 shrink-0 flex-col border-t border-slate-200 bg-slate-50">
-                    <div class="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5 text-xs">
-                        <div class="flex items-center gap-2 font-semibold text-slate-700">
+                <div
+                    v-if="showBottomDrawer"
+                    class="flex h-48 shrink-0 flex-col border-t border-slate-200 bg-slate-50"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-1.5 text-xs"
+                    >
+                        <div
+                            class="flex items-center gap-2 font-semibold text-slate-700"
+                        >
                             <Terminal class="size-3.5" />
                             <span>Build Logs & Normalized Diagnostics</span>
                         </div>
@@ -1052,43 +1212,91 @@ onBeforeUnmount(() => {
                             <X class="size-3.5" />
                         </button>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-3 font-mono text-xs text-slate-700">
-                        <p v-if="!latestCompilationState" class="text-slate-500">
-                            No compilation runs recorded for this project yet. Click Compile to run an isolated build.
+                    <div
+                        class="flex-1 overflow-y-auto p-3 font-mono text-xs text-slate-700"
+                    >
+                        <p
+                            v-if="!latestCompilationState"
+                            class="text-slate-500"
+                        >
+                            No compilation runs recorded for this project yet.
+                            Click Compile to run an isolated build.
                         </p>
                         <div v-else class="space-y-2">
                             <div class="flex items-center justify-between">
                                 <p>
-                                    Build <span class="font-semibold">{{ latestCompilationState.public_id.slice(0, 8) }}</span> · Status:
-                                    <strong class="uppercase">{{ latestCompilationState.status }}</strong>
-                                    <span v-if="latestCompilationState.duration_ms"> ({{ latestCompilationState.duration_ms }} ms)</span>
+                                    Build
+                                    <span class="font-semibold">{{
+                                        latestCompilationState.public_id.slice(
+                                            0,
+                                            8,
+                                        )
+                                    }}</span>
+                                    · Status:
+                                    <strong class="uppercase">{{
+                                        latestCompilationState.status
+                                    }}</strong>
+                                    <span
+                                        v-if="
+                                            latestCompilationState.duration_ms
+                                        "
+                                    >
+                                        ({{
+                                            latestCompilationState.duration_ms
+                                        }}
+                                        ms)</span
+                                    >
                                 </p>
                                 <a
-                                    :href="compilationsRoutes.artifacts.show({ compilation: latestCompilationState.public_id, type: 'log' }).url"
+                                    :href="
+                                        compilationsRoutes.artifacts.show({
+                                            compilation:
+                                                latestCompilationState.public_id,
+                                            type: 'log',
+                                        }).url
+                                    "
                                     target="_blank"
                                     class="text-indigo-600 hover:underline"
                                 >
                                     Raw Log
                                 </a>
                             </div>
-                            <p v-if="latestCompilationState.error_summary" class="rounded bg-rose-50 p-2 text-rose-700">
+                            <p
+                                v-if="latestCompilationState.error_summary"
+                                class="rounded bg-rose-50 p-2 text-rose-700"
+                            >
                                 {{ latestCompilationState.error_summary }}
                             </p>
                             <button
-                                v-for="(diag, i) in latestCompilationState.diagnostics"
+                                v-for="(
+                                    diag, i
+                                ) in latestCompilationState.diagnostics"
                                 :key="i"
                                 type="button"
                                 class="block w-full rounded border border-slate-200 bg-white p-2 text-left transition hover:border-indigo-300"
-                                @click="diag.line ? jumpToLine(diag.line) : undefined"
+                                @click="
+                                    diag.line
+                                        ? jumpToLine(diag.line)
+                                        : undefined
+                                "
                             >
                                 <span
                                     class="font-semibold uppercase"
-                                    :class="diag.severity === 'error' ? 'text-rose-600' : 'text-amber-600'"
+                                    :class="
+                                        diag.severity === 'error'
+                                            ? 'text-rose-600'
+                                            : 'text-amber-600'
+                                    "
                                 >
                                     {{ diag.severity }}
                                 </span>
-                                <span v-if="diag.file_path || diag.line" class="text-slate-500">
-                                    · {{ diag.file_path ?? 'source' }}:{{ diag.line ?? '?' }}
+                                <span
+                                    v-if="diag.file_path || diag.line"
+                                    class="text-slate-500"
+                                >
+                                    · {{ diag.file_path ?? 'source' }}:{{
+                                        diag.line ?? '?'
+                                    }}
                                 </span>
                                 — {{ diag.message }}
                             </button>
@@ -1098,7 +1306,9 @@ onBeforeUnmount(() => {
             </main>
 
             <!-- Right PDF Preview Column -->
-            <section class="hidden w-[42%] shrink-0 flex-col bg-slate-100 lg:flex">
+            <section
+                class="hidden w-[42%] shrink-0 flex-col bg-slate-100 lg:flex"
+            >
                 <PdfViewer :pdf-url="pdfUrl" :is-stale="isStalePdf" />
             </section>
         </div>
@@ -1108,17 +1318,28 @@ onBeforeUnmount(() => {
             class="flex h-6 shrink-0 items-center justify-between border-t border-slate-200 bg-white px-3 text-[11px] text-slate-600"
         >
             <div class="flex items-center gap-4">
-                <span class="font-mono">{{ currentFile?.path ?? 'No file' }}</span>
+                <span class="font-mono">{{
+                    currentFile?.path ?? 'No file'
+                }}</span>
                 <span class="flex items-center gap-1">
-                    <Loader2 v-if="saveStatus === 'saving'" class="size-3 animate-spin text-indigo-600" />
-                    <CheckCircle2 v-else-if="saveStatus === 'saved'" class="size-3 text-emerald-600" />
+                    <Loader2
+                        v-if="saveStatus === 'saving'"
+                        class="size-3 animate-spin text-indigo-600"
+                    />
+                    <CheckCircle2
+                        v-else-if="saveStatus === 'saved'"
+                        class="size-3 text-emerald-600"
+                    />
                     <AlertCircle v-else class="size-3 text-amber-600" />
                     <span class="capitalize">{{ saveStatus }}</span>
                 </span>
             </div>
 
             <div class="flex items-center gap-4 tabular-nums">
-                <span>Ln {{ cursorPos.lineNumber }}, Col {{ cursorPos.column }}</span>
+                <span
+                    >Ln {{ cursorPos.lineNumber }}, Col
+                    {{ cursorPos.column }}</span
+                >
                 <span>UTF-8</span>
                 <span class="flex items-center gap-1">
                     <ArrowLeftRight class="size-3 text-emerald-600" />
@@ -1127,5 +1348,46 @@ onBeforeUnmount(() => {
                 <span class="font-mono">{{ project.compiler_engine }}</span>
             </div>
         </footer>
+
+        <AlertDialog
+            :open="fileToDelete !== null"
+            @update:open="
+                (open) => {
+                    if (!open) fileToDelete = null;
+                }
+            "
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete project file</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to delete
+                        <strong class="font-mono">{{
+                            fileToDelete?.path
+                        }}</strong
+                        >? This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        class="bg-destructive text-white hover:bg-destructive/90"
+                        @click="
+                            () => {
+                                const target = fileToDelete;
+                                fileToDelete = null;
+                                if (target) {
+                                    void deleteFile(target);
+                                }
+                            }
+                        "
+                    >
+                        Delete file
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <Toaster />
     </div>
 </template>

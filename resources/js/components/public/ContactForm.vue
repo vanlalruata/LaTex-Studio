@@ -3,6 +3,7 @@ import { useForm } from '@inertiajs/vue3';
 import { CheckCircle2 } from '@lucide/vue';
 import { ref } from 'vue';
 import { store } from '@/actions/App/Http/Controllers/PublicSite/ContactController';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const submitted = ref(false);
 
@@ -33,20 +34,18 @@ function submit(): void {
     <div
         class="rounded-2xl border border-academic-border bg-surface p-6 shadow-(--shadow-soft) sm:p-8"
     >
-        <div
+        <Alert
             v-if="submitted"
             role="status"
-            class="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
+            class="mb-6 border-emerald-200 bg-emerald-50 text-emerald-900"
         >
-            <CheckCircle2 class="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-            <div>
-                <p class="font-medium">Enquiry received</p>
-                <p class="mt-1 text-xs text-emerald-800">
-                    Thank you. Your message has been recorded for our team to
-                    review.
-                </p>
-            </div>
-        </div>
+            <CheckCircle2 class="size-4 text-emerald-700" aria-hidden="true" />
+            <AlertTitle>Enquiry received</AlertTitle>
+            <AlertDescription class="text-emerald-800">
+                Thank you. Your message has been recorded for our team to
+                review.
+            </AlertDescription>
+        </Alert>
 
         <form class="space-y-5" @submit.prevent="submit">
             <div class="hidden" aria-hidden="true">

@@ -22,6 +22,12 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             canonicalUrl: string;
+            flash?: {
+                success?: string | null;
+                error?: string | null;
+                warning?: string | null;
+                info?: string | null;
+            };
             publicSite: PublicSiteProps;
             [key: string]: unknown;
         };

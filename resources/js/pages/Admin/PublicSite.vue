@@ -1,11 +1,23 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { AlertTriangle, Trash2 } from '@lucide/vue';
+import { ref } from 'vue';
 import {
     destroyPlan,
     storePlan,
     updateSettings,
 } from '@/actions/App/Http/Controllers/Admin/PublicSiteController';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface AdminPlan {
     id: number;
@@ -102,9 +114,14 @@ function createPlan(): void {
         });
 }
 
+const planToDelete = ref<AdminPlan | null>(null);
+
 function removePlan(planId: number): void {
     router.delete(destroyPlan.url(planId), {
         preserveScroll: true,
+        onFinish: () => {
+            planToDelete.value = null;
+        },
     });
 }
 </script>
@@ -136,22 +153,18 @@ function removePlan(planId: number): void {
             </span>
         </div>
 
-        <div
+        <Alert
             v-if="props.paidModeWithoutPlansWarning"
-            class="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+            class="border-amber-300 bg-amber-50 text-amber-900"
         >
-            <AlertTriangle class="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-            <div>
-                <p class="font-medium">
-                    Pricing remains hidden on the public site
-                </p>
-                <p class="mt-0.5 text-xs">
-                    Paid or contact-sales mode is selected, but at least one
-                    active public plan and an enabled pricing page are required
-                    before pricing becomes visible.
-                </p>
-            </div>
-        </div>
+            <AlertTriangle class="size-4 text-amber-700" aria-hidden="true" />
+            <AlertTitle>Pricing remains hidden on the public site</AlertTitle>
+            <AlertDescription class="text-amber-800">
+                Paid or contact-sales mode is selected, but at least one active
+                public plan and an enabled pricing page are required before
+                pricing becomes visible.
+            </AlertDescription>
+        </Alert>
 
         <form
             class="space-y-6 rounded-xl border bg-card p-6"
@@ -268,7 +281,7 @@ function removePlan(planId: number): void {
                     <button
                         type="button"
                         class="inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10"
-                        @click="removePlan(plan.id)"
+                        @click="planToDelete = plan"
                     >
                         <Trash2 class="size-3.5" />
                         Delete
@@ -327,5 +340,35 @@ function removePlan(planId: number): void {
                 </div>
             </form>
         </div>
+
+        <AlertDialog
+            :open="planToDelete !== null"
+            @update:open="
+                (open) => {
+                    if (!open) planToDelete = null;
+                }
+            "
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete pricing plan</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to delete
+                        <strong>{{ planToDelete?.name }}</strong>? This action
+                        cannot be undone and will immediately update public
+                        pricing visibility.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        class="bg-destructive text-white hover:bg-destructive/90"
+                        @click="planToDelete && removePlan(planToDelete.id)"
+                    >
+                        Delete plan
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
 </template>

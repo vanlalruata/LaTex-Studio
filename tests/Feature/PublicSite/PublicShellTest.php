@@ -8,6 +8,7 @@ test('public home page renders with allowlisted publicSite props', function () {
     $response->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Public/Home')
+            ->has('flash')
             ->has('publicSite', fn (Assert $publicSite) => $publicSite
                 ->has('brandName')
                 ->has('tagline')
