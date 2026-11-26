@@ -42,3 +42,16 @@ export interface FaqItem {
     question: string;
     answer: string;
 }
+
+export interface PricingPlanItem {
+    slug: string;
+    name: string;
+    summary: string | null;
+    priceAmount: number;
+    currency: string;
+    billingInterval: string;
+    features: string[];
+    ctaLabel: string;
+    ctaType: string;
+    ctaTarget: string | null;
+}

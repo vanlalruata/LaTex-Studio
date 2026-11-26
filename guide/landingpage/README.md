@@ -7,6 +7,7 @@
 - Inertia.js 3
 - Vue 3.5 / TypeScript
 - Tailwind CSS 4.1
+- **shadcn-vue as the exclusive UI component system** across the public website, authenticated portal, and admin interface
 - MySQL
 - Redis where caching, queues, or rate limiting require it
 - Existing application authentication, authorization, settings, and billing foundations where available
@@ -45,5 +46,6 @@ Do not imply that the platform has a proprietary, fully TeX-compatible typesetti
 - Contact submissions must be validated, rate-limited, stored safely, and manageable by authorized administrators.
 - The demo must use synthetic sample content and must not expose real user projects, source files, credentials, or compiler infrastructure.
 - Public marketing pages must not leak private application configuration or admin-only settings.
+- All application UI components must use shadcn-vue. Do not introduce another component library or build parallel bespoke UI primitives. Native semantic HTML remains appropriate for page structure and content.
 - Reuse the project's existing design tokens, auth, route conventions, and components where appropriate; inspect the repository before changing anything.
 - Implement in phases, run tests, and report assumptions. Do not silently invent product capabilities, prices, SLAs, security certifications, or customer testimonials.

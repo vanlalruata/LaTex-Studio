@@ -148,3 +148,28 @@ Suggested statuses: `new`, `in_progress`, `resolved`, `spam`.
 - Use existing permission middleware/policies for admin.
 - Do not introduce a new billing provider as part of this landing page task.
 - Avoid external dependencies for simple interactions.
+
+
+## 8.11 Exclusive frontend component library: shadcn-vue
+
+The public site, authenticated portal and admin portal must use shadcn-vue as their only UI component system.
+
+### Repository inspection
+- Inspect `components.json`, the installed shadcn-vue package/version, aliases, generated component directory and existing wrappers.
+- Determine whether components are installed locally or consumed through the project's existing registry workflow.
+- Reuse existing generated components; do not duplicate them.
+- If shadcn-vue is not yet configured, propose the exact compatible setup for Vue 3, TypeScript, Vite and Tailwind CSS 4.1 before changing dependencies.
+
+### Implementation rules
+- Use shadcn-vue `Button`, `Card`, `Alert`, `AlertDialog`, `Dialog`, `Sheet`, `Input`, `Textarea`, `Select`, `Checkbox`, `Switch`, `Tabs`, `Accordion`, `NavigationMenu`, `DropdownMenu`, `Badge`, `Table`, `Tooltip`, `Popover`, `Separator`, `Skeleton`, `Progress`, `Breadcrumb`, `Pagination`, and `Sonner`/toast components as appropriate and only where installed.
+- Use shadcn-vue Form components with the project's chosen validation library and server validation errors.
+- Use shadcn-vue `AlertDialog` for destructive confirmations; do not substitute browser `confirm()`.
+- Use shadcn-vue `Alert` for important inline status/error messages.
+- Use shadcn-vue `Sheet` for mobile navigation and responsive side panels where appropriate.
+- Use shadcn-vue `Dialog` for modal workflows and `DropdownMenu` for action menus.
+- Use shadcn-vue `Table` for admin data tables, with accessible responsive handling.
+- Use the installed shadcn-vue toast/sonner integration for transient feedback.
+
+Native semantic HTML is allowed and required for page structure, text, headings, landmarks, lists and content. Do not interpret “only shadcn-vue” as requiring a component around every `div` or paragraph. However, do not implement a second UI component library or bespoke replacements for controls that shadcn-vue already provides.
+
+Tailwind CSS 4.1 remains the styling and layout system. Theme shadcn-vue components through the project's shared tokens and CSS variables. Keep component accessibility and keyboard behaviour intact.

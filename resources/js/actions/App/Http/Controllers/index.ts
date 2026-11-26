@@ -9,6 +9,7 @@ import ProjectMemberController from './ProjectMemberController'
 import CommentController from './CommentController'
 import SuggestionController from './SuggestionController'
 import AiAssistantController from './AiAssistantController'
+import Admin from './Admin'
 import Settings from './Settings'
 const Controllers = {
     PublicSite: Object.assign(PublicSite, PublicSite),
@@ -22,6 +23,7 @@ ProjectMemberController: Object.assign(ProjectMemberController, ProjectMemberCon
 CommentController: Object.assign(CommentController, CommentController),
 SuggestionController: Object.assign(SuggestionController, SuggestionController),
 AiAssistantController: Object.assign(AiAssistantController, AiAssistantController),
+Admin: Object.assign(Admin, Admin),
 Settings: Object.assign(Settings, Settings),
 }
 

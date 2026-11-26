@@ -10,6 +10,7 @@ import {
     faq,
     features,
     howItWorks,
+    pricing,
     privacy,
     templates,
     terms,
@@ -27,7 +28,7 @@ const productLinks = computed(() => {
         { label: 'Templates', href: templates.url() },
     ];
     if (publicSite.value?.pricingVisible) {
-        links.push({ label: 'Pricing', href: '/pricing' });
+        links.push({ label: 'Pricing', href: pricing.url() });
     }
     return links;
 });

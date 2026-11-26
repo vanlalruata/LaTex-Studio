@@ -3,6 +3,7 @@ import FeatureController from './FeatureController'
 import HowItWorksController from './HowItWorksController'
 import DemoController from './DemoController'
 import TemplateController from './TemplateController'
+import PricingController from './PricingController'
 import AboutController from './AboutController'
 import FaqController from './FaqController'
 import LegalController from './LegalController'
@@ -12,6 +13,7 @@ FeatureController: Object.assign(FeatureController, FeatureController),
 HowItWorksController: Object.assign(HowItWorksController, HowItWorksController),
 DemoController: Object.assign(DemoController, DemoController),
 TemplateController: Object.assign(TemplateController, TemplateController),
+PricingController: Object.assign(PricingController, PricingController),
 AboutController: Object.assign(AboutController, AboutController),
 FaqController: Object.assign(FaqController, FaqController),
 LegalController: Object.assign(LegalController, LegalController),

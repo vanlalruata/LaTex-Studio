@@ -312,6 +312,84 @@ templates.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     templates.form = templatesForm
 /**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+export const pricing = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: pricing.url(options),
+    method: 'get',
+})
+
+pricing.definition = {
+    methods: ["get","head"],
+    url: '/pricing',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+pricing.url = (options?: RouteQueryOptions) => {
+    return pricing.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+pricing.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: pricing.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+pricing.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: pricing.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+    const pricingForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: pricing.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+        pricingForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: pricing.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PublicSite\PricingController::__invoke
+ * @see app/Http/Controllers/PublicSite/PricingController.php:12
+ * @route '/pricing'
+ */
+        pricingForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: pricing.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    pricing.form = pricingForm
+/**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
  * @see app/Http/Controllers/PublicSite/AboutController.php:11
  * @route '/about'
@@ -628,6 +706,7 @@ const publicMethod = {
 howItWorks: Object.assign(howItWorks, howItWorks),
 demo: Object.assign(demo, demo),
 templates: Object.assign(templates, templates),
+pricing: Object.assign(pricing, pricing),
 about: Object.assign(about, about),
 faq: Object.assign(faq, faq),
 privacy: Object.assign(privacy, privacy),

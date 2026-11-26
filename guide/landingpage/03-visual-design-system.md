@@ -121,3 +121,57 @@ Clearly label as “Interactive product preview” if it is a frontend simulatio
 - Alt text for meaningful product imagery; decorative visuals use empty alt.
 - Forms have labels, descriptions and error associations.
 - Do not communicate feature availability by colour alone.
+
+
+## 3.11 Mandatory component-system standard: shadcn-vue
+
+**shadcn-vue is the exclusive UI component system** for the entire product frontend:
+- Public marketing website.
+- Authenticated research-writing portal.
+- Admin and management portal.
+- Settings, forms, dialogs, menus, notifications and other interactive surfaces.
+
+Rules:
+1. Use shadcn-vue components for interactive controls and reusable UI patterns wherever an appropriate component exists.
+2. Do not introduce PrimeVue, Vuetify, Quasar, Element Plus, Bootstrap Vue, Headless UI, DaisyUI, or another competing component library.
+3. Do not create a parallel bespoke component framework for buttons, inputs, dialogs, menus, tabs, cards, alerts, tables, tooltips or similar patterns.
+4. Compose and theme shadcn-vue components to achieve the product's visual identity. A branded wrapper around a shadcn-vue component is acceptable when it preserves the component's accessibility and behaviour.
+5. Native semantic HTML (`main`, `section`, `header`, `footer`, headings, paragraphs, lists, `article`, `nav`) is expected for document structure and content. The requirement is not to wrap every HTML element in a component.
+6. Use Tailwind CSS 4.1 for layout, spacing, responsive behaviour and theming, while keeping component behaviour and accessibility consistent with shadcn-vue.
+7. Inspect the installed shadcn-vue version and generated component conventions before adding or updating components. Do not assume every component is installed.
+8. Add only the components actually required. Follow the project's chosen shadcn-vue installation and registry conventions; do not copy component source from unrelated versions.
+9. Keep accessible keyboard interactions, focus management, ARIA semantics and form validation behaviour intact when composing components.
+
+Recommended component mapping (confirm availability in the installed version):
+
+| UI need | Preferred shadcn-vue component |
+|---|---|
+| Primary/secondary actions | Button |
+| Feature/plan/content surfaces | Card |
+| Notices and inline feedback | Alert |
+| Destructive/important confirmation | AlertDialog |
+| General modal content | Dialog |
+| Mobile navigation / side panels | Sheet |
+| Text fields | Input |
+| Long-form fields | Textarea |
+| Field grouping and validation | Form + FormField / project form integration |
+| Choice controls | Select, RadioGroup, Checkbox, Switch |
+| Tabs in demo or settings | Tabs |
+| FAQ | Accordion |
+| Navigation dropdowns | NavigationMenu, DropdownMenu |
+| Context actions | DropdownMenu |
+| Status labels | Badge |
+| Data tables | Table |
+| Tooltips | Tooltip |
+| Popovers | Popover |
+| Date/time selection | Calendar / DatePicker composition, if installed |
+| Toast notifications | Sonner or the project's installed shadcn-vue toast solution |
+| Progress / loading | Progress, Skeleton |
+| Command/search palette | Command + Dialog |
+| Pagination | Pagination |
+| Breadcrumbs | Breadcrumb |
+| Avatar / user menu | Avatar, DropdownMenu |
+| Separators | Separator |
+| Scrollable panels | ScrollArea |
+
+Do not use a component merely because it exists. Choose the simplest accessible component that matches the interaction.

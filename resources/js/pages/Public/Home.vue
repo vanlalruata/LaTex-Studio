@@ -16,6 +16,7 @@ import {
 import { computed } from 'vue';
 import FaqAccordion from '@/components/public/FaqAccordion.vue';
 import FeatureCard from '@/components/public/FeatureCard.vue';
+import PricingCard from '@/components/public/PricingCard.vue';
 import PublicContainer from '@/components/public/PublicContainer.vue';
 import SectionHeading from '@/components/public/SectionHeading.vue';
 import SeoHead from '@/components/public/SeoHead.vue';
@@ -25,14 +26,16 @@ import {
     faq,
     features as featuresRoute,
     howItWorks,
+    pricing as pricingRoute,
     templates,
 } from '@/routes/public';
-import type { FaqItem, FeatureItem } from '@/types/public';
+import type { FaqItem, FeatureItem, PricingPlanItem } from '@/types/public';
 
 type Props = {
     canRegister: boolean;
     features: FeatureItem[];
     faqs: FaqItem[];
+    pricingPlans: PricingPlanItem[];
 };
 
 const props = defineProps<Props>();
@@ -40,6 +43,11 @@ const page = usePage();
 const isAuthenticated = computed(() => Boolean(page.props.auth?.user));
 const registrationMode = computed(
     () => page.props.publicSite?.registrationMode ?? 'open',
+);
+const showPricing = computed(
+    () =>
+        Boolean(page.props.publicSite?.pricingVisible) &&
+        props.pricingPlans.length > 0,
 );
 
 const iconMap: Record<string, typeof FileCode2> = {
@@ -482,6 +490,38 @@ const workflowSteps = [
                         reproducible project summaries.
                     </p>
                 </div>
+            </div>
+        </PublicContainer>
+    </section>
+
+    <section
+        v-if="showPricing"
+        id="pricing"
+        class="border-t border-academic-border bg-canvas py-16 sm:py-20"
+    >
+        <PublicContainer>
+            <div
+                class="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"
+            >
+                <SectionHeading
+                    eyebrow="Plans"
+                    title="Simple, transparent plans"
+                    description="Choose a plan configured for your research workflow."
+                />
+                <Link
+                    :href="pricingRoute()"
+                    class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-academic-primary hover:text-academic-primary-hover"
+                >
+                    <span>Compare plans</span>
+                    <ArrowRight class="size-4" aria-hidden="true" />
+                </Link>
+            </div>
+            <div class="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <PricingCard
+                    v-for="plan in props.pricingPlans"
+                    :key="plan.slug"
+                    :plan="plan"
+                />
             </div>
         </PublicContainer>
     </section>

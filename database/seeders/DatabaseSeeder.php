@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,7 +14,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::query()->firstOrCreate(
+        $adminRole = Role::query()->firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => 'web',
+        ]);
+
+        $admin = User::query()->firstOrCreate(
             ['email' => 'admin@latexstudio.com'],
             [
                 'name' => 'Platform Admin',
@@ -21,6 +27,7 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+        $admin->assignRole($adminRole);
 
         User::query()->firstOrCreate(
             ['email' => 'researcher@latexstudio.com'],

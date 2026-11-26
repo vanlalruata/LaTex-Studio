@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\PublicSiteController as AdminPublicSiteController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\PublicSite\FeatureController;
 use App\Http\Controllers\PublicSite\HomeController;
 use App\Http\Controllers\PublicSite\HowItWorksController;
 use App\Http\Controllers\PublicSite\LegalController;
+use App\Http\Controllers\PublicSite\PricingController;
 use App\Http\Controllers\PublicSite\TemplateController;
 use App\Http\Controllers\SuggestionController;
 use Illuminate\Http\Request;
@@ -27,6 +29,7 @@ Route::get('/features', FeatureController::class)->name('public.features');
 Route::get('/how-it-works', HowItWorksController::class)->name('public.how-it-works');
 Route::get('/demo', DemoController::class)->name('public.demo');
 Route::get('/templates', TemplateController::class)->name('public.templates');
+Route::get('/pricing', PricingController::class)->name('public.pricing');
 Route::get('/about', AboutController::class)->name('public.about');
 Route::get('/faq', FaqController::class)->name('public.faq');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('public.privacy');
@@ -73,6 +76,17 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');
     Route::post('projects/{project}/ai/ask', [AiAssistantController::class, 'ask'])->name('projects.ai.ask');
 });
+
+Route::middleware(['auth', 'verified', 'can:manage-public-site'])
+    ->prefix('admin/public-site')
+    ->name('admin.public-site.')
+    ->group(function (): void {
+        Route::get('/', [AdminPublicSiteController::class, 'index'])->name('index');
+        Route::put('/settings', [AdminPublicSiteController::class, 'updateSettings'])->name('settings.update');
+        Route::post('/plans', [AdminPublicSiteController::class, 'storePlan'])->name('plans.store');
+        Route::put('/plans/{plan}', [AdminPublicSiteController::class, 'updatePlan'])->name('plans.update');
+        Route::delete('/plans/{plan}', [AdminPublicSiteController::class, 'destroyPlan'])->name('plans.destroy');
+    });
 
 require __DIR__.'/settings.php';
 

@@ -5,7 +5,13 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import PublicContainer from '@/components/public/PublicContainer.vue';
 import { dashboard, home, login, register } from '@/routes';
-import { about, features, howItWorks, templates } from '@/routes/public';
+import {
+    about,
+    features,
+    howItWorks,
+    pricing,
+    templates,
+} from '@/routes/public';
 
 const page = usePage();
 const mobileMenuOpen = ref(false);
@@ -22,7 +28,7 @@ const navLinks = computed(() => {
     ];
 
     if (publicSite.value?.pricingVisible) {
-        items.push({ label: 'Pricing', href: '/pricing' });
+        items.push({ label: 'Pricing', href: pricing.url() });
     }
 
     items.push({ label: 'About', href: about.url() });

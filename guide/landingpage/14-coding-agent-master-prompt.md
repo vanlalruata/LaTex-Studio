@@ -41,6 +41,7 @@ Then stop and request approval. Do not generate migrations, controllers or pages
 - Vue 3.5.
 - TypeScript.
 - Tailwind CSS 4.1.
+- **shadcn-vue — the exclusive UI component system for the public website, authenticated portal and admin interface.**
 - MySQL.
 - Reuse the existing application stack and conventions.
 
@@ -186,3 +187,22 @@ Provide:
 - Known limitations and next steps.
 
 Do not claim a test passed unless it was run. Do not claim the website is production-ready if security, privacy, legal copy, deployment or acceptance checks remain incomplete.
+
+
+## G. Mandatory shadcn-vue component policy
+
+This requirement applies to **all frontend surfaces**: public landing pages, authenticated writing portal, admin portal, settings, forms and dialogs.
+
+- Use shadcn-vue as the only UI component library.
+- Before coding, inspect the installed shadcn-vue version, `components.json`, aliases, generated component files and Tailwind 4 compatibility.
+- Reuse installed shadcn-vue components. Add missing components using the repository's established shadcn-vue workflow and compatible version.
+- Use shadcn-vue components such as Alert, AlertDialog, Button, Card, Dialog, Sheet, Input, Textarea, Form, Select, Checkbox, Switch, Tabs, Accordion, NavigationMenu, DropdownMenu, Badge, Table, Tooltip, Popover, Separator, Skeleton, Progress, Breadcrumb, Pagination and the installed toast/Sonner solution where appropriate.
+- Use AlertDialog for destructive confirmations; do not use browser `alert()` or `confirm()` for product workflows.
+- Use Alert for inline errors and important status notices.
+- Use Sheet for mobile navigation/side panels where suitable.
+- Do not add PrimeVue, Vuetify, Quasar, Element Plus, Bootstrap Vue, Headless UI, DaisyUI or another component library.
+- Do not create bespoke replacements for common controls that already exist in shadcn-vue.
+- Branded wrapper components are permitted when they compose shadcn-vue primitives and preserve accessibility.
+- Native semantic HTML is permitted and expected for document structure and content: landmarks, sections, headings, paragraphs, lists and articles. Do not wrap every text node or structural element in a UI component.
+- Tailwind CSS 4.1 is used for layout, responsive styling and theme tokens; shadcn-vue remains the source of UI interaction patterns and accessible primitives.
+- Do not assume a named component is installed. Confirm its availability and use the correct import/API for the installed version.
