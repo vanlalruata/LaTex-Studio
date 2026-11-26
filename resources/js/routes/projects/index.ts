@@ -6,6 +6,7 @@ import members from './members'
 import comments from './comments'
 import suggestions from './suggestions'
 import chat from './chat'
+import tables from './tables'
 import ai from './ai'
 /**
 * @see \App\Http\Controllers\ProjectController::store
@@ -560,6 +561,7 @@ members: Object.assign(members, members),
 comments: Object.assign(comments, comments),
 suggestions: Object.assign(suggestions, suggestions),
 chat: Object.assign(chat, chat),
+tables: Object.assign(tables, tables),
 ai: Object.assign(ai, ai),
 }
 

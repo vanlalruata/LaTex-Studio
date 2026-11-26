@@ -2,6 +2,8 @@
 
 namespace App\Services\PublicSite;
 
+use App\Models\MarketingFeature;
+
 class MarketingCatalog
 {
     /**
@@ -19,6 +21,41 @@ class MarketingCatalog
      * }>
      */
     public function features(): array
+    {
+        $features = MarketingFeature::query()
+            ->where('is_public', true)
+            ->where('availability_status', '!=', 'disabled')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return $features->map(static fn (MarketingFeature $feature): array => [
+            'slug' => $feature->slug,
+            'title' => $feature->title,
+            'summary' => $feature->summary,
+            'description' => $feature->description,
+            'category' => $feature->category,
+            'status' => $feature->availability_status,
+            'iconKey' => $feature->icon_key,
+            'featured' => $feature->is_featured,
+        ])->all();
+    }
+
+    /**
+     * Seed baseline product capabilities and keep unseeded environments useful.
+     *
+     * @return list<array{
+     *     slug: string,
+     *     title: string,
+     *     summary: string,
+     *     description: string,
+     *     category: string,
+     *     status: 'available'|'beta'|'planned',
+     *     iconKey: string,
+     *     featured: bool
+     * }>
+     */
+    public function defaultFeatures(): array
     {
         return [
             [

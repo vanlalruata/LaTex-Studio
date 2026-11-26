@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ContactEnquiryController as AdminContactEnquiryController;
+use App\Http\Controllers\Admin\MarketingFeatureController as AdminMarketingFeatureController;
 use App\Http\Controllers\Admin\PublicSiteController as AdminPublicSiteController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\CommentController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\PublicSite\PricingController;
 use App\Http\Controllers\PublicSite\SitemapController;
 use App\Http\Controllers\PublicSite\TemplateController;
 use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\TableDesignController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -85,6 +87,13 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('projects/{project}/chat', [ProjectChatController::class, 'index'])->name('projects.chat.index');
     Route::post('projects/{project}/chat', [ProjectChatController::class, 'store'])->name('projects.chat.store');
 
+    // Advanced LaTeX Table Designer
+    Route::get('projects/{project}/tables', [TableDesignController::class, 'index'])->name('projects.tables.index');
+    Route::post('projects/{project}/tables', [TableDesignController::class, 'store'])->name('projects.tables.store');
+    Route::get('projects/{project}/tables/{tableDesign:public_id}', [TableDesignController::class, 'show'])->name('projects.tables.show');
+    Route::put('projects/{project}/tables/{tableDesign:public_id}', [TableDesignController::class, 'update'])->name('projects.tables.update');
+    Route::delete('projects/{project}/tables/{tableDesign:public_id}', [TableDesignController::class, 'destroy'])->name('projects.tables.destroy');
+
     // Phase 9: AI Research Assistant
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');
     Route::post('projects/{project}/ai/ask', [AiAssistantController::class, 'ask'])->name('projects.ai.ask');
@@ -101,6 +110,10 @@ Route::middleware(['auth', 'verified', 'can:manage-public-site'])
         Route::delete('/plans/{plan}', [AdminPublicSiteController::class, 'destroyPlan'])->name('plans.destroy');
         Route::get('/enquiries', [AdminContactEnquiryController::class, 'index'])->name('enquiries.index');
         Route::patch('/enquiries/{enquiry}', [AdminContactEnquiryController::class, 'update'])->name('enquiries.update');
+        Route::get('/features', [AdminMarketingFeatureController::class, 'index'])->name('features.index');
+        Route::post('/features', [AdminMarketingFeatureController::class, 'store'])->name('features.store');
+        Route::put('/features/{feature}', [AdminMarketingFeatureController::class, 'update'])->name('features.update');
+        Route::delete('/features/{feature}', [AdminMarketingFeatureController::class, 'destroy'])->name('features.destroy');
     });
 
 require __DIR__.'/settings.php';

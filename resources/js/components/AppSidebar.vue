@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from '@lucide/vue';
+import {
+    BookOpen,
+    ClipboardList,
+    FolderGit2,
+    LayoutGrid,
+    Settings2,
+    Sparkles,
+} from '@lucide/vue';
+import { usePage } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -15,13 +23,36 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as publicSiteIndex } from '@/routes/admin/public-site';
+import { index as featuresIndex } from '@/routes/admin/public-site/features';
+import { index as enquiriesIndex } from '@/routes/admin/public-site/enquiries';
 import type { NavItem } from '@/types';
+
+const page = usePage();
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+];
+
+const adminNavItems: NavItem[] = [
+    {
+        title: 'Public site settings',
+        href: publicSiteIndex(),
+        icon: Settings2,
+    },
+    {
+        title: 'Marketing features',
+        href: featuresIndex(),
+        icon: Sparkles,
+    },
+    {
+        title: 'Contact enquiries',
+        href: enquiriesIndex(),
+        icon: ClipboardList,
     },
 ];
 
@@ -55,6 +86,11 @@ const footerNavItems: NavItem[] = [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain
+                v-if="page.props.auth.canManageAdmin"
+                :items="adminNavItems"
+                label="Administration"
+            />
         </SidebarContent>
 
         <SidebarFooter>

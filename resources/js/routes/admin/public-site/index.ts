@@ -2,6 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import settings from './settings'
 import plans from './plans'
 import enquiries from './enquiries'
+import features from './features'
 /**
 * @see \App\Http\Controllers\Admin\PublicSiteController::index
  * @see app/Http/Controllers/Admin/PublicSiteController.php:20
@@ -85,6 +86,7 @@ const publicSite = {
 settings: Object.assign(settings, settings),
 plans: Object.assign(plans, plans),
 enquiries: Object.assign(enquiries, enquiries),
+features: Object.assign(features, features),
 }
 
 export default publicSite

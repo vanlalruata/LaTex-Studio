@@ -2,6 +2,7 @@
 
 use App\Enums\CompilerEngine;
 use App\Models\Template;
+use Database\Seeders\MarketingFeatureSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('all public marketing pages render expected Inertia components', function (string $routeName, string $component) {
@@ -21,6 +22,8 @@ test('all public marketing pages render expected Inertia components', function (
 ]);
 
 test('features page exposes non-disabled features with explicit status', function () {
+    app(MarketingFeatureSeeder::class)->run();
+
     $response = $this->get(route('public.features'));
 
     $response->assertOk()
