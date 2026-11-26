@@ -89,17 +89,26 @@ function formatCellContent(
     }
 
     if (cell.merge && cell.merge.isMaster) {
-        if (cell.merge.rowSpan > 1) {
+        const hasMultirow = cell.merge.rowSpan > 1;
+        const hasMulticol = cell.merge.colSpan > 1;
+
+        if (hasMultirow) {
             const vAlign = cell.merge.multirowValign
                 ? `[${cell.merge.multirowValign}]`
                 : '';
-            text = `\\multirow${vAlign}{${cell.merge.rowSpan}}{*}{${text}}`;
+            const vOffset = cell.merge.multirowVoffset
+                ? `[${cell.merge.multirowVoffset}]`
+                : '';
+            const width = col.width || '*';
+            text = `\\multirow${vAlign}{${cell.merge.rowSpan}}{${width}}${vOffset}{${text}}`;
         }
-        if (cell.merge.colSpan > 1) {
+        if (hasMulticol) {
             const align = cell.merge.horizontalAlignOverride || 'c';
             const border = cell.merge.borderOverride ?? align;
             text = `\\multicolumn{${cell.merge.colSpan}}{${border}}{${text}}`;
         }
+    } else if (cell.formatting.horizontalAlign && cell.formatting.horizontalAlign !== col.type) {
+        text = `\\multicolumn{1}{${cell.formatting.horizontalAlign}}{${text}}`;
     }
 
     return text;
@@ -169,6 +178,17 @@ export function resolveTablePackages(doc: TableDocument): PackageRequirement[] {
         });
     }
 
+    const usesArrayCols =
+        doc.columns.some((c) => c.type === 'm' || c.type === 'b') ||
+        Boolean(doc.style.extraRowHeight);
+    if (usesArrayCols) {
+        reqs.set('array', {
+            packageName: 'array',
+            reason: 'Required for m{}/b{} column types or \\extrarowheight',
+            required: true,
+        });
+    }
+
     return Array.from(reqs.values());
 }
 
@@ -194,6 +214,15 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
         }
         if (doc.style.fontSize !== 'normalsize' && doc.style.fontSize !== 'custom') {
             lines.push(`${indent}\\${doc.style.fontSize}`);
+        }
+        if (doc.style.tabColSep) {
+            lines.push(`${indent}\\setlength{\\tabcolsep}{${doc.style.tabColSep}}`);
+        }
+        if (doc.style.arrayStretch && doc.style.arrayStretch !== 1) {
+            lines.push(`${indent}\\renewcommand{\\arraystretch}{${doc.style.arrayStretch}}`);
+        }
+        if (doc.style.extraRowHeight) {
+            lines.push(`${indent}\\setlength{\\extrarowheight}{${doc.style.extraRowHeight}}`);
         }
         if (doc.layout.captionPosition === 'top' && doc.caption) {
             const shortPart = doc.shortCaption ? `[${doc.shortCaption}]` : '';
@@ -254,7 +283,8 @@ export function generateTableLatex(doc: TableDocument): GeneratedTableOutput {
             );
         }
 
-        lines.push(`${innerIndent}${cellStrings.join(' & ')} \\\\`);
+        const rowEnd = row.height ? `\\\\[${row.height}]` : '\\\\';
+        lines.push(`${innerIndent}${cellStrings.join(' & ')} ${rowEnd}`);
 
         const bottomRule = horizontalRuleCommand(row.bottomBorder.style);
         if (bottomRule) {

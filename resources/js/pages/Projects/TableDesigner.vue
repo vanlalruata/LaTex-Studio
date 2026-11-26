@@ -11,10 +11,16 @@ import {
     Download,
     Italic,
     MoreHorizontal,
+    MoveDown,
+    MoveLeft,
+    MoveRight,
+    MoveUp,
     Plus,
     Redo2,
     Rows3,
     Save,
+    Split,
+    TableCellsMerge,
     Trash2,
     Underline,
     Undo2,
@@ -61,6 +67,14 @@ import {
 } from '@/components/ui/tooltip';
 import { latexToMathML } from '@/lib/mathRenderer';
 import projectsRoutes from '@/routes/projects';
+import {
+    analyzeSelection,
+    clearCells,
+    mergeSelectedCells,
+    moveColumn,
+    moveRow,
+    splitMergedCell,
+} from '@/services/tableDesigner/cellOperations';
 import { generateTableLatex } from '@/services/tableDesigner/latexGenerator';
 import {
     cellKey,
@@ -107,6 +121,9 @@ const redoStack = ref<string[]>([]);
 const isSaving = ref(false);
 const hasUnsavedChanges = ref(false);
 const deleteDialogOpen = ref(false);
+const splitDialogOpen = ref(false);
+const isDraggingRange = ref(false);
+const dragAnchor = ref<{ rowIdx: number; colIdx: number } | null>(null);
 
 const selectionMode = ref<'cell' | 'row' | 'column' | 'table'>('cell');
 const selectedRowId = ref<string | null>(doc.value.rows[0]?.id ?? null);
@@ -148,6 +165,123 @@ const activeCell = computed(() => {
     }
     return doc.value.cells[cellKey(selectedRowId.value, selectedColId.value)];
 });
+
+const selectionBounds = computed(() =>
+    analyzeSelection(doc.value, selectedCellKeys.value),
+);
+
+const canMergeSelection = computed(
+    () =>
+        props.project.can_edit &&
+        Boolean(selectionBounds.value?.isValidRectangle) &&
+        (selectionBounds.value?.cellCount ?? 0) >= 2,
+);
+
+const canSplitSelection = computed(
+    () =>
+        props.project.can_edit &&
+        Boolean(activeCell.value?.merge?.isMaster) &&
+        ((activeCell.value?.merge?.rowSpan ?? 1) > 1 ||
+            (activeCell.value?.merge?.colSpan ?? 1) > 1),
+);
+
+function startRangeDrag(rowIdx: number, colIdx: number, shiftKey: boolean): void {
+    if (shiftKey) {
+        return;
+    }
+    isDraggingRange.value = true;
+    dragAnchor.value = { rowIdx, colIdx };
+}
+
+function updateRangeDrag(rowIdx: number, colIdx: number): void {
+    if (!isDraggingRange.value || !dragAnchor.value) {
+        return;
+    }
+    const minR = Math.min(dragAnchor.value.rowIdx, rowIdx);
+    const maxR = Math.max(dragAnchor.value.rowIdx, rowIdx);
+    const minC = Math.min(dragAnchor.value.colIdx, colIdx);
+    const maxC = Math.max(dragAnchor.value.colIdx, colIdx);
+    const next = new Set<string>();
+    for (let r = minR; r <= maxR; r++) {
+        for (let c = minC; c <= maxC; c++) {
+            const row = doc.value.rows[r];
+            const col = doc.value.columns[c];
+            if (row && col) {
+                next.add(cellKey(row.id, col.id));
+            }
+        }
+    }
+    selectedCellKeys.value = next;
+}
+
+function endRangeDrag(): void {
+    isDraggingRange.value = false;
+}
+
+function handleMergeCells(): void {
+    if (!canMergeSelection.value) {
+        toast.warning('Select a valid rectangular range of at least 2 cells to merge.');
+        return;
+    }
+    pushUndoSnapshot();
+    const ok = mergeSelectedCells(doc.value, selectedCellKeys.value);
+    if (!ok) {
+        toast.error('Cannot merge overlapping merged regions.');
+        return;
+    }
+    toast.success('Cells merged.');
+}
+
+function requestSplitCell(): void {
+    if (!canSplitSelection.value || !activeCell.value) {
+        return;
+    }
+    if (activeCell.value.content.trim().includes(' ')) {
+        splitDialogOpen.value = true;
+        return;
+    }
+    executeSplitCell('keep_first');
+}
+
+function executeSplitCell(strategy: 'keep_first' | 'distribute_words'): void {
+    if (!selectedRowId.value || !selectedColId.value) {
+        return;
+    }
+    pushUndoSnapshot();
+    splitMergedCell(doc.value, selectedRowId.value, selectedColId.value, strategy);
+    splitDialogOpen.value = false;
+    toast.success('Merged cell split.');
+}
+
+function handleMoveRow(delta: -1 | 1): void {
+    if (!selectedRow.value) {
+        return;
+    }
+    pushUndoSnapshot();
+    const ok = moveRow(doc.value, selectedRow.value.index, selectedRow.value.index + delta);
+    if (!ok) {
+        toast.warning('Cannot move a row across a multirow merge.');
+    }
+}
+
+function handleMoveColumn(delta: -1 | 1): void {
+    if (!selectedCol.value) {
+        return;
+    }
+    pushUndoSnapshot();
+    const ok = moveColumn(doc.value, selectedCol.value.index, selectedCol.value.index + delta);
+    if (!ok) {
+        toast.warning('Cannot move a column across a multicolumn merge.');
+    }
+}
+
+function handleClearSelectedCells(): void {
+    if (selectedCellKeys.value.size === 0) {
+        return;
+    }
+    pushUndoSnapshot();
+    clearCells(doc.value, selectedCellKeys.value);
+}
 
 function getCsrfToken(): string {
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -576,6 +710,26 @@ function renderCellMath(tex: string): string {
                         <span>+ Column</span>
                     </Button>
 
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="!canMergeSelection"
+                        @click="handleMergeCells"
+                    >
+                        <TableCellsMerge class="size-3.5" />
+                        <span>Merge</span>
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="!canSplitSelection"
+                        @click="requestSplitCell"
+                    >
+                        <Split class="size-3.5" />
+                        <span>Split</span>
+                    </Button>
+
                     <Button variant="outline" size="sm" @click="downloadTex">
                         <Download class="size-3.5" />
                         <span>Export .tex</span>
@@ -743,6 +897,50 @@ function renderCellMath(tex: string): string {
                         >
                             Delete Col
                         </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            :disabled="!project.can_edit || !selectedRow"
+                            title="Move row up"
+                            @click="handleMoveRow(-1)"
+                        >
+                            <MoveUp class="size-3.5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            :disabled="!project.can_edit || !selectedRow"
+                            title="Move row down"
+                            @click="handleMoveRow(1)"
+                        >
+                            <MoveDown class="size-3.5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            :disabled="!project.can_edit || !selectedCol"
+                            title="Move column left"
+                            @click="handleMoveColumn(-1)"
+                        >
+                            <MoveLeft class="size-3.5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            :disabled="!project.can_edit || !selectedCol"
+                            title="Move column right"
+                            @click="handleMoveColumn(1)"
+                        >
+                            <MoveRight class="size-3.5" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            :disabled="!project.can_edit || selectedCellKeys.size === 0"
+                            @click="handleClearSelectedCells"
+                        >
+                            Clear
+                        </Button>
                     </div>
 
                     <!-- Interactive Grid Canvas -->
@@ -769,7 +967,7 @@ function renderCellMath(tex: string): string {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody @mouseup="endRangeDrag" @mouseleave="endRangeDrag">
                                     <tr v-for="row in doc.rows" :key="row.id">
                                         <td
                                             class="cursor-pointer border border-slate-200 bg-slate-50 px-2 py-1 text-center text-xs font-medium text-slate-500 hover:bg-slate-100"
@@ -778,36 +976,41 @@ function renderCellMath(tex: string): string {
                                         >
                                             R{{ row.index + 1 }}
                                         </td>
-                                        <td
-                                            v-for="col in doc.columns"
-                                            :key="col.id"
-                                            class="relative border border-slate-200 p-0 transition-colors"
-                                            :class="[
-                                                selectedCellKeys.has(cellKey(row.id, col.id))
-                                                    ? 'ring-2 ring-indigo-500 ring-inset bg-indigo-50/30'
-                                                    : 'bg-white',
-                                                row.topBorder.style !== 'none' ? 'border-t-2 border-t-slate-800' : '',
-                                                row.bottomBorder.style !== 'none' ? 'border-b-2 border-b-slate-800' : '',
-                                                col.leftBorder.style !== 'none' ? 'border-l-2 border-l-slate-800' : '',
-                                                col.rightBorder.style !== 'none' ? 'border-r-2 border-r-slate-800' : '',
-                                            ]"
-                                            @click="selectCell(row.id, col.id, $event.shiftKey)"
-                                        >
-                                            <input
-                                                :data-cell-input="`${row.id}:${col.id}`"
-                                                :value="doc.cells[cellKey(row.id, col.id)]?.content ?? ''"
-                                                :readonly="!project.can_edit"
-                                                class="w-full bg-transparent px-3 py-2 text-sm outline-none"
+                                        <template v-for="col in doc.columns" :key="col.id">
+                                            <td
+                                                v-if="!doc.cells[cellKey(row.id, col.id)]?.merge || doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster"
+                                                :rowspan="doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster ? doc.cells[cellKey(row.id, col.id)]?.merge?.rowSpan : 1"
+                                                :colspan="doc.cells[cellKey(row.id, col.id)]?.merge?.isMaster ? doc.cells[cellKey(row.id, col.id)]?.merge?.colSpan : 1"
+                                                class="relative border border-slate-200 p-0 transition-colors"
                                                 :class="[
-                                                    doc.cells[cellKey(row.id, col.id)]?.formatting.bold || row.bold ? 'font-bold' : '',
-                                                    doc.cells[cellKey(row.id, col.id)]?.formatting.italic || row.italic ? 'italic' : '',
-                                                    doc.cells[cellKey(row.id, col.id)]?.formatting.underline ? 'underline' : '',
-                                                    col.type === 'c' ? 'text-center' : col.type === 'r' ? 'text-right' : 'text-left',
+                                                    selectedCellKeys.has(cellKey(row.id, col.id))
+                                                        ? 'ring-2 ring-indigo-500 ring-inset bg-indigo-50/30'
+                                                        : 'bg-white',
+                                                    row.topBorder.style !== 'none' ? 'border-t-2 border-t-slate-800' : '',
+                                                    row.bottomBorder.style !== 'none' ? 'border-b-2 border-b-slate-800' : '',
+                                                    col.leftBorder.style !== 'none' ? 'border-l-2 border-l-slate-800' : '',
+                                                    col.rightBorder.style !== 'none' ? 'border-r-2 border-r-slate-800' : '',
                                                 ]"
-                                                @input="updateCellContent(row.id, col.id, ($event.target as HTMLInputElement).value)"
-                                                @keydown="handleCellKeydown($event, row.index, col.index)"
-                                            />
-                                        </td>
+                                                @mousedown="startRangeDrag(row.index, col.index, $event.shiftKey)"
+                                                @mouseenter="updateRangeDrag(row.index, col.index)"
+                                                @click="selectCell(row.id, col.id, $event.shiftKey)"
+                                            >
+                                                <input
+                                                    :data-cell-input="`${row.id}:${col.id}`"
+                                                    :value="doc.cells[cellKey(row.id, col.id)]?.content ?? ''"
+                                                    :readonly="!project.can_edit"
+                                                    class="w-full bg-transparent px-3 py-2 text-sm outline-none"
+                                                    :class="[
+                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.bold || row.bold ? 'font-bold' : '',
+                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.italic || row.italic ? 'italic' : '',
+                                                        doc.cells[cellKey(row.id, col.id)]?.formatting.underline ? 'underline' : '',
+                                                        (doc.cells[cellKey(row.id, col.id)]?.merge?.horizontalAlignOverride || doc.cells[cellKey(row.id, col.id)]?.formatting.horizontalAlign || col.type) === 'c' ? 'text-center' : (doc.cells[cellKey(row.id, col.id)]?.merge?.horizontalAlignOverride || doc.cells[cellKey(row.id, col.id)]?.formatting.horizontalAlign || col.type) === 'r' ? 'text-right' : 'text-left',
+                                                    ]"
+                                                    @input="updateCellContent(row.id, col.id, ($event.target as HTMLInputElement).value)"
+                                                    @keydown="handleCellKeydown($event, row.index, col.index)"
+                                                />
+                                            </td>
+                                        </template>
                                     </tr>
                                 </tbody>
                             </table>
@@ -956,6 +1159,33 @@ function renderCellMath(tex: string): string {
                                             <option value="latex">Raw LaTeX source</option>
                                         </select>
                                     </div>
+                                    <div v-if="activeCell.merge?.isMaster" class="space-y-2 border-t pt-2">
+                                        <p class="text-[11px] font-semibold text-slate-600">
+                                            Merged Cell ({{ activeCell.merge.rowSpan }}x{{ activeCell.merge.colSpan }})
+                                        </p>
+                                        <div>
+                                            <Label class="text-[11px]">Merged Alignment</Label>
+                                            <select
+                                                v-model="activeCell.merge.horizontalAlignOverride"
+                                                class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                            >
+                                                <option value="l">Left (l)</option>
+                                                <option value="c">Center (c)</option>
+                                                <option value="r">Right (r)</option>
+                                            </select>
+                                        </div>
+                                        <div v-if="activeCell.merge.rowSpan > 1">
+                                            <Label class="text-[11px]">Multirow Vertical Align</Label>
+                                            <select
+                                                v-model="activeCell.merge.multirowValign"
+                                                class="mt-1 w-full rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs"
+                                            >
+                                                <option value="t">Top (t)</option>
+                                                <option value="c">Middle (c)</option>
+                                                <option value="b">Bottom (b)</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
 
@@ -1069,12 +1299,42 @@ function renderCellMath(tex: string): string {
                                             <option value="bottom">Below table</option>
                                         </select>
                                     </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <Label class="text-[11px]">\tabcolsep</Label>
+                                            <Input v-model="doc.style.tabColSep" placeholder="6pt" class="mt-1 h-7 font-mono text-xs" />
+                                        </div>
+                                        <div>
+                                            <Label class="text-[11px]">\arraystretch</Label>
+                                            <Input v-model.number="doc.style.arrayStretch" type="number" step="0.1" min="0.5" max="3" placeholder="1.0" class="mt-1 h-7 font-mono text-xs" />
+                                        </div>
+                                    </div>
                                 </AccordionContent>
                             </AccordionItem>
                         </Accordion>
                     </ScrollArea>
                 </aside>
             </div>
+
+            <AlertDialog :open="splitDialogOpen" @update:open="splitDialogOpen = $event">
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Split merged cell</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This merged cell contains multiple words. Choose how to preserve its content when splitting:
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction @click="executeSplitCell('keep_first')">
+                            Keep in top-left cell
+                        </AlertDialogAction>
+                        <AlertDialogAction @click="executeSplitCell('distribute_words')">
+                            Distribute words
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <AlertDialog :open="deleteDialogOpen" @update:open="deleteDialogOpen = $event">
                 <AlertDialogContent>

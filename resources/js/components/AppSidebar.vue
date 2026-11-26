@@ -7,6 +7,7 @@ import {
     LayoutGrid,
     Settings2,
     Sparkles,
+    Files,
 } from '@lucide/vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLogo from '@/components/AppLogo.vue';
@@ -26,6 +27,7 @@ import { dashboard } from '@/routes';
 import { index as publicSiteIndex } from '@/routes/admin/public-site';
 import { index as featuresIndex } from '@/routes/admin/public-site/features';
 import { index as enquiriesIndex } from '@/routes/admin/public-site/enquiries';
+import { index as templatesIndex } from '@/routes/admin/public-site/templates';
 import type { NavItem } from '@/types';
 
 const page = usePage();
@@ -48,6 +50,11 @@ const adminNavItems: NavItem[] = [
         title: 'Marketing features',
         href: featuresIndex(),
         icon: Sparkles,
+    },
+    {
+        title: 'Template catalog',
+        href: templatesIndex(),
+        icon: Files,
     },
     {
         title: 'Contact enquiries',

@@ -42,7 +42,7 @@ class MarketingCatalog
     }
 
     /**
-     * Seed baseline product capabilities and keep unseeded environments useful.
+     * Return the baseline catalog used by the repeatable feature seeder.
      *
      * @return list<array{
      *     slug: string,
