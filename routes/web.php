@@ -17,6 +17,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\ConversionJobController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FigureController;
 use App\Http\Controllers\OcrJobController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ProjectChatController;
@@ -154,6 +155,13 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('projects/{project}/tables/{tableDesign:public_id}', [TableDesignController::class, 'show'])->name('projects.tables.show');
     Route::put('projects/{project}/tables/{tableDesign:public_id}', [TableDesignController::class, 'update'])->name('projects.tables.update');
     Route::delete('projects/{project}/tables/{tableDesign:public_id}', [TableDesignController::class, 'destroy'])->name('projects.tables.destroy');
+
+    // Advanced TikZ Figure Editor
+    Route::get('projects/{project}/figures', [FigureController::class, 'index'])->name('projects.figures.index');
+    Route::post('projects/{project}/figures', [FigureController::class, 'store'])->name('projects.figures.store');
+    Route::get('projects/{project}/figures/{figure:public_id}', [FigureController::class, 'show'])->name('projects.figures.show');
+    Route::put('projects/{project}/figures/{figure:public_id}', [FigureController::class, 'update'])->name('projects.figures.update');
+    Route::delete('projects/{project}/figures/{figure:public_id}', [FigureController::class, 'destroy'])->name('projects.figures.destroy');
 
     // Phase 9: AI Research Assistant
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');

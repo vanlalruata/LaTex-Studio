@@ -3,24 +3,31 @@ import { Head, Link } from '@inertiajs/vue3';
 import {
     AlertCircle,
     ArrowLeftRight,
+    Ban,
     Bold,
     BookOpen,
     CheckCircle2,
+    Crosshair,
     Download,
     FileCode,
     FilePlus,
     Files,
+    FileWarning,
     History,
     Home,
     Italic,
+    ListChecks,
     ListTree,
     Loader2,
     MessageCircle,
     MessageSquare,
     Play,
+    Plug,
     Plus,
+    RefreshCw,
     Save,
     Search,
+    Shapes,
     Sigma,
     Sparkles,
     Terminal,
@@ -34,16 +41,27 @@ import AiAssistantPanel, {
     type AiCredentialSummary,
 } from '@/components/ai/AiAssistantPanel.vue';
 import CollaboratorChatPanel from '@/components/collaboration/CollaboratorChatPanel.vue';
+import IntegrationsPanel from '@/components/collaboration/IntegrationsPanel.vue';
+import PresenceStrip from '@/components/collaboration/PresenceStrip.vue';
 import ReviewPanel, {
     type CommentThreadItem,
     type SuggestionItem,
 } from '@/components/collaboration/ReviewPanel.vue';
+import TaskBoardPanel from '@/components/collaboration/TaskBoardPanel.vue';
 import BibliographyPanel from '@/components/editor/BibliographyPanel.vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
 import ResearchToolsPanel from '@/components/editor/ResearchToolsPanel.vue';
 import SymbolPalette from '@/components/editor/SymbolPalette.vue';
 import VisualLatexEditor from '@/components/editor/VisualLatexEditor.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
+import { useBuildInspector } from '@/composables/useBuildInspector';
+import { useProjectAnnotations } from '@/composables/useProjectAnnotations';
+import { useProjectIntegrations } from '@/composables/useProjectIntegrations';
+import { useProjectTasks } from '@/composables/useProjectTasks';
+import { useResearchWorkspace } from '@/composables/useResearchWorkspace';
+import { useRevisions } from '@/composables/useRevisions';
+import { useWorkspacePresence } from '@/composables/useWorkspacePresence';
+import { apiSend } from '@/lib/http';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -57,6 +75,7 @@ import {
 import { Toaster } from '@/components/ui/sonner';
 import { dashboard } from '@/routes';
 import compilationsRoutes from '@/routes/compilations';
+import synctexRoutes from '@/routes/compilations/synctex';
 import projectsRoutes from '@/routes/projects';
 import { parseBibtex, type BibEntry } from '@/services/latex/bibtexParser';
 import { inferMonacoLanguage } from '@/services/latex/monacoLatexLanguage';
@@ -125,7 +144,15 @@ interface BuildHistoryItem {
     status: string;
     compiler_engine: string;
     duration_ms: number | null;
+    exit_code: number | null;
+    error_summary: string | null;
     created_at: string | null;
+    finished_at: string | null;
+    error_count: number;
+    warning_count: number;
+    has_pdf: boolean;
+    has_log: boolean;
+    has_synctex: boolean;
 }
 
 const props = defineProps<{
@@ -146,7 +173,6 @@ const openTabs = ref<FileNode[]>(
         ? props.files.filter((f) => f.public_id === props.activeFile?.public_id)
         : [],
 );
-const revisionList = ref<RevisionItem[]>([...props.revisions]);
 const fileSearch = ref('');
 const leftSidebarTab = ref<
     | 'explorer'
@@ -156,9 +182,11 @@ const leftSidebarTab = ref<
     | 'review'
     | 'ai'
     | 'revisions'
+    | 'tasks'
+    | 'integrations'
 >('explorer');
 const editorMode = ref<'code' | 'visual'>('code');
-const previewTab = ref<'pdf' | 'build'>('pdf');
+const previewTab = ref<'pdf' | 'log' | 'warnings' | 'build'>('pdf');
 const showRightRail = ref(true);
 const rightRailTab = ref<'chat' | 'ai' | 'comments' | 'tools'>('chat');
 const bibEntries = ref<BibEntry[]>([]);
@@ -184,9 +212,72 @@ const lastSuccessfulCompilationId = ref<string | null>(
     props.project.last_successful_compilation_id,
 );
 const editorRef = ref<InstanceType<typeof MonacoEditor> | null>(null);
+const pdfViewerRef = ref<InstanceType<typeof PdfViewer> | null>(null);
+
+const presence = useWorkspacePresence(props.project.public_id);
+const taskBoard = useProjectTasks(props.project.public_id);
+const annotationState = useProjectAnnotations(props.project.public_id);
+const research = useResearchWorkspace(props.project.public_id);
+const integrationState = useProjectIntegrations(props.project.public_id);
+const revisionState = useRevisions(props.project.public_id);
+const revisionList = revisionState.revisions;
+revisionList.value = [...props.revisions];
+const inspector = useBuildInspector();
+
+const { users: presenceUsers } = presence;
+const {
+    tasks: projectTasks,
+    milestones: projectMilestones,
+    isLoading: tasksLoading,
+    error: tasksError,
+    createTask,
+    updateTask,
+    deleteTask,
+    createMilestone,
+} = taskBoard;
+const {
+    annotations,
+    create: persistAnnotation,
+    resolve: resolveAnnotation,
+    remove: removeAnnotation,
+} = annotationState;
+const {
+    assets: researchAssets,
+    sources: researchSources,
+    ocrJobs,
+    conversions,
+    createAsset,
+    deleteAsset,
+    createOcrJob,
+    deleteOcrJob,
+    createConversion,
+    deleteConversion,
+} = research;
+const {
+    integrations,
+    connect: connectIntegration,
+    setStatus: setIntegrationStatus,
+    remove: removeIntegration,
+} = integrationState;
+const {
+    diff: revisionDiff,
+    isLoadingDiff,
+    isRestoring,
+    error: revisionError,
+} = revisionState;
+const { logText, isLoadingLog, error: logError } = inspector;
+
+const activeRevisionId = ref<string | null>(null);
+const restoreTargetId = ref<string | null>(null);
+const engine = ref(props.project.compiler_engine);
+const commitEngineValue = ref(props.project.compiler_engine);
+const activeCompilationId = ref<string | null>(null);
+
+const compilerEngines = ['pdflatex', 'xelatex', 'lualatex'] as const;
 
 let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 let compilePollTimer: ReturnType<typeof setTimeout> | null = null;
+let presenceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function getCsrfToken(): string {
     const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
@@ -241,6 +332,108 @@ const pdfUrl = computed(() =>
           }).url
         : null,
 );
+
+const warningDiagnostics = computed(() =>
+    (latestCompilationState.value?.diagnostics ?? []).filter(
+        (diagnostic) => diagnostic.severity === 'warning',
+    ),
+);
+
+const errorDiagnostics = computed(() =>
+    (latestCompilationState.value?.diagnostics ?? []).filter(
+        (diagnostic) => diagnostic.severity === 'error',
+    ),
+);
+
+const canSyncTex = computed(() => lastSuccessfulCompilationId.value !== null);
+
+function handleCursorChange(position: { lineNumber: number; column: number }): void {
+    cursorPos.value = position;
+
+    if (!currentFile.value) {
+        return;
+    }
+
+    if (presenceTimer) {
+        clearTimeout(presenceTimer);
+    }
+
+    presenceTimer = setTimeout(() => {
+        if (currentFile.value) {
+            void presence.touch({
+                file_id: currentFile.value.public_id,
+                line: position.lineNumber,
+                column: position.column,
+            });
+        }
+    }, 500);
+}
+
+async function handlePresenceJump(user: {
+    cursor: { file_id: string; line: number } | null;
+}): Promise<void> {
+    if (!user.cursor) {
+        return;
+    }
+
+    const file = fileList.value.find(
+        (candidate) => candidate.public_id === user.cursor?.file_id,
+    );
+
+    if (file) {
+        await openFile(file);
+        jumpToLine(user.cursor.line);
+    }
+}
+
+async function forwardSynctex(): Promise<void> {
+    if (!currentFile.value || !lastSuccessfulCompilationId.value) {
+        return;
+    }
+
+    const result = await apiSend<{ page: number }>(
+        synctexRoutes.forward(lastSuccessfulCompilationId.value).url,
+        'POST',
+        {
+            file_path: currentFile.value.path,
+            line: cursorPos.value.lineNumber,
+        },
+    );
+
+    if (result.ok && result.data) {
+        previewTab.value = 'pdf';
+        pdfViewerRef.value?.goToPage(result.data.page);
+    }
+}
+
+async function handleInverseSynctex(payload: {
+    page: number;
+    x: number;
+    y: number;
+}): Promise<void> {
+    if (!lastSuccessfulCompilationId.value) {
+        return;
+    }
+
+    const result = await apiSend<{
+        file_id: string;
+        file_path: string;
+        line: number;
+    }>(synctexRoutes.inverse(lastSuccessfulCompilationId.value).url, 'POST', payload);
+
+    if (!result.ok || !result.data) {
+        return;
+    }
+
+    const file = fileList.value.find(
+        (candidate) => candidate.public_id === result.data?.file_id,
+    );
+
+    if (file) {
+        await openFile(file);
+        jumpToLine(result.data.line);
+    }
+}
 
 async function openFile(file: FileNode): Promise<void> {
     if (file.is_directory) {
@@ -504,7 +697,142 @@ async function triggerCompile(): Promise<void> {
     }
 
     const created = (await response.json()) as { public_id: string };
+    activeCompilationId.value = created.public_id;
     await pollCompilation(created.public_id);
+}
+
+async function cancelBuild(): Promise<void> {
+    if (!activeCompilationId.value) {
+        return;
+    }
+
+    const result = await apiSend<{ public_id: string }>(
+        compilationsRoutes.cancel(activeCompilationId.value).url,
+        'POST',
+    );
+
+    if (result.ok && activeCompilationId.value) {
+        await pollCompilation(activeCompilationId.value);
+    }
+}
+
+async function retryBuild(compilationId: string): Promise<void> {
+    const result = await apiSend<{ public_id: string; status: string }>(
+        compilationsRoutes.retry(compilationId).url,
+        'POST',
+    );
+
+    if (!result.ok || !result.data) {
+        return;
+    }
+
+    isCompiling.value = true;
+    activeCompilationId.value = result.data.public_id;
+    previewTab.value = 'log';
+    await pollCompilation(result.data.public_id);
+}
+
+async function commitEngine(): Promise<void> {
+    const next = engine.value;
+    const previous = commitEngineValue.value;
+
+    if (next === previous || !props.project.can_compile) {
+        return;
+    }
+
+    const result = await apiSend<{ compiler_engine: string }>(
+        projectsRoutes.engine.update(props.project.public_id).url,
+        'PUT',
+        { compiler_engine: next },
+    );
+
+    if (!result.ok) {
+        engine.value = previous;
+
+        return;
+    }
+
+    commitEngineValue.value = next;
+}
+
+async function openLogTab(compilationId?: string | null): Promise<void> {
+    const target = compilationId ?? latestCompilationState.value?.public_id ?? null;
+
+    if (!target) {
+        return;
+    }
+
+    previewTab.value = 'log';
+    await inspector.loadLog(target);
+}
+
+async function selectRevision(revisionId: string): Promise<void> {
+    if (activeRevisionId.value === revisionId) {
+        activeRevisionId.value = null;
+        revisionState.diff.value = null;
+
+        return;
+    }
+
+    activeRevisionId.value = revisionId;
+    await revisionState.loadDiff(revisionId);
+}
+
+async function restoreRevision(): Promise<void> {
+    const target = restoreTargetId.value;
+    restoreTargetId.value = null;
+
+    if (!target) {
+        return;
+    }
+
+    const restored = await revisionState.restore(target);
+
+    if (!restored) {
+        return;
+    }
+
+    activeRevisionId.value = null;
+
+    if (currentFile.value) {
+        const file = fileList.value.find(
+            (candidate) => candidate.public_id === currentFile.value?.public_id,
+        );
+        currentFile.value = null;
+        if (file) {
+            await openFile(file);
+        }
+    }
+}
+
+async function handleCreateAnnotation(body: string): Promise<void> {
+    if (!currentFile.value) {
+        return;
+    }
+
+    await persistAnnotation({
+        fileId: currentFile.value.public_id,
+        startLine: cursorPos.value.lineNumber,
+        body,
+    });
+}
+
+async function handleResolveAnnotation(annotationId: string): Promise<void> {
+    const annotation = annotations.value.find(
+        (candidate) => candidate.public_id === annotationId,
+    );
+
+    if (annotation?.status === 'resolved') {
+        return;
+    }
+
+    await resolveAnnotation(annotationId);
+}
+
+function openReviewPanel(): void {
+    showRightRail.value = true;
+    rightRailTab.value = 'comments';
+    leftSidebarTab.value = 'review';
 }
 
 async function pollCompilation(compilationId: string): Promise<void> {
@@ -756,6 +1084,12 @@ async function handleAskAi(payload: {
 onMounted(() => {
     void refreshProjectIndex();
     void loadCollaborationData();
+    void taskBoard.load();
+    void annotationState.load();
+    void research.load();
+    void integrationState.load();
+    void revisionState.loadList();
+    presence.start();
 });
 
 onBeforeUnmount(() => {
@@ -764,6 +1098,9 @@ onBeforeUnmount(() => {
     }
     if (compilePollTimer) {
         clearTimeout(compilePollTimer);
+    }
+    if (presenceTimer) {
+        clearTimeout(presenceTimer);
     }
 });
 </script>
@@ -801,6 +1138,33 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="flex items-center gap-2">
+                <PresenceStrip
+                    :users="presenceUsers"
+                    :current-file-id="currentFile?.public_id ?? null"
+                    @jump="handlePresenceJump"
+                />
+
+                <label
+                    v-if="project.can_compile"
+                    class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600"
+                    title="Switch the TeX engine for future builds"
+                >
+                    <span class="text-[10px] font-medium tracking-wide text-slate-400 uppercase">Engine</span>
+                    <select
+                        v-model="engine"
+                        class="bg-transparent text-xs font-medium outline-none"
+                        @change="commitEngine"
+                    >
+                        <option
+                            v-for="engineOption in compilerEngines"
+                            :key="engineOption"
+                            :value="engineOption"
+                        >
+                            {{ engineOption }}
+                        </option>
+                    </select>
+                </label>
+
                 <button
                     v-if="project.can_edit"
                     type="button"
@@ -827,6 +1191,14 @@ onBeforeUnmount(() => {
                     <span>Table Designer</span>
                 </Link>
 
+                <Link
+                    :href="projectsRoutes.figures.index(project.public_id).url"
+                    class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                >
+                    <Shapes class="size-3.5" />
+                    <span>TikZ Editor</span>
+                </Link>
+
                 <button
                     type="button"
                     class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
@@ -848,6 +1220,17 @@ onBeforeUnmount(() => {
                 >
                     <MessageCircle class="size-3.5" />
                     <span>Chat &amp; AI</span>
+                </button>
+
+                <button
+                    v-if="project.can_compile && isCompiling"
+                    type="button"
+                    class="inline-flex items-center gap-1.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                    title="Cancel the running compilation"
+                    @click="cancelBuild"
+                >
+                    <Ban class="size-3.5" />
+                    <span>Cancel</span>
                 </button>
 
                 <button
@@ -961,6 +1344,32 @@ onBeforeUnmount(() => {
                     @click="leftSidebarTab = 'revisions'"
                 >
                     <History class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="
+                        leftSidebarTab === 'tasks'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
+                    title="Project tasks & milestones"
+                    @click="leftSidebarTab = 'tasks'"
+                >
+                    <ListChecks class="size-4" />
+                </button>
+                <button
+                    type="button"
+                    class="rounded-lg p-2 transition"
+                    :class="
+                        leftSidebarTab === 'integrations'
+                            ? 'bg-white text-indigo-600 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                    "
+                    title="Integrations"
+                    @click="leftSidebarTab = 'integrations'"
+                >
+                    <Plug class="size-4" />
                 </button>
             </aside>
 
@@ -1105,7 +1514,19 @@ onBeforeUnmount(() => {
                 <!-- Research Tools -->
                 <ResearchToolsPanel
                     v-else-if="leftSidebarTab === 'tools'"
+                    :assets="researchAssets"
+                    :sources="researchSources"
+                    :ocr-jobs="ocrJobs"
+                    :conversions="conversions"
+                    :can-edit="project.can_edit"
                     @insert="insertSnippet"
+                    @create-asset="createAsset"
+                    @delete-asset="deleteAsset"
+                    @insert-citation="insertSnippet"
+                    @create-ocr="createOcrJob"
+                    @delete-ocr="deleteOcrJob"
+                    @create-conversion="createConversion"
+                    @delete-conversion="deleteConversion"
                 />
 
                 <!-- Review & Track Changes -->
@@ -1113,12 +1534,16 @@ onBeforeUnmount(() => {
                     v-else-if="leftSidebarTab === 'review'"
                     :threads="reviewThreads"
                     :suggestions="reviewSuggestions"
+                    :annotations="annotations"
                     :can-comment="project.role !== 'viewer'"
                     :can-edit="project.can_edit"
                     @create-thread="handleCreateThread"
                     @resolve-thread="handleResolveThread"
                     @accept-suggestion="handleAcceptSuggestion"
                     @reject-suggestion="handleRejectSuggestion"
+                    @create-annotation="handleCreateAnnotation"
+                    @resolve-annotation="handleResolveAnnotation"
+                    @remove-annotation="removeAnnotation"
                     @jump-to-line="jumpToLine"
                 />
 
@@ -1130,10 +1555,35 @@ onBeforeUnmount(() => {
                     :is-asking="isAiAsking"
                     :error-message="aiError"
                     @ask="handleAskAi"
+                    @open-review="openReviewPanel"
+                />
+
+                <!-- Project tasks & milestones -->
+                <TaskBoardPanel
+                    v-else-if="leftSidebarTab === 'tasks'"
+                    :tasks="projectTasks"
+                    :milestones="projectMilestones"
+                    :can-edit="project.can_edit"
+                    :is-loading="tasksLoading"
+                    :error="tasksError"
+                    @create-task="(title, priority) => createTask({ title, priority })"
+                    @update-task="(taskId, status) => updateTask(taskId, { status })"
+                    @delete-task="deleteTask"
+                    @create-milestone="createMilestone"
+                />
+
+                <!-- Integrations -->
+                <IntegrationsPanel
+                    v-else-if="leftSidebarTab === 'integrations'"
+                    :integrations="integrations"
+                    :can-edit="project.can_edit"
+                    @connect="connectIntegration"
+                    @set-status="setIntegrationStatus"
+                    @remove="removeIntegration"
                 />
 
                 <!-- Revisions Sidebar -->
-                <template v-else>
+                <template v-else-if="leftSidebarTab === 'revisions'">
                     <div class="border-b border-slate-100 px-3 py-2">
                         <span
                             class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
@@ -1141,20 +1591,111 @@ onBeforeUnmount(() => {
                         >
                     </div>
                     <div class="flex-1 space-y-2 overflow-y-auto p-2">
+                        <p
+                            v-if="revisionList.length === 0"
+                            class="py-4 text-center text-xs text-slate-400"
+                        >
+                            No revisions yet.
+                        </p>
+
                         <div
                             v-for="rev in revisionList"
                             :key="rev.public_id"
                             class="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 text-xs"
+                            :class="
+                                activeRevisionId === rev.public_id
+                                    ? 'border-indigo-300 ring-1 ring-indigo-200'
+                                    : ''
+                            "
                         >
-                            <p class="font-medium text-slate-800">
-                                {{ rev.message || 'Snapshot' }}
-                            </p>
-                            <p
-                                class="mt-1 font-mono text-[10px] text-slate-500"
+                            <button
+                                type="button"
+                                class="w-full text-left"
+                                @click="selectRevision(rev.public_id)"
                             >
-                                {{ rev.revision_hash.slice(0, 12) }} ·
-                                {{ rev.creator_name }}
-                            </p>
+                                <p class="font-medium text-slate-800">
+                                    {{ rev.message || 'Snapshot' }}
+                                </p>
+                                <p
+                                    class="mt-1 font-mono text-[10px] text-slate-500"
+                                >
+                                    {{ rev.revision_hash.slice(0, 12) }} ·
+                                    {{ rev.creator_name }}
+                                </p>
+                                <p class="mt-0.5 text-[10px] text-slate-400">
+                                    {{ rev.created_at }}
+                                </p>
+                            </button>
+
+                            <div
+                                v-if="activeRevisionId === rev.public_id"
+                                class="mt-2 border-t border-slate-200 pt-2"
+                            >
+                                <p
+                                    v-if="isLoadingDiff"
+                                    class="text-[11px] text-slate-500"
+                                >
+                                    Comparing with current source…
+                                </p>
+
+                                <template v-else-if="revisionDiff">
+                                    <div class="flex gap-1 text-[10px] font-medium">
+                                        <span class="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700">
+                                            +{{ revisionDiff.counts.added }}
+                                        </span>
+                                        <span class="rounded bg-rose-50 px-1.5 py-0.5 text-rose-700">
+                                            −{{ revisionDiff.counts.removed }}
+                                        </span>
+                                        <span class="rounded bg-amber-50 px-1.5 py-0.5 text-amber-700">
+                                            ~{{ revisionDiff.counts.modified }}
+                                        </span>
+                                    </div>
+
+                                    <p
+                                        v-if="revisionDiff.files.length === 0"
+                                        class="mt-1.5 text-[11px] text-slate-500"
+                                    >
+                                        No differences against current source.
+                                    </p>
+
+                                    <div
+                                        v-for="fileDiff in revisionDiff.files"
+                                        :key="fileDiff.path"
+                                        class="mt-2"
+                                    >
+                                        <p class="font-mono text-[10px] font-medium text-slate-600">
+                                            {{ fileDiff.status }} · {{ fileDiff.path }}
+                                        </p>
+                                        <template v-if="fileDiff.text_available">
+                                            <p class="mt-1 text-[9px] font-semibold tracking-wide text-rose-600 uppercase">
+                                                Snapshot
+                                            </p>
+                                            <pre class="max-h-20 overflow-auto rounded bg-rose-950/90 p-1.5 font-mono text-[10px] whitespace-pre-wrap text-rose-50">{{ fileDiff.before ?? '(empty)' }}</pre>
+                                            <p class="mt-1 text-[9px] font-semibold tracking-wide text-emerald-600 uppercase">
+                                                Current
+                                            </p>
+                                            <pre class="max-h-20 overflow-auto rounded bg-slate-900 p-1.5 font-mono text-[10px] whitespace-pre-wrap text-emerald-50">{{ fileDiff.after ?? '(deleted)' }}</pre>
+                                        </template>
+                                    </div>
+
+                                    <button
+                                        v-if="project.can_edit"
+                                        type="button"
+                                        class="mt-2 w-full rounded bg-amber-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                                        :disabled="isRestoring"
+                                        @click="restoreTargetId = rev.public_id"
+                                    >
+                                        {{ isRestoring ? 'Restoring…' : 'Restore this snapshot' }}
+                                    </button>
+                                </template>
+
+                                <p
+                                    v-else-if="revisionError"
+                                    class="text-[11px] text-rose-600"
+                                >
+                                    {{ revisionError }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -1253,6 +1794,15 @@ onBeforeUnmount(() => {
                             <Sigma class="size-3.5" />
                         </button>
                         <button
+                            v-if="canSyncTex"
+                            type="button"
+                            class="rounded p-1 text-slate-600 hover:bg-slate-200"
+                            title="SyncTeX: jump to this source position in the PDF"
+                            @click="forwardSynctex"
+                        >
+                            <Crosshair class="size-3.5" />
+                        </button>
+                        <button
                             type="button"
                             class="ml-1 inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-slate-600 hover:bg-slate-200"
                             title="Save now (Ctrl+S)"
@@ -1273,7 +1823,7 @@ onBeforeUnmount(() => {
                             :language="currentLanguage"
                             :read-only="!project.can_edit"
                             @update:model-value="handleEditorInput"
-                            @cursor-change="cursorPos = $event"
+                            @cursor-change="handleCursorChange"
                             @save="saveCurrentFile"
                         />
                         <VisualLatexEditor
@@ -1430,6 +1980,36 @@ onBeforeUnmount(() => {
                         type="button"
                         class="rounded-md px-2.5 py-1 font-medium transition"
                         :class="
+                            previewTab === 'log'
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'text-slate-600 hover:bg-slate-100'
+                        "
+                        @click="openLogTab()"
+                    >
+                        Log
+                    </button>
+                    <button
+                        type="button"
+                        class="flex items-center gap-1 rounded-md px-2.5 py-1 font-medium transition"
+                        :class="
+                            previewTab === 'warnings'
+                                ? 'bg-indigo-50 text-indigo-700'
+                                : 'text-slate-600 hover:bg-slate-100'
+                        "
+                        @click="previewTab = 'warnings'"
+                    >
+                        Warnings
+                        <span
+                            v-if="warningDiagnostics.length > 0"
+                            class="rounded-full bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-800"
+                        >
+                            {{ warningDiagnostics.length }}
+                        </span>
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-md px-2.5 py-1 font-medium transition"
+                        :class="
                             previewTab === 'build'
                                 ? 'bg-indigo-50 text-indigo-700'
                                 : 'text-slate-600 hover:bg-slate-100'
@@ -1438,14 +2018,115 @@ onBeforeUnmount(() => {
                     >
                         Build History
                     </button>
+
+                    <a
+                        v-if="latestCompilationState"
+                        :href="
+                            compilationsRoutes.artifacts.show({
+                                compilation: latestCompilationState.public_id,
+                                type: 'log',
+                            }).url
+                        "
+                        target="_blank"
+                        class="ml-auto text-[11px] font-medium text-indigo-600 hover:underline"
+                    >
+                        Raw log
+                    </a>
                 </div>
 
-                <div v-show="previewTab === 'pdf'" class="min-h-0 flex-1">
-                    <PdfViewer :pdf-url="pdfUrl" :is-stale="isStalePdf" />
+                <div v-if="previewTab === 'pdf'" class="min-h-0 flex-1">
+                    <PdfViewer
+                        ref="pdfViewerRef"
+                        :pdf-url="pdfUrl"
+                        :is-stale="isStalePdf"
+                        :is-compiling="isCompiling"
+                        :synctex-enabled="canSyncTex"
+                        @inverse="handleInverseSynctex"
+                    />
                 </div>
 
                 <div
-                    v-if="previewTab === 'build'"
+                    v-else-if="previewTab === 'log'"
+                    class="flex flex-1 flex-col overflow-hidden bg-slate-950"
+                >
+                    <div
+                        class="flex items-center justify-between border-b border-slate-800 px-3 py-1.5 text-[11px] text-slate-300"
+                    >
+                        <span class="font-mono">
+                            {{
+                                latestCompilationState
+                                    ? `build ${latestCompilationState.public_id.slice(0, 8)} · ${latestCompilationState.status}`
+                                    : 'No build yet'
+                            }}
+                        </span>
+                        <button
+                            v-if="latestCompilationState"
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-slate-800"
+                            @click="openLogTab(latestCompilationState.public_id)"
+                        >
+                            <RefreshCw class="size-3" /> Refresh
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-auto p-3 font-mono text-[11px] whitespace-pre-wrap text-slate-200">
+                        <p v-if="isLoadingLog" class="text-slate-400">Loading build log…</p>
+                        <pre v-else-if="logText" class="font-mono whitespace-pre-wrap">{{ logText }}</pre>
+                        <p v-else class="text-slate-400">
+                            {{ logError ?? 'No log artifact recorded for this build.' }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-else-if="previewTab === 'warnings'"
+                    class="flex-1 space-y-2 overflow-y-auto p-3 text-xs"
+                >
+                    <p
+                        v-if="errorDiagnostics.length === 0 && warningDiagnostics.length === 0"
+                        class="py-8 text-center text-slate-500"
+                    >
+                        No errors or warnings in the latest build.
+                    </p>
+
+                    <div v-if="errorDiagnostics.length > 0" class="space-y-1.5">
+                        <p class="flex items-center gap-1 text-[11px] font-semibold tracking-wide text-rose-600 uppercase">
+                            <AlertCircle class="size-3.5" /> Errors ({{ errorDiagnostics.length }})
+                        </p>
+                        <button
+                            v-for="(diagnostic, index) in errorDiagnostics"
+                            :key="`error-${index}`"
+                            type="button"
+                            class="block w-full rounded border border-rose-200 bg-rose-50/60 p-2 text-left hover:border-rose-300"
+                            @click="diagnostic.line ? jumpToLine(diagnostic.line) : undefined"
+                        >
+                            <span class="font-mono text-[10px] text-rose-700">
+                                {{ diagnostic.file_path ?? 'source' }}:{{ diagnostic.line ?? '?' }}
+                            </span>
+                            <span class="mt-0.5 block text-slate-700">{{ diagnostic.message }}</span>
+                        </button>
+                    </div>
+
+                    <div v-if="warningDiagnostics.length > 0" class="space-y-1.5 pt-1">
+                        <p class="flex items-center gap-1 text-[11px] font-semibold tracking-wide text-amber-600 uppercase">
+                            <FileWarning class="size-3.5" /> Warnings ({{ warningDiagnostics.length }})
+                        </p>
+                        <button
+                            v-for="(diagnostic, index) in warningDiagnostics"
+                            :key="`warning-${index}`"
+                            type="button"
+                            class="block w-full rounded border border-amber-200 bg-amber-50/60 p-2 text-left hover:border-amber-300"
+                            @click="diagnostic.line ? jumpToLine(diagnostic.line) : undefined"
+                        >
+                            <span class="font-mono text-[10px] text-amber-700">
+                                {{ diagnostic.file_path ?? 'source' }}:{{ diagnostic.line ?? '?' }}
+                            </span>
+                            <span class="mt-0.5 block text-slate-700">{{ diagnostic.message }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    v-else
                     class="flex-1 space-y-2 overflow-y-auto p-4 text-xs"
                 >
                     <p
@@ -1460,27 +2141,95 @@ onBeforeUnmount(() => {
                     <div
                         v-for="item in props.buildHistory"
                         :key="item.public_id"
-                        class="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3"
+                        class="rounded-lg border border-slate-200 bg-white p-3"
                     >
-                        <div>
-                            <p class="font-mono font-semibold text-slate-800">
-                                {{ item.public_id.slice(0, 8) }} ·
-                                {{ item.compiler_engine }}
-                            </p>
-                            <p class="mt-0.5 text-[11px] text-slate-500">
-                                {{ item.created_at }}
-                            </p>
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <p class="font-mono font-semibold text-slate-800">
+                                    {{ item.public_id.slice(0, 8) }} ·
+                                    {{ item.compiler_engine }}
+                                </p>
+                                <p class="mt-0.5 text-[11px] text-slate-500">
+                                    {{ item.created_at }}
+                                    <span v-if="item.duration_ms"> · {{ item.duration_ms }} ms</span>
+                                </p>
+                                <div class="mt-1 flex flex-wrap items-center gap-1 text-[10px]">
+                                    <span
+                                        v-if="item.error_count > 0"
+                                        class="rounded bg-rose-50 px-1.5 py-0.5 font-medium text-rose-700"
+                                    >
+                                        {{ item.error_count }} errors
+                                    </span>
+                                    <span
+                                        v-if="item.warning_count > 0"
+                                        class="rounded bg-amber-50 px-1.5 py-0.5 font-medium text-amber-700"
+                                    >
+                                        {{ item.warning_count }} warnings
+                                    </span>
+                                    <span
+                                        v-if="item.has_pdf"
+                                        class="rounded bg-emerald-50 px-1.5 py-0.5 font-medium text-emerald-700"
+                                    >
+                                        PDF
+                                    </span>
+                                    <span
+                                        v-if="item.has_synctex"
+                                        class="rounded bg-sky-50 px-1.5 py-0.5 font-medium text-sky-700"
+                                    >
+                                        SyncTeX
+                                    </span>
+                                    <span
+                                        v-if="item.exit_code !== null"
+                                        class="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600"
+                                    >
+                                        exit {{ item.exit_code }}
+                                    </span>
+                                </div>
+                                <p
+                                    v-if="item.error_summary"
+                                    class="mt-1 line-clamp-2 text-[11px] text-rose-700"
+                                >
+                                    {{ item.error_summary }}
+                                </p>
+                            </div>
+                            <div class="flex shrink-0 flex-col items-end gap-1">
+                                <span
+                                    class="rounded-full px-2 py-0.5 text-[11px] font-medium capitalize"
+                                    :class="
+                                        item.status === 'published'
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : item.status === 'cancelled'
+                                              ? 'bg-slate-100 text-slate-600'
+                                              : item.status === 'timed_out'
+                                                ? 'bg-amber-50 text-amber-700'
+                                                : item.status === 'queued' || item.status === 'compiling'
+                                                  ? 'bg-sky-50 text-sky-700'
+                                                  : 'bg-rose-50 text-rose-700'
+                                    "
+                                >
+                                    {{ item.status }}
+                                </span>
+                                <div class="flex gap-1">
+                                    <button
+                                        v-if="item.has_log"
+                                        type="button"
+                                        class="rounded border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-600 hover:bg-slate-50"
+                                        @click="openLogTab(item.public_id)"
+                                    >
+                                        Log
+                                    </button>
+                                    <button
+                                        v-if="item.status !== 'queued' && item.status !== 'compiling'"
+                                        type="button"
+                                        class="rounded border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                                        :disabled="isCompiling"
+                                        @click="retryBuild(item.public_id)"
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <span
-                            class="rounded-full px-2 py-0.5 text-[11px] font-medium capitalize"
-                            :class="
-                                item.status === 'succeeded'
-                                    ? 'bg-emerald-50 text-emerald-700'
-                                    : 'bg-rose-50 text-rose-700'
-                            "
-                        >
-                            {{ item.status }}
-                        </span>
                     </div>
                 </div>
             </section>
@@ -1560,15 +2309,34 @@ onBeforeUnmount(() => {
                         v-else-if="rightRailTab === 'comments'"
                         :threads="reviewThreads"
                         :suggestions="reviewSuggestions"
+                        :annotations="annotations"
                         :can-comment="project.role !== 'viewer'"
                         :can-edit="project.can_edit"
                         @create-thread="handleCreateThread"
                         @resolve-thread="handleResolveThread"
                         @accept-suggestion="handleAcceptSuggestion"
                         @reject-suggestion="handleRejectSuggestion"
+                        @create-annotation="handleCreateAnnotation"
+                        @resolve-annotation="handleResolveAnnotation"
+                        @remove-annotation="removeAnnotation"
                         @jump-to-line="jumpToLine"
                     />
-                    <ResearchToolsPanel v-else @insert="insertSnippet" />
+                    <ResearchToolsPanel
+                        v-else
+                        :assets="researchAssets"
+                        :sources="researchSources"
+                        :ocr-jobs="ocrJobs"
+                        :conversions="conversions"
+                        :can-edit="project.can_edit"
+                        @insert="insertSnippet"
+                        @create-asset="createAsset"
+                        @delete-asset="deleteAsset"
+                        @insert-citation="insertSnippet"
+                        @create-ocr="createOcrJob"
+                        @delete-ocr="deleteOcrJob"
+                        @create-conversion="createConversion"
+                        @delete-conversion="deleteConversion"
+                    />
                 </div>
             </aside>
         </div>
@@ -1643,6 +2411,35 @@ onBeforeUnmount(() => {
                         "
                     >
                         Delete file
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog
+            :open="restoreTargetId !== null"
+            @update:open="
+                (open) => {
+                    if (!open) restoreTargetId = null;
+                }
+            "
+        >
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Restore snapshot</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This will replace the current project files with the
+                        selected snapshot and save a new restore revision so you
+                        can roll back again if needed.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                        class="bg-amber-600 text-white hover:bg-amber-700"
+                        @click="restoreRevision"
+                    >
+                        {{ isRestoring ? 'Restoring…' : 'Restore snapshot' }}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

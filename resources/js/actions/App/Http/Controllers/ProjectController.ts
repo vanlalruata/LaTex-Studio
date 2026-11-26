@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\ProjectController::store
- * @see app/Http/Controllers/ProjectController.php:24
+ * @see app/Http/Controllers/ProjectController.php:26
  * @route '/projects'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::store
- * @see app/Http/Controllers/ProjectController.php:24
+ * @see app/Http/Controllers/ProjectController.php:26
  * @route '/projects'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ProjectController::store
- * @see app/Http/Controllers/ProjectController.php:24
+ * @see app/Http/Controllers/ProjectController.php:26
  * @route '/projects'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\ProjectController::store
- * @see app/Http/Controllers/ProjectController.php:24
+ * @see app/Http/Controllers/ProjectController.php:26
  * @route '/projects'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\ProjectController::store
- * @see app/Http/Controllers/ProjectController.php:24
+ * @see app/Http/Controllers/ProjectController.php:26
  * @route '/projects'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
 export const show = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -71,7 +71,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
 show.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -104,7 +104,7 @@ show.url = (args: { project: string | { public_id: string } } | [project: string
 
 /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
 show.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -113,7 +113,7 @@ show.get = (args: { project: string | { public_id: string } } | [project: string
 })
 /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
 show.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -123,7 +123,7 @@ show.head = (args: { project: string | { public_id: string } } | [project: strin
 
     /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
     const showForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -133,7 +133,7 @@ show.head = (args: { project: string | { public_id: string } } | [project: strin
 
             /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
         showForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -142,7 +142,7 @@ show.head = (args: { project: string | { public_id: string } } | [project: strin
         })
             /**
 * @see \App\Http\Controllers\ProjectController::show
- * @see app/Http/Controllers/ProjectController.php:51
+ * @see app/Http/Controllers/ProjectController.php:53
  * @route '/projects/{project}'
  */
         showForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -158,7 +158,7 @@ show.head = (args: { project: string | { public_id: string } } | [project: strin
     show.form = showForm
 /**
 * @see \App\Http\Controllers\ProjectController::update
- * @see app/Http/Controllers/ProjectController.php:152
+ * @see app/Http/Controllers/ProjectController.php:163
  * @route '/projects/{project}'
  */
 export const update = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -173,7 +173,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::update
- * @see app/Http/Controllers/ProjectController.php:152
+ * @see app/Http/Controllers/ProjectController.php:163
  * @route '/projects/{project}'
  */
 update.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -206,7 +206,7 @@ update.url = (args: { project: string | { public_id: string } } | [project: stri
 
 /**
 * @see \App\Http\Controllers\ProjectController::update
- * @see app/Http/Controllers/ProjectController.php:152
+ * @see app/Http/Controllers/ProjectController.php:163
  * @route '/projects/{project}'
  */
 update.patch = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -216,7 +216,7 @@ update.patch = (args: { project: string | { public_id: string } } | [project: st
 
     /**
 * @see \App\Http\Controllers\ProjectController::update
- * @see app/Http/Controllers/ProjectController.php:152
+ * @see app/Http/Controllers/ProjectController.php:163
  * @route '/projects/{project}'
  */
     const updateForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -231,7 +231,7 @@ update.patch = (args: { project: string | { public_id: string } } | [project: st
 
             /**
 * @see \App\Http\Controllers\ProjectController::update
- * @see app/Http/Controllers/ProjectController.php:152
+ * @see app/Http/Controllers/ProjectController.php:163
  * @route '/projects/{project}'
  */
         updateForm.patch = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -247,7 +247,7 @@ update.patch = (args: { project: string | { public_id: string } } | [project: st
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\ProjectController::destroy
- * @see app/Http/Controllers/ProjectController.php:166
+ * @see app/Http/Controllers/ProjectController.php:177
  * @route '/projects/{project}'
  */
 export const destroy = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -262,7 +262,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::destroy
- * @see app/Http/Controllers/ProjectController.php:166
+ * @see app/Http/Controllers/ProjectController.php:177
  * @route '/projects/{project}'
  */
 destroy.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -295,7 +295,7 @@ destroy.url = (args: { project: string | { public_id: string } } | [project: str
 
 /**
 * @see \App\Http\Controllers\ProjectController::destroy
- * @see app/Http/Controllers/ProjectController.php:166
+ * @see app/Http/Controllers/ProjectController.php:177
  * @route '/projects/{project}'
  */
 destroy.delete = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -305,7 +305,7 @@ destroy.delete = (args: { project: string | { public_id: string } } | [project: 
 
     /**
 * @see \App\Http\Controllers\ProjectController::destroy
- * @see app/Http/Controllers/ProjectController.php:166
+ * @see app/Http/Controllers/ProjectController.php:177
  * @route '/projects/{project}'
  */
     const destroyForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -320,7 +320,7 @@ destroy.delete = (args: { project: string | { public_id: string } } | [project: 
 
             /**
 * @see \App\Http\Controllers\ProjectController::destroy
- * @see app/Http/Controllers/ProjectController.php:166
+ * @see app/Http/Controllers/ProjectController.php:177
  * @route '/projects/{project}'
  */
         destroyForm.delete = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -336,7 +336,7 @@ destroy.delete = (args: { project: string | { public_id: string } } | [project: 
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
 export const exportMethod = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -351,7 +351,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
 exportMethod.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -384,7 +384,7 @@ exportMethod.url = (args: { project: string | { public_id: string } } | [project
 
 /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
 exportMethod.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -393,7 +393,7 @@ exportMethod.get = (args: { project: string | { public_id: string } } | [project
 })
 /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
 exportMethod.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -403,7 +403,7 @@ exportMethod.head = (args: { project: string | { public_id: string } } | [projec
 
     /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
     const exportMethodForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -413,7 +413,7 @@ exportMethod.head = (args: { project: string | { public_id: string } } | [projec
 
             /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
         exportMethodForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -422,7 +422,7 @@ exportMethod.head = (args: { project: string | { public_id: string } } | [projec
         })
             /**
 * @see \App\Http\Controllers\ProjectController::exportMethod
- * @see app/Http/Controllers/ProjectController.php:176
+ * @see app/Http/Controllers/ProjectController.php:187
  * @route '/projects/{project}/export'
  */
         exportMethodForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

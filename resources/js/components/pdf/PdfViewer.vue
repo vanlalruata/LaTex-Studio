@@ -21,13 +21,19 @@ const props = withDefaults(
         pdfUrl?: string | null;
         isStale?: boolean;
         isCompiling?: boolean;
+        synctexEnabled?: boolean;
     }>(),
     {
         pdfUrl: null,
         isStale: false,
         isCompiling: false,
+        synctexEnabled: false,
     },
 );
+
+const emit = defineEmits<{
+    inverse: [payload: { page: number; x: number; y: number }];
+}>();
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const currentPage = ref(1);
@@ -104,6 +110,35 @@ function nextPage(): void {
         currentPage.value += 1;
     }
 }
+
+async function handleCanvasClick(event: MouseEvent): Promise<void> {
+    if (!props.synctexEnabled || !pdfDoc || !canvasRef.value) {
+        return;
+    }
+
+    const page = await pdfDoc.getPage(currentPage.value);
+    const viewport = page.getViewport({ scale: scale.value });
+    const rect = canvasRef.value.getBoundingClientRect();
+    const [pdfX, pdfY] = viewport.convertToPdfPoint(
+        event.clientX - rect.left,
+        event.clientY - rect.top,
+    );
+    const pageHeightPt = viewport.height / scale.value;
+
+    emit('inverse', {
+        page: currentPage.value,
+        x: Math.max(0, Math.round(pdfX * 100) / 100),
+        y: Math.max(0, Math.round((pageHeightPt - pdfY) * 100) / 100),
+    });
+}
+
+function goToPage(pageNumber: number): void {
+    if (pageNumber >= 1 && pageNumber <= totalPages.value) {
+        currentPage.value = pageNumber;
+    }
+}
+
+defineExpose({ goToPage });
 
 watch(() => props.pdfUrl, (url) => void loadDocument(url));
 watch([currentPage, scale], () => void renderPage(currentPage.value));
@@ -205,6 +240,9 @@ onMounted(() => {
                 <canvas
                     ref="canvasRef"
                     class="rounded border border-slate-200 bg-white shadow-sm"
+                    :class="synctexEnabled ? 'cursor-crosshair' : ''"
+                    :title="synctexEnabled ? 'Click to jump to the matching source line' : undefined"
+                    @click="handleCanvasClick"
                 />
             </div>
         </div>

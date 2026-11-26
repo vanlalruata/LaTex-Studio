@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Collaboration\ProjectPresenceService;
 use App\Http\Requests\StoreProjectChatMessageRequest;
 use App\Models\Project;
 use App\Models\ProjectChatMessage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 
 class ProjectChatController extends Controller
 {
-    public function index(Request $request, Project $project): JsonResponse
+    public function index(Request $request, Project $project, ProjectPresenceService $presence): JsonResponse
     {
         Gate::authorize('view', $project);
 
         $user = $request->user();
         if ($user !== null) {
-            $this->touchPresence($project, $user->id, $user->name);
+            $presence->touch($project, $user);
         }
 
         $messages = ProjectChatMessage::query()
@@ -42,11 +42,11 @@ class ProjectChatController extends Controller
 
         return response()->json([
             'messages' => $messages,
-            'onlineUsers' => $this->onlineUsers($project),
+            'onlineUsers' => $presence->online($project),
         ]);
     }
 
-    public function store(StoreProjectChatMessageRequest $request, Project $project): JsonResponse
+    public function store(StoreProjectChatMessageRequest $request, Project $project, ProjectPresenceService $presence): JsonResponse
     {
         Gate::authorize('view', $project);
 
@@ -72,7 +72,7 @@ class ProjectChatController extends Controller
         ]);
 
         $message->load(['user:id,name', 'parent:id,public_id']);
-        $this->touchPresence($project, $user->id, $user->name);
+        $presence->touch($project, $user);
 
         return response()->json([
             'message' => [
@@ -86,48 +86,5 @@ class ProjectChatController extends Controller
                 'created_at' => $message->created_at?->toIso8601String(),
             ],
         ], 201);
-    }
-
-    private function touchPresence(Project $project, int $userId, string $userName): void
-    {
-        $key = "project.presence.{$project->id}";
-        /** @var array<int, array{id: int, name: string, last_seen: int}> $presence */
-        $presence = Cache::get($key, []);
-        $now = time();
-
-        $presence[$userId] = [
-            'id' => $userId,
-            'name' => $userName,
-            'last_seen' => $now,
-        ];
-
-        $presence = array_filter(
-            $presence,
-            static fn (array $entry): bool => ($now - $entry['last_seen']) <= 60
-        );
-
-        Cache::put($key, $presence, now()->addMinutes(2));
-    }
-
-    /**
-     * @return list<array{id: int, name: string}>
-     */
-    private function onlineUsers(Project $project): array
-    {
-        $key = "project.presence.{$project->id}";
-        /** @var array<int, array{id: int, name: string, last_seen: int}> $presence */
-        $presence = Cache::get($key, []);
-        $now = time();
-
-        return array_values(array_map(
-            static fn (array $entry): array => [
-                'id' => $entry['id'],
-                'name' => $entry['name'],
-            ],
-            array_filter(
-                $presence,
-                static fn (array $entry): bool => ($now - $entry['last_seen']) <= 60
-            )
-        ));
     }
 }

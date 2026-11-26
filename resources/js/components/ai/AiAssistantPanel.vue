@@ -12,11 +12,18 @@ export interface AiCredentialSummary {
     is_default: boolean;
 }
 
+export interface AiPatch {
+    title: string;
+    original_excerpt: string | null;
+    proposed_content: string;
+}
+
 export interface AiActionItem {
     public_id: string;
     kind: string;
     prompt: string;
     response_text: string;
+    proposed_patch?: AiPatch | null;
     status: string;
 }
 
@@ -29,6 +36,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     ask: [payload: { credentialId: string; kind: 'chat' | 'compile_fix' | 'paper_review'; prompt: string }];
+    openReview: [];
 }>();
 
 const selectedCredentialId = ref(
@@ -138,6 +146,29 @@ function submit(): void {
                     <p class="whitespace-pre-wrap text-[11px] leading-relaxed text-slate-700">
                         {{ action.response_text }}
                     </p>
+
+                    <div
+                        v-if="action.proposed_patch"
+                        class="rounded border border-emerald-200 bg-emerald-50/40 p-1.5"
+                    >
+                        <p class="text-[10px] font-semibold tracking-wide text-emerald-800 uppercase">
+                            Proposed diff · {{ action.proposed_patch.title }}
+                        </p>
+                        <pre
+                            v-if="action.proposed_patch.original_excerpt"
+                            class="mt-1 max-h-20 overflow-auto whitespace-pre-wrap rounded bg-rose-50 p-1.5 font-mono text-[10px] text-rose-800 line-through decoration-rose-400/60"
+                        >{{ action.proposed_patch.original_excerpt }}</pre>
+                        <pre
+                            class="mt-1 max-h-24 overflow-auto whitespace-pre-wrap rounded bg-white p-1.5 font-mono text-[10px] text-emerald-800"
+                        >{{ action.proposed_patch.proposed_content }}</pre>
+                        <button
+                            type="button"
+                            class="mt-1.5 w-full rounded bg-emerald-600 py-1 text-[10px] font-medium text-white hover:bg-emerald-700"
+                            @click="emit('openReview')"
+                        >
+                            Review &amp; apply in Changes tab
+                        </button>
+                    </div>
                 </div>
             </div>
 

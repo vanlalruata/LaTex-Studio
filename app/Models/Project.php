@@ -148,6 +148,78 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<ProjectTask, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(ProjectTask::class);
+    }
+
+    /**
+     * @return HasMany<ProjectMilestone, $this>
+     */
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ProjectMilestone::class);
+    }
+
+    /**
+     * @return HasMany<ProjectIntegration, $this>
+     */
+    public function integrations(): HasMany
+    {
+        return $this->hasMany(ProjectIntegration::class);
+    }
+
+    /**
+     * @return HasMany<DocumentAnnotation, $this>
+     */
+    public function annotations(): HasMany
+    {
+        return $this->hasMany(DocumentAnnotation::class);
+    }
+
+    /**
+     * @return HasMany<ResearchAsset, $this>
+     */
+    public function researchAssets(): HasMany
+    {
+        return $this->hasMany(ResearchAsset::class);
+    }
+
+    /**
+     * @return HasMany<BibliographySource, $this>
+     */
+    public function bibliographySources(): HasMany
+    {
+        return $this->hasMany(BibliographySource::class);
+    }
+
+    /**
+     * @return HasMany<OcrJob, $this>
+     */
+    public function ocrJobs(): HasMany
+    {
+        return $this->hasMany(OcrJob::class);
+    }
+
+    /**
+     * @return HasMany<ConversionJob, $this>
+     */
+    public function conversionJobs(): HasMany
+    {
+        return $this->hasMany(ConversionJob::class);
+    }
+
+    /**
+     * @return HasMany<Figure, $this>
+     */
+    public function figures(): HasMany
+    {
+        return $this->hasMany(Figure::class);
+    }
+
+    /**
      * @return BelongsTo<Compilation, $this>
      */
     public function lastSuccessfulCompilation(): BelongsTo

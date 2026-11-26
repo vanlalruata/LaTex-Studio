@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
 export const show = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
 show.url = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions) => {
@@ -44,7 +44,7 @@ show.url = (args: { compilation: string | { public_id: string }, type: string | 
 
 /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
 show.get = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -53,7 +53,7 @@ show.get = (args: { compilation: string | { public_id: string }, type: string | 
 })
 /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
 show.head = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -63,7 +63,7 @@ show.head = (args: { compilation: string | { public_id: string }, type: string |
 
     /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
     const showForm = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -73,7 +73,7 @@ show.head = (args: { compilation: string | { public_id: string }, type: string |
 
             /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
         showForm.get = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -82,7 +82,7 @@ show.head = (args: { compilation: string | { public_id: string }, type: string |
         })
             /**
 * @see \App\Http\Controllers\CompilationController::show
- * @see app/Http/Controllers/CompilationController.php:67
+ * @see app/Http/Controllers/CompilationController.php:231
  * @route '/compilations/{compilation}/artifacts/{type}'
  */
         showForm.head = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\CompilationController::store
- * @see app/Http/Controllers/CompilationController.php:17
+ * @see app/Http/Controllers/CompilationController.php:23
  * @route '/projects/{project}/compilations'
  */
 export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\CompilationController::store
- * @see app/Http/Controllers/CompilationController.php:17
+ * @see app/Http/Controllers/CompilationController.php:23
  * @route '/projects/{project}/compilations'
  */
 store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ store.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\CompilationController::store
- * @see app/Http/Controllers/CompilationController.php:17
+ * @see app/Http/Controllers/CompilationController.php:23
  * @route '/projects/{project}/compilations'
  */
 store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
 
     /**
 * @see \App\Http\Controllers\CompilationController::store
- * @see app/Http/Controllers/CompilationController.php:17
+ * @see app/Http/Controllers/CompilationController.php:23
  * @route '/projects/{project}/compilations'
  */
     const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -69,7 +69,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
 
             /**
 * @see \App\Http\Controllers\CompilationController::store
- * @see app/Http/Controllers/CompilationController.php:17
+ * @see app/Http/Controllers/CompilationController.php:23
  * @route '/projects/{project}/compilations'
  */
         storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

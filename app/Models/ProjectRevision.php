@@ -39,6 +39,11 @@ class ProjectRevision extends Model
         });
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
+
     /**
      * @return array<string, string>
      */

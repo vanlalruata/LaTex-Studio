@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Domain\Administration\AuditService;
 use App\Domain\Files\PathValidator;
 use App\Domain\Projects\CreateProjectAction;
+use App\Enums\ArtifactType;
 use App\Enums\CompilerEngine;
+use App\Enums\DiagnosticSeverity;
 use App\Http\Requests\Projects\StoreProjectRequest;
 use App\Http\Requests\Projects\UpdateProjectRequest;
 use App\Models\Project;
@@ -87,6 +89,7 @@ class ProjectController extends Controller
             ->first();
 
         $buildHistory = $project->compilations()
+            ->with(['diagnostics', 'artifacts'])
             ->latest('created_at')
             ->limit(10)
             ->get()
@@ -95,7 +98,15 @@ class ProjectController extends Controller
                 'status' => $c->status->value,
                 'compiler_engine' => $c->compiler_engine->value,
                 'duration_ms' => $c->duration_ms,
+                'exit_code' => $c->exit_code,
+                'error_summary' => $c->error_summary,
                 'created_at' => $c->created_at?->toIso8601String(),
+                'finished_at' => $c->finished_at?->toIso8601String(),
+                'error_count' => $c->diagnostics->where('severity', DiagnosticSeverity::Error)->count(),
+                'warning_count' => $c->diagnostics->where('severity', DiagnosticSeverity::Warning)->count(),
+                'has_pdf' => $c->artifacts->contains('type', ArtifactType::Pdf),
+                'has_log' => $c->artifacts->contains('type', ArtifactType::Log),
+                'has_synctex' => $c->artifacts->contains('type', ArtifactType::Synctex),
             ])
             ->values();
 

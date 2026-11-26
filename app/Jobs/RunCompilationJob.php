@@ -97,6 +97,10 @@ class RunCompilationJob implements ShouldQueue
                 workspacePath: $workDir,
             ));
 
+            if ($compilation->fresh()?->status === CompilationStatus::Cancelled) {
+                return;
+            }
+
             $compilation->update(['status' => CompilationStatus::Validating]);
 
             if ($result->logContents !== null) {
@@ -114,6 +118,10 @@ class RunCompilationJob implements ShouldQueue
                         'raw_excerpt' => $diag['raw_excerpt'],
                     ]);
                 }
+            }
+
+            if ($compilation->fresh()?->status === CompilationStatus::Cancelled) {
+                return;
             }
 
             $pdfContents = $result->pdfContents;
