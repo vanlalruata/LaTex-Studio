@@ -2,7 +2,7 @@
 
 ## 1. Services
 
-- Nginx with TLS.
+- Apache2 with TLS.
 - Laravel application.
 - Queue workers.
 - MySQL.
@@ -18,7 +18,7 @@
 ## 2. Compiler image profiles
 
 | Profile | Intended use |
-|---|---|
+| --- | --- |
 | Standard | Common article/report/thesis workflows |
 | Research | Bibliography, graphics, tables, algorithms, glossaries and common research packages |
 | Extended | Specialist/publisher workflows requiring additional packages or fonts |
@@ -30,6 +30,7 @@ The Ayaka-notes TeX Live Full project documents a multi-architecture image and p
 ## 3. Capacity planning
 
 Do not choose quotas from guesswork. Benchmark:
+
 - idle memory of each service;
 - peak memory per compile profile;
 - CPU time and wall time by corpus project;
@@ -44,6 +45,7 @@ Set limits at container runtime, not only in PHP validation.
 ## 4. Monitoring
 
 Monitor:
+
 - queue depth and oldest job age;
 - active/failed/timed-out builds;
 - worker restarts;

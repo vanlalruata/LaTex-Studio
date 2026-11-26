@@ -1,0 +1,35 @@
+export type RegistrationMode = 'open' | 'waitlist' | 'invite_only' | 'closed';
+
+export type FeatureStatus = 'available' | 'beta' | 'planned' | 'disabled';
+
+export interface PublicSiteAnnouncement {
+    text: string;
+    href?: string;
+}
+
+export interface PublicSiteProps {
+    brandName: string;
+    tagline: string;
+    registrationMode: RegistrationMode;
+    pricingVisible: boolean;
+    contactFormEnabled: boolean;
+    supportEmail: string | null;
+    announcement: PublicSiteAnnouncement | null;
+}
+
+export interface FeatureItem {
+    slug: string;
+    title: string;
+    summary: string;
+    description?: string;
+    category?: string;
+    status: Exclude<FeatureStatus, 'disabled'>;
+    iconKey?: string;
+    href?: string;
+}
+
+export interface FaqItem {
+    id: string;
+    question: string;
+    answer: string;
+}

@@ -45,13 +45,17 @@ flowchart TB
 ## 2. Planes and boundaries
 
 ### Presentation plane
+
 Vue 3.5, Inertia 3, TypeScript, Tailwind CSS 4.1, Monaco, PDF.js and first-party UI components. Client-side code must not contain secrets or authoritative permission decisions.
 
 ### Control plane
+
 Laravel handles authentication, organization/project membership, policies, APIs, storage metadata, revisions, quotas, audit, jobs and worker coordination. Controllers remain thin. Domain logic belongs in domain services/actions and typed DTOs.
 
 ### Execution plane
+
 Dedicated, isolated containers or worker pools for:
+
 - LaTeX compilation.
 - Document conversion.
 - OCR/model inference.
@@ -61,12 +65,13 @@ Dedicated, isolated containers or worker pools for:
 Each worker class has a distinct image, security profile, queue, quota policy and protocol. Do not run user code inside the Laravel web container.
 
 ### Engine plane
+
 First-party services for LaTeX language analysis, math parsing, document model, dependency analysis, diagnostics normalization, build scheduling and provider orchestration.
 
 ## 3. Technology baseline
 
 | Component | Choice | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Backend | Laravel 13 / PHP | Domain and application orchestration |
 | Frontend | Inertia.js 3 + Vue 3.5 + TS | SPA-style workspace |
 | CSS | Tailwind CSS 4.1 | Design system |
@@ -79,7 +84,7 @@ First-party services for LaTeX language analysis, math parsing, document model, 
 | Optional compiler | Tectonic adapter | Capability-tested; not equivalent to full TeX Live |
 | Conversion | First-party pipeline + optional Pandoc | Preserve source; loss-aware reports |
 | OCR | Provider interface; Python service if needed | Model isolation |
-| Deployment | Ubuntu + Nginx + Docker | Private workers and artifacts |
+| Deployment | Ubuntu + Apache2 + Docker | Private workers and artifacts |
 
 Pin exact dependency versions in lockfiles. Verify framework/runtime compatibility before upgrades.
 
@@ -175,6 +180,7 @@ resources/js/
 ## 6. Workspace layout
 
 Desktop:
+
 - Left panel: file explorer, outline, symbols, search and project tools.
 - Centre: Monaco editor with tabs, status bar and diff mode.
 - Right: PDF preview, math preview, diagnostics or review panel.
@@ -201,7 +207,7 @@ Panels must be resizable, collapsible and persisted per user. On mobile, switch 
 
 ```mermaid
 flowchart LR
-  Internet --> N[Nginx + TLS]
+  Internet --> N[Apache2 + TLS]
   N --> APP[Laravel App]
   APP --> MYSQL[(MySQL)]
   APP --> REDIS[(Redis)]
@@ -256,6 +262,7 @@ The current preview references a successful build ID. Failed builds update statu
 ## 11. Real-time collaboration architecture
 
 Do not add CRDT collaboration in the first release. First implement:
+
 - Server-acknowledged saves.
 - Immutable revisions.
 - Conflict detection.

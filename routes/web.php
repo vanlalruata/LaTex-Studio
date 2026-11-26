@@ -9,10 +9,13 @@ use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectIndexController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectRevisionController;
+use App\Http\Controllers\PublicSite\HomeController;
 use App\Http\Controllers\SuggestionController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
@@ -57,3 +60,13 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 });
 
 require __DIR__.'/settings.php';
+
+Route::fallback(function (Request $request) {
+    if ($request->expectsJson() || $request->is('api/*')) {
+        abort(404);
+    }
+
+    return Inertia::render('Public/NotFound')
+        ->toResponse($request)
+        ->setStatusCode(404);
+});
