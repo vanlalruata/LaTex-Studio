@@ -746,6 +746,13 @@ async function overwriteConflictWithLocal(): Promise<void> {
 const creationMode = ref<'file' | 'folder'>('file');
 const uploadTargetDir = ref<string | null>(null);
 const fileUploadInputRef = ref<HTMLInputElement | null>(null);
+const uploadProgress = ref<{
+    fileName: string;
+    percent: number;
+    current: number;
+    total: number;
+} | null>(null);
+const uploadError = ref<string | null>(null);
 
 function parentDirOf(path: string): string | undefined {
     const idx = path.lastIndexOf('/');
@@ -772,6 +779,57 @@ function triggerUploadToFolder(parentDir?: string): void {
     fileUploadInputRef.value?.click();
 }
 
+function uploadSingleFileWithProgress(
+    targetPath: string,
+    file: File,
+    index: number,
+    total: number,
+): Promise<FileNode & { content: string }> {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', projectsRoutes.files.store(props.project.public_id).url);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('X-XSRF-TOKEN', getCsrfToken());
+
+        xhr.upload.onprogress = (progressEvent) => {
+            const percent = progressEvent.lengthComputable
+                ? Math.round((progressEvent.loaded / progressEvent.total) * 100)
+                : 0;
+            uploadProgress.value = {
+                fileName: file.name,
+                percent,
+                current: index + 1,
+                total,
+            };
+        };
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    resolve(JSON.parse(xhr.responseText) as FileNode & { content: string });
+                } catch {
+                    reject(new Error('Invalid server response during upload.'));
+                }
+            } else {
+                try {
+                    const errBody = JSON.parse(xhr.responseText) as { message?: string };
+                    reject(new Error(errBody.message ?? `Upload failed (${xhr.status}).`));
+                } catch {
+                    reject(new Error(`Upload failed (${xhr.status}).`));
+                }
+            }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error while uploading file.'));
+
+        const formData = new FormData();
+        formData.append('path', targetPath);
+        formData.append('file', file);
+        xhr.send(formData);
+    });
+}
+
 async function handleFileUploadChange(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const files = input.files;
@@ -779,36 +837,42 @@ async function handleFileUploadChange(event: Event): Promise<void> {
         return;
     }
 
-    for (const file of Array.from(files)) {
-        const targetPath = uploadTargetDir.value
-            ? `${uploadTargetDir.value}/${file.name}`
-            : file.name;
+    const targetDir = uploadTargetDir.value;
+    uploadError.value = null;
+    const fileArray = Array.from(files);
 
-        const formData = new FormData();
-        formData.append('path', targetPath);
-        formData.append('file', file);
+    try {
+        for (let i = 0; i < fileArray.length; i++) {
+            const file = fileArray[i];
+            const targetPath = targetDir ? `${targetDir}/${file.name}` : file.name;
 
-        const response = await fetch(
-            projectsRoutes.files.store(props.project.public_id).url,
-            {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    Accept: 'application/json',
-                    'X-XSRF-TOKEN': getCsrfToken(),
-                },
-                body: formData,
-            },
-        );
+            uploadProgress.value = {
+                fileName: file.name,
+                percent: 0,
+                current: i + 1,
+                total: fileArray.length,
+            };
 
-        if (response.ok) {
-            const created = (await response.json()) as FileNode & { content: string };
-            fileList.value.push(created);
+            const created = await uploadSingleFileWithProgress(
+                targetPath,
+                file,
+                i,
+                fileArray.length,
+            );
+
+            fileList.value = [...fileList.value, created];
+
+            if (targetDir) {
+                expandFolder(targetDir);
+            }
         }
+    } catch (error) {
+        uploadError.value = error instanceof Error ? error.message : 'Upload failed.';
+    } finally {
+        uploadProgress.value = null;
+        input.value = '';
+        uploadTargetDir.value = null;
     }
-
-    input.value = '';
-    uploadTargetDir.value = null;
 }
 
 async function createFile(): Promise<void> {
@@ -842,7 +906,14 @@ async function createFile(): Promise<void> {
     }
 
     const created = (await response.json()) as FileNode & { content: string };
-    fileList.value.push(created);
+    fileList.value = [...fileList.value, created];
+    const parent = parentDirOf(created.path);
+    if (parent) {
+        expandFolder(parent);
+    }
+    if (created.is_directory) {
+        expandFolder(created.path);
+    }
     newFileName.value = '';
     showNewFileInput.value = false;
 
@@ -1749,128 +1820,153 @@ onBeforeUnmount(() => {
                                 <Plus class="size-3.5" />
                             </button>
                         </form>
+                        <div
+                            v-if="uploadProgress"
+                            class="mt-2 space-y-1 rounded-md border border-indigo-200 bg-indigo-50/70 p-2 text-[11px]"
+                        >
+                            <div class="flex items-center justify-between gap-2 text-indigo-900">
+                                <span class="truncate font-medium">
+                                    Uploading {{ uploadProgress.fileName }}
+                                    <span v-if="uploadProgress.total > 1">
+                                        ({{ uploadProgress.current }}/{{ uploadProgress.total }})
+                                    </span>
+                                </span>
+                                <span class="shrink-0 tabular-nums">{{ uploadProgress.percent }}%</span>
+                            </div>
+                            <div class="h-1.5 w-full overflow-hidden rounded-full bg-indigo-200">
+                                <div
+                                    class="h-full bg-indigo-600 transition-all duration-150"
+                                    :style="{ width: `${uploadProgress.percent}%` }"
+                                />
+                            </div>
+                        </div>
+                        <p v-if="uploadError" class="mt-2 text-[11px] text-rose-600">
+                            {{ uploadError }}
+                        </p>
                     </div>
 
-                    <ContextMenu>
-                        <ContextMenuTrigger as-child>
-                            <div class="flex-1 overflow-y-auto p-1.5">
-                                <ContextMenu v-for="row in explorerTreeRows" :key="row.key">
-                                    <ContextMenuTrigger as-child>
-                                        <div
-                                            class="group flex items-center justify-between rounded-md py-1.5 pr-2 text-xs transition"
-                                            :style="{ paddingLeft: `${8 + row.depth * 14}px` }"
-                                            :class="
-                                                row.file && currentFile?.public_id === row.file.public_id
-                                                    ? 'bg-indigo-50 font-medium text-indigo-700'
-                                                    : 'text-slate-700 hover:bg-slate-100'
-                                            "
-                                        >
-                                            <button
-                                                type="button"
-                                                class="flex min-w-0 flex-1 items-center gap-1.5 text-left"
-                                                @click="row.isDirectory ? toggleFolder(row.path) : (row.file && openFile(row.file))"
-                                            >
-                                                <template v-if="row.isDirectory">
-                                                    <ChevronDown
-                                                        v-if="row.isExpanded"
-                                                        class="size-3.5 shrink-0 text-slate-400"
-                                                    />
-                                                    <ChevronRight
-                                                        v-else
-                                                        class="size-3.5 shrink-0 text-slate-400"
-                                                    />
-                                                    <FolderOpen
-                                                        v-if="row.isExpanded"
-                                                        class="size-3.5 shrink-0 text-amber-500"
-                                                    />
-                                                    <Folder
-                                                        v-else
-                                                        class="size-3.5 shrink-0 text-amber-500"
-                                                    />
-                                                </template>
-                                                <FileCode
-                                                    v-else
-                                                    class="ml-5 size-3.5 shrink-0 text-slate-400"
-                                                />
-                                                <span class="truncate">{{ row.name }}</span>
-                                            </button>
-                                            <button
-                                                v-if="
-                                                    project.can_edit &&
-                                                    row.file &&
-                                                    row.file.path !== project.root_file_path
-                                                "
-                                                type="button"
-                                                class="hidden rounded p-0.5 text-slate-400 group-hover:block hover:text-rose-600"
-                                                :title="row.isDirectory ? 'Delete folder' : 'Delete file'"
-                                                @click="fileToDelete = row.file"
-                                            >
-                                                <Trash2 class="size-3" />
-                                            </button>
-                                        </div>
-                                    </ContextMenuTrigger>
-                                    <ContextMenuContent v-if="project.can_edit" class="w-48">
-                                        <ContextMenuItem
-                                            @select="
-                                                openCreatePrompt(
-                                                    'file',
-                                                    row.isDirectory ? row.path : parentDirOf(row.path),
-                                                )
-                                            "
-                                        >
-                                            <FilePlus class="mr-2 size-3.5" />
-                                            New file
-                                        </ContextMenuItem>
-                                        <ContextMenuItem
-                                            @select="
-                                                openCreatePrompt(
-                                                    'folder',
-                                                    row.isDirectory ? row.path : parentDirOf(row.path),
-                                                )
-                                            "
-                                        >
-                                            <FolderPlus class="mr-2 size-3.5" />
-                                            New folder
-                                        </ContextMenuItem>
-                                        <ContextMenuItem
-                                            @select="
-                                                triggerUploadToFolder(
-                                                    row.isDirectory ? row.path : parentDirOf(row.path),
-                                                )
-                                            "
-                                        >
-                                            <Upload class="mr-2 size-3.5" />
-                                            Upload any file
-                                        </ContextMenuItem>
-                                        <template v-if="row.file && row.file.path !== project.root_file_path">
-                                            <ContextMenuSeparator />
-                                            <ContextMenuItem
-                                                class="text-rose-600 focus:text-rose-600"
-                                                @select="fileToDelete = row.file"
-                                            >
-                                                <Trash2 class="mr-2 size-3.5" />
-                                                {{ row.isDirectory ? 'Delete folder' : 'Delete file' }}
-                                            </ContextMenuItem>
+                    <div class="flex flex-1 flex-col overflow-y-auto p-1.5">
+                        <ContextMenu v-for="row in explorerTreeRows" :key="row.key">
+                            <ContextMenuTrigger as-child>
+                                <div
+                                    class="group flex items-center justify-between rounded-md py-1.5 pr-2 text-xs transition"
+                                    :style="{ paddingLeft: `${8 + row.depth * 14}px` }"
+                                    :class="
+                                        row.file && currentFile?.public_id === row.file.public_id
+                                            ? 'bg-indigo-50 font-medium text-indigo-700'
+                                            : 'text-slate-700 hover:bg-slate-100'
+                                    "
+                                >
+                                    <button
+                                        type="button"
+                                        class="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+                                        @click="row.isDirectory ? toggleFolder(row.path) : (row.file && openFile(row.file))"
+                                    >
+                                        <template v-if="row.isDirectory">
+                                            <ChevronDown
+                                                v-if="row.isExpanded"
+                                                class="size-3.5 shrink-0 text-slate-400"
+                                            />
+                                            <ChevronRight
+                                                v-else
+                                                class="size-3.5 shrink-0 text-slate-400"
+                                            />
+                                            <FolderOpen
+                                                v-if="row.isExpanded"
+                                                class="size-3.5 shrink-0 text-amber-500"
+                                            />
+                                            <Folder
+                                                v-else
+                                                class="size-3.5 shrink-0 text-amber-500"
+                                            />
                                         </template>
-                                    </ContextMenuContent>
-                                </ContextMenu>
-                            </div>
-                        </ContextMenuTrigger>
-                        <ContextMenuContent v-if="project.can_edit" class="w-48">
-                            <ContextMenuItem @select="openCreatePrompt('file')">
-                                <FilePlus class="mr-2 size-3.5" />
-                                New file
-                            </ContextMenuItem>
-                            <ContextMenuItem @select="openCreatePrompt('folder')">
-                                <FolderPlus class="mr-2 size-3.5" />
-                                New folder
-                            </ContextMenuItem>
-                            <ContextMenuItem @select="triggerUploadToFolder()">
-                                <Upload class="mr-2 size-3.5" />
-                                Upload any file
-                            </ContextMenuItem>
-                        </ContextMenuContent>
-                    </ContextMenu>
+                                        <FileCode
+                                            v-else
+                                            class="ml-5 size-3.5 shrink-0 text-slate-400"
+                                        />
+                                        <span class="truncate">{{ row.name }}</span>
+                                    </button>
+                                    <button
+                                        v-if="
+                                            project.can_edit &&
+                                            row.file &&
+                                            row.file.path !== project.root_file_path
+                                        "
+                                        type="button"
+                                        class="hidden rounded p-0.5 text-slate-400 group-hover:block hover:text-rose-600"
+                                        :title="row.isDirectory ? 'Delete folder' : 'Delete file'"
+                                        @click="fileToDelete = row.file"
+                                    >
+                                        <Trash2 class="size-3" />
+                                    </button>
+                                </div>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent v-if="project.can_edit" class="w-48">
+                                <ContextMenuItem
+                                    @select="
+                                        openCreatePrompt(
+                                            'file',
+                                            row.isDirectory ? row.path : parentDirOf(row.path),
+                                        )
+                                    "
+                                >
+                                    <FilePlus class="mr-2 size-3.5" />
+                                    New file
+                                </ContextMenuItem>
+                                <ContextMenuItem
+                                    @select="
+                                        openCreatePrompt(
+                                            'folder',
+                                            row.isDirectory ? row.path : parentDirOf(row.path),
+                                        )
+                                    "
+                                >
+                                    <FolderPlus class="mr-2 size-3.5" />
+                                    New folder
+                                </ContextMenuItem>
+                                <ContextMenuItem
+                                    @select="
+                                        triggerUploadToFolder(
+                                            row.isDirectory ? row.path : parentDirOf(row.path),
+                                        )
+                                    "
+                                >
+                                    <Upload class="mr-2 size-3.5" />
+                                    Upload any file
+                                </ContextMenuItem>
+                                <template v-if="row.file && row.file.path !== project.root_file_path">
+                                    <ContextMenuSeparator />
+                                    <ContextMenuItem
+                                        class="text-rose-600 focus:text-rose-600"
+                                        @select="fileToDelete = row.file"
+                                    >
+                                        <Trash2 class="mr-2 size-3.5" />
+                                        {{ row.isDirectory ? 'Delete folder' : 'Delete file' }}
+                                    </ContextMenuItem>
+                                </template>
+                            </ContextMenuContent>
+                        </ContextMenu>
+
+                        <ContextMenu>
+                            <ContextMenuTrigger as-child>
+                                <div class="min-h-12 flex-1" />
+                            </ContextMenuTrigger>
+                            <ContextMenuContent v-if="project.can_edit" class="w-48">
+                                <ContextMenuItem @select="openCreatePrompt('file')">
+                                    <FilePlus class="mr-2 size-3.5" />
+                                    New file
+                                </ContextMenuItem>
+                                <ContextMenuItem @select="openCreatePrompt('folder')">
+                                    <FolderPlus class="mr-2 size-3.5" />
+                                    New folder
+                                </ContextMenuItem>
+                                <ContextMenuItem @select="triggerUploadToFolder()">
+                                    <Upload class="mr-2 size-3.5" />
+                                    Upload any file
+                                </ContextMenuItem>
+                            </ContextMenuContent>
+                        </ContextMenu>
+                    </div>
 
                     <!-- Document Outline -->
                     <div class="flex h-48 flex-col border-t border-slate-200">
