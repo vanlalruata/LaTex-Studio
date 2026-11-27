@@ -5,9 +5,12 @@ import {
     Building,
     ClipboardList,
     Activity,
+    Cpu,
     FolderGit2,
+    GraduationCap,
     LayoutGrid,
     ScrollText,
+    ServerCog,
     Settings2,
     Sparkles,
     Files,
@@ -37,6 +40,9 @@ import { index as usersIndex } from '@/routes/admin/users';
 import { index as projectsIndex } from '@/routes/admin/projects';
 import { index as organizationsIndex } from '@/routes/admin/organizations';
 import { index as auditIndex } from '@/routes/admin/audit';
+import { index as buildQueueIndex } from '@/routes/admin/build-queue';
+import { index as compilerIndex } from '@/routes/admin/compiler';
+import { index as institutionalDomainsIndex } from '@/routes/admin/institutional-domains';
 import { index as usageIndex } from '@/routes/admin/usage';
 import type { NavItem } from '@/types';
 
@@ -100,6 +106,21 @@ const adminNavItems: NavItem[] = [
         title: 'Usage & builds',
         href: usageIndex(),
         icon: Activity,
+    },
+    {
+        title: 'Compiler settings',
+        href: compilerIndex(),
+        icon: ServerCog,
+    },
+    {
+        title: 'Build queue',
+        href: buildQueueIndex(),
+        icon: Cpu,
+    },
+    {
+        title: 'Institutional access',
+        href: institutionalDomainsIndex(),
+        icon: GraduationCap,
     },
 ];
 

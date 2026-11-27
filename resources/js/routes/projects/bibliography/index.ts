@@ -1,10 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-export const index = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -16,10 +16,10 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-index.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -49,50 +49,50 @@ index.url = (args: { project: string | number | { public_id: string | number } }
 
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-index.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-index.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-const indexForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-indexForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::index
-* @see app/Http/Controllers/BibliographyController.php:14
+* @see app/Http/Controllers/BibliographyController.php:17
 * @route '/projects/{project}/bibliography'
 */
-indexForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -106,10 +106,10 @@ index.form = indexForm
 
 /**
 * @see \App\Http\Controllers\BibliographyController::store
-* @see app/Http/Controllers/BibliographyController.php:39
+* @see app/Http/Controllers/BibliographyController.php:42
 * @route '/projects/{project}/bibliography'
 */
-export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -121,10 +121,10 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\BibliographyController::store
-* @see app/Http/Controllers/BibliographyController.php:39
+* @see app/Http/Controllers/BibliographyController.php:42
 * @route '/projects/{project}/bibliography'
 */
-store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -154,30 +154,30 @@ store.url = (args: { project: string | number | { public_id: string | number } }
 
 /**
 * @see \App\Http\Controllers\BibliographyController::store
-* @see app/Http/Controllers/BibliographyController.php:39
+* @see app/Http/Controllers/BibliographyController.php:42
 * @route '/projects/{project}/bibliography'
 */
-store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::store
-* @see app/Http/Controllers/BibliographyController.php:39
+* @see app/Http/Controllers/BibliographyController.php:42
 * @route '/projects/{project}/bibliography'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::store
-* @see app/Http/Controllers/BibliographyController.php:39
+* @see app/Http/Controllers/BibliographyController.php:42
 * @route '/projects/{project}/bibliography'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -185,11 +185,276 @@ storeForm.post = (args: { project: string | number | { public_id: string | numbe
 store.form = storeForm
 
 /**
+* @see \App\Http\Controllers\BibliographyLookupController::__invoke
+* @see app/Http/Controllers/BibliographyLookupController.php:15
+* @route '/projects/{project}/bibliography/lookup'
+*/
+export const lookup = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: lookup.url(args, options),
+    method: 'post',
+})
+
+lookup.definition = {
+    methods: ["post"],
+    url: '/projects/{project}/bibliography/lookup',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\BibliographyLookupController::__invoke
+* @see app/Http/Controllers/BibliographyLookupController.php:15
+* @route '/projects/{project}/bibliography/lookup'
+*/
+lookup.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { project: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+        args = { project: args.public_id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            project: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+    }
+
+    return lookup.definition.url
+            .replace('{project}', parsedArgs.project.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\BibliographyLookupController::__invoke
+* @see app/Http/Controllers/BibliographyLookupController.php:15
+* @route '/projects/{project}/bibliography/lookup'
+*/
+lookup.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: lookup.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyLookupController::__invoke
+* @see app/Http/Controllers/BibliographyLookupController.php:15
+* @route '/projects/{project}/bibliography/lookup'
+*/
+const lookupForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: lookup.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyLookupController::__invoke
+* @see app/Http/Controllers/BibliographyLookupController.php:15
+* @route '/projects/{project}/bibliography/lookup'
+*/
+lookupForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: lookup.url(args, options),
+    method: 'post',
+})
+
+lookup.form = lookupForm
+
+/**
+* @see \App\Http\Controllers\BibliographyController::importMethod
+* @see app/Http/Controllers/BibliographyController.php:99
+* @route '/projects/{project}/bibliography/import'
+*/
+export const importMethod = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: importMethod.url(args, options),
+    method: 'post',
+})
+
+importMethod.definition = {
+    methods: ["post"],
+    url: '/projects/{project}/bibliography/import',
+} satisfies RouteDefinition<["post"]>
+
+/**
+* @see \App\Http\Controllers\BibliographyController::importMethod
+* @see app/Http/Controllers/BibliographyController.php:99
+* @route '/projects/{project}/bibliography/import'
+*/
+importMethod.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { project: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+        args = { project: args.public_id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            project: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+    }
+
+    return importMethod.definition.url
+            .replace('{project}', parsedArgs.project.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\BibliographyController::importMethod
+* @see app/Http/Controllers/BibliographyController.php:99
+* @route '/projects/{project}/bibliography/import'
+*/
+importMethod.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+    url: importMethod.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyController::importMethod
+* @see app/Http/Controllers/BibliographyController.php:99
+* @route '/projects/{project}/bibliography/import'
+*/
+const importMethodForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: importMethod.url(args, options),
+    method: 'post',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyController::importMethod
+* @see app/Http/Controllers/BibliographyController.php:99
+* @route '/projects/{project}/bibliography/import'
+*/
+importMethodForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: importMethod.url(args, options),
+    method: 'post',
+})
+
+importMethod.form = importMethodForm
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+export const exportMethod = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportMethod.url(args, options),
+    method: 'get',
+})
+
+exportMethod.definition = {
+    methods: ["get","head"],
+    url: '/projects/{project}/bibliography/export',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+exportMethod.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { project: args }
+    }
+
+    if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+        args = { project: args.public_id }
+    }
+
+    if (Array.isArray(args)) {
+        args = {
+            project: args[0],
+        }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+    }
+
+    return exportMethod.definition.url
+            .replace('{project}', parsedArgs.project.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+exportMethod.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportMethod.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+exportMethod.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: exportMethod.url(args, options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+const exportMethodForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: exportMethod.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+exportMethodForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: exportMethod.url(args, options),
+    method: 'get',
+})
+
+/**
+* @see \App\Http\Controllers\BibliographyController::exportMethod
+* @see app/Http/Controllers/BibliographyController.php:143
+* @route '/projects/{project}/bibliography/export'
+*/
+exportMethodForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: exportMethod.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+exportMethod.form = exportMethodForm
+
+/**
 * @see \App\Http\Controllers\BibliographyController::destroy
-* @see app/Http/Controllers/BibliographyController.php:86
+* @see app/Http/Controllers/BibliographyController.php:89
 * @route '/projects/{project}/bibliography/{source}'
 */
-export const destroy = (args: { project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { project: string | { public_id: string }, source: string | { public_id: string } } | [project: string | { public_id: string }, source: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -201,10 +466,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\BibliographyController::destroy
-* @see app/Http/Controllers/BibliographyController.php:86
+* @see app/Http/Controllers/BibliographyController.php:89
 * @route '/projects/{project}/bibliography/{source}'
 */
-destroy.url = (args: { project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+destroy.url = (args: { project: string | { public_id: string }, source: string | { public_id: string } } | [project: string | { public_id: string }, source: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -231,20 +496,20 @@ destroy.url = (args: { project: string | number | { public_id: string | number }
 
 /**
 * @see \App\Http\Controllers\BibliographyController::destroy
-* @see app/Http/Controllers/BibliographyController.php:86
+* @see app/Http/Controllers/BibliographyController.php:89
 * @route '/projects/{project}/bibliography/{source}'
 */
-destroy.delete = (args: { project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { project: string | { public_id: string }, source: string | { public_id: string } } | [project: string | { public_id: string }, source: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
 /**
 * @see \App\Http\Controllers\BibliographyController::destroy
-* @see app/Http/Controllers/BibliographyController.php:86
+* @see app/Http/Controllers/BibliographyController.php:89
 * @route '/projects/{project}/bibliography/{source}'
 */
-const destroyForm = (args: { project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { project: string | { public_id: string }, source: string | { public_id: string } } | [project: string | { public_id: string }, source: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -256,10 +521,10 @@ const destroyForm = (args: { project: string | number | { public_id: string | nu
 
 /**
 * @see \App\Http\Controllers\BibliographyController::destroy
-* @see app/Http/Controllers/BibliographyController.php:86
+* @see app/Http/Controllers/BibliographyController.php:89
 * @route '/projects/{project}/bibliography/{source}'
 */
-destroyForm.delete = (args: { project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, source: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { project: string | { public_id: string }, source: string | { public_id: string } } | [project: string | { public_id: string }, source: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -274,6 +539,9 @@ destroy.form = destroyForm
 const bibliography = {
     index: Object.assign(index, index),
     store: Object.assign(store, store),
+    lookup: Object.assign(lookup, lookup),
+    import: Object.assign(importMethod, importMethod),
+    export: Object.assign(exportMethod, exportMethod),
     destroy: Object.assign(destroy, destroy),
 }
 

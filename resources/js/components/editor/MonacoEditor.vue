@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import * as monaco from 'monaco-editor';
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref, toRef, watch } from 'vue';
+import { useRemoteCursors } from '@/composables/useRemoteCursors';
+import type { PresenceUser } from '@/composables/useWorkspacePresence';
 import { registerLatexLanguage } from '@/services/latex/monacoLatexLanguage';
 import {
     applyLiveMarkers,
@@ -12,22 +14,36 @@ const props = withDefaults(
         modelValue: string;
         language?: string;
         readOnly?: boolean;
+        remoteCursors?: PresenceUser[];
+        currentFileId?: string | null;
+        currentUserId?: number | null;
     }>(),
     {
         language: 'latex',
         readOnly: false,
+        remoteCursors: () => [],
+        currentFileId: null,
+        currentUserId: null,
     },
 );
 
 const emit = defineEmits<{
     'update:modelValue': [value: string];
     cursorChange: [position: { lineNumber: number; column: number }];
+    synctexJump: [lineNumber: number];
     save: [];
 }>();
 
 const containerRef = ref<HTMLElement | null>(null);
 let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
 let ignoreNextChange = false;
+
+const { syncDecorations } = useRemoteCursors(
+    () => editorInstance,
+    toRef(props, 'remoteCursors'),
+    toRef(props, 'currentFileId'),
+    toRef(props, 'currentUserId'),
+);
 
 function insertText(text: string): void {
     if (!editorInstance) {
@@ -113,9 +129,17 @@ onMounted(() => {
         });
     });
 
+    editorInstance.onMouseDown((event) => {
+        if ((event.event.ctrlKey || event.event.metaKey) && event.target.position) {
+            emit('synctexJump', event.target.position.lineNumber);
+        }
+    });
+
     editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
         emit('save');
     });
+
+    syncDecorations();
 });
 
 watch(
@@ -170,4 +194,16 @@ onBeforeUnmount(() => {
     height: auto;
     display: block;
 }
+
+.latex-monaco-host :deep(.remote-cursor-caret) {
+    border-left: 2px solid;
+    margin-left: -1px;
+}
+
+.latex-monaco-host :deep(.remote-cursor-caret-indigo) { border-color: #6366f1; }
+.latex-monaco-host :deep(.remote-cursor-caret-emerald) { border-color: #10b981; }
+.latex-monaco-host :deep(.remote-cursor-caret-amber) { border-color: #f59e0b; }
+.latex-monaco-host :deep(.remote-cursor-caret-rose) { border-color: #f43f5e; }
+.latex-monaco-host :deep(.remote-cursor-caret-sky) { border-color: #0ea5e9; }
+.latex-monaco-host :deep(.remote-cursor-caret-violet) { border-color: #8b5cf6; }
 </style>

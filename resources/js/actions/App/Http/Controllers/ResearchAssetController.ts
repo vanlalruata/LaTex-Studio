@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-export const index = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ index.definition = {
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-index.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -52,7 +52,7 @@ index.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-index.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -62,7 +62,7 @@ index.get = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-index.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
@@ -72,7 +72,7 @@ index.head = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-const indexForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -82,7 +82,7 @@ const indexForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-indexForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -92,7 +92,7 @@ indexForm.get = (args: { project: string | number | { public_id: string | number
 * @see app/Http/Controllers/ResearchAssetController.php:14
 * @route '/projects/{project}/research-assets'
 */
-indexForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -109,7 +109,7 @@ index.form = indexForm
 * @see app/Http/Controllers/ResearchAssetController.php:34
 * @route '/projects/{project}/research-assets'
 */
-export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -124,7 +124,7 @@ store.definition = {
 * @see app/Http/Controllers/ResearchAssetController.php:34
 * @route '/projects/{project}/research-assets'
 */
-store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -157,7 +157,7 @@ store.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/ResearchAssetController.php:34
 * @route '/projects/{project}/research-assets'
 */
-store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -167,7 +167,7 @@ store.post = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/ResearchAssetController.php:34
 * @route '/projects/{project}/research-assets'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -177,7 +177,7 @@ const storeForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/ResearchAssetController.php:34
 * @route '/projects/{project}/research-assets'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -189,7 +189,7 @@ store.form = storeForm
 * @see app/Http/Controllers/ResearchAssetController.php:62
 * @route '/projects/{project}/research-assets/{asset}'
 */
-export const destroy = (args: { project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { project: string | { public_id: string }, asset: string | { public_id: string } } | [project: string | { public_id: string }, asset: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -204,7 +204,7 @@ destroy.definition = {
 * @see app/Http/Controllers/ResearchAssetController.php:62
 * @route '/projects/{project}/research-assets/{asset}'
 */
-destroy.url = (args: { project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+destroy.url = (args: { project: string | { public_id: string }, asset: string | { public_id: string } } | [project: string | { public_id: string }, asset: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -234,7 +234,7 @@ destroy.url = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/ResearchAssetController.php:62
 * @route '/projects/{project}/research-assets/{asset}'
 */
-destroy.delete = (args: { project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { project: string | { public_id: string }, asset: string | { public_id: string } } | [project: string | { public_id: string }, asset: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -244,7 +244,7 @@ destroy.delete = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/ResearchAssetController.php:62
 * @route '/projects/{project}/research-assets/{asset}'
 */
-const destroyForm = (args: { project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { project: string | { public_id: string }, asset: string | { public_id: string } } | [project: string | { public_id: string }, asset: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -259,7 +259,7 @@ const destroyForm = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/ResearchAssetController.php:62
 * @route '/projects/{project}/research-assets/{asset}'
 */
-destroyForm.delete = (args: { project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, asset: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { project: string | { public_id: string }, asset: string | { public_id: string } } | [project: string | { public_id: string }, asset: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',

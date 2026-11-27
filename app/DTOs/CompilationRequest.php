@@ -18,5 +18,6 @@ readonly class CompilationRequest
         public float $cpus = 1.0,
         public int $pidsLimit = 64,
         public int $maxOutputMb = 100,
+        public bool $enableStreaming = false,
     ) {}
 }

@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/CompilationController.php:23
 * @route '/projects/{project}/compilations'
 */
-export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ store.definition = {
 * @see app/Http/Controllers/CompilationController.php:23
 * @route '/projects/{project}/compilations'
 */
-store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -52,7 +52,7 @@ store.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/CompilationController.php:23
 * @route '/projects/{project}/compilations'
 */
-store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -62,7 +62,7 @@ store.post = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/CompilationController.php:23
 * @route '/projects/{project}/compilations'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -72,7 +72,7 @@ const storeForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/CompilationController.php:23
 * @route '/projects/{project}/compilations'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -84,7 +84,7 @@ store.form = storeForm
 * @see app/Http/Controllers/CompilationController.php:134
 * @route '/projects/{project}/compiler-engine'
 */
-export const updateEngine = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const updateEngine = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updateEngine.url(args, options),
     method: 'put',
 })
@@ -99,7 +99,7 @@ updateEngine.definition = {
 * @see app/Http/Controllers/CompilationController.php:134
 * @route '/projects/{project}/compiler-engine'
 */
-updateEngine.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+updateEngine.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -132,7 +132,7 @@ updateEngine.url = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:134
 * @route '/projects/{project}/compiler-engine'
 */
-updateEngine.put = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+updateEngine.put = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updateEngine.url(args, options),
     method: 'put',
 })
@@ -142,7 +142,7 @@ updateEngine.put = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:134
 * @route '/projects/{project}/compiler-engine'
 */
-const updateEngineForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateEngineForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: updateEngine.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -157,7 +157,7 @@ const updateEngineForm = (args: { project: string | number | { public_id: string
 * @see app/Http/Controllers/CompilationController.php:134
 * @route '/projects/{project}/compiler-engine'
 */
-updateEngineForm.put = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateEngineForm.put = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: updateEngine.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -174,7 +174,7 @@ updateEngine.form = updateEngineForm
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-export const show = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -189,7 +189,7 @@ show.definition = {
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-show.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -222,7 +222,7 @@ show.url = (args: { compilation: string | number | { public_id: string | number 
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-show.get = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -232,7 +232,7 @@ show.get = (args: { compilation: string | number | { public_id: string | number 
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-show.head = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -242,7 +242,7 @@ show.head = (args: { compilation: string | number | { public_id: string | number
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-const showForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const showForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -252,7 +252,7 @@ const showForm = (args: { compilation: string | number | { public_id: string | n
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-showForm.get = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.get = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -262,7 +262,7 @@ showForm.get = (args: { compilation: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:48
 * @route '/compilations/{compilation}'
 */
-showForm.head = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.head = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -279,7 +279,7 @@ show.form = showForm
 * @see app/Http/Controllers/CompilationController.php:80
 * @route '/compilations/{compilation}/cancel'
 */
-export const cancel = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const cancel = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: cancel.url(args, options),
     method: 'post',
 })
@@ -294,7 +294,7 @@ cancel.definition = {
 * @see app/Http/Controllers/CompilationController.php:80
 * @route '/compilations/{compilation}/cancel'
 */
-cancel.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+cancel.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -327,7 +327,7 @@ cancel.url = (args: { compilation: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/CompilationController.php:80
 * @route '/compilations/{compilation}/cancel'
 */
-cancel.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+cancel.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: cancel.url(args, options),
     method: 'post',
 })
@@ -337,7 +337,7 @@ cancel.post = (args: { compilation: string | number | { public_id: string | numb
 * @see app/Http/Controllers/CompilationController.php:80
 * @route '/compilations/{compilation}/cancel'
 */
-const cancelForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const cancelForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: cancel.url(args, options),
     method: 'post',
 })
@@ -347,7 +347,7 @@ const cancelForm = (args: { compilation: string | number | { public_id: string |
 * @see app/Http/Controllers/CompilationController.php:80
 * @route '/compilations/{compilation}/cancel'
 */
-cancelForm.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+cancelForm.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: cancel.url(args, options),
     method: 'post',
 })
@@ -359,7 +359,7 @@ cancel.form = cancelForm
 * @see app/Http/Controllers/CompilationController.php:102
 * @route '/compilations/{compilation}/retry'
 */
-export const retry = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const retry = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: retry.url(args, options),
     method: 'post',
 })
@@ -374,7 +374,7 @@ retry.definition = {
 * @see app/Http/Controllers/CompilationController.php:102
 * @route '/compilations/{compilation}/retry'
 */
-retry.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+retry.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -407,7 +407,7 @@ retry.url = (args: { compilation: string | number | { public_id: string | number
 * @see app/Http/Controllers/CompilationController.php:102
 * @route '/compilations/{compilation}/retry'
 */
-retry.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+retry.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: retry.url(args, options),
     method: 'post',
 })
@@ -417,7 +417,7 @@ retry.post = (args: { compilation: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/CompilationController.php:102
 * @route '/compilations/{compilation}/retry'
 */
-const retryForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const retryForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: retry.url(args, options),
     method: 'post',
 })
@@ -427,7 +427,7 @@ const retryForm = (args: { compilation: string | number | { public_id: string | 
 * @see app/Http/Controllers/CompilationController.php:102
 * @route '/compilations/{compilation}/retry'
 */
-retryForm.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+retryForm.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: retry.url(args, options),
     method: 'post',
 })
@@ -439,7 +439,7 @@ retry.form = retryForm
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-export const forwardSynctex = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const forwardSynctex = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: forwardSynctex.url(args, options),
     method: 'post',
 })
@@ -454,7 +454,7 @@ forwardSynctex.definition = {
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-forwardSynctex.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+forwardSynctex.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -487,7 +487,7 @@ forwardSynctex.url = (args: { compilation: string | number | { public_id: string
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-forwardSynctex.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+forwardSynctex.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: forwardSynctex.url(args, options),
     method: 'post',
 })
@@ -497,7 +497,7 @@ forwardSynctex.post = (args: { compilation: string | number | { public_id: strin
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-const forwardSynctexForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const forwardSynctexForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: forwardSynctex.url(args, options),
     method: 'post',
 })
@@ -507,7 +507,7 @@ const forwardSynctexForm = (args: { compilation: string | number | { public_id: 
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-forwardSynctexForm.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+forwardSynctexForm.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: forwardSynctex.url(args, options),
     method: 'post',
 })
@@ -519,7 +519,7 @@ forwardSynctex.form = forwardSynctexForm
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-export const inverseSynctex = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const inverseSynctex = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: inverseSynctex.url(args, options),
     method: 'post',
 })
@@ -534,7 +534,7 @@ inverseSynctex.definition = {
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-inverseSynctex.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+inverseSynctex.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -567,7 +567,7 @@ inverseSynctex.url = (args: { compilation: string | number | { public_id: string
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-inverseSynctex.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+inverseSynctex.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: inverseSynctex.url(args, options),
     method: 'post',
 })
@@ -577,7 +577,7 @@ inverseSynctex.post = (args: { compilation: string | number | { public_id: strin
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-const inverseSynctexForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const inverseSynctexForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: inverseSynctex.url(args, options),
     method: 'post',
 })
@@ -587,7 +587,7 @@ const inverseSynctexForm = (args: { compilation: string | number | { public_id: 
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-inverseSynctexForm.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+inverseSynctexForm.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: inverseSynctex.url(args, options),
     method: 'post',
 })
@@ -599,7 +599,7 @@ inverseSynctex.form = inverseSynctexForm
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-export const artifact = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const artifact = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: artifact.url(args, options),
     method: 'get',
 })
@@ -614,7 +614,7 @@ artifact.definition = {
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-artifact.url = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions) => {
+artifact.url = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             compilation: args[0],
@@ -642,7 +642,7 @@ artifact.url = (args: { compilation: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-artifact.get = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+artifact.get = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: artifact.url(args, options),
     method: 'get',
 })
@@ -652,7 +652,7 @@ artifact.get = (args: { compilation: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-artifact.head = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+artifact.head = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: artifact.url(args, options),
     method: 'head',
 })
@@ -662,7 +662,7 @@ artifact.head = (args: { compilation: string | number | { public_id: string | nu
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-const artifactForm = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const artifactForm = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: artifact.url(args, options),
     method: 'get',
 })
@@ -672,7 +672,7 @@ const artifactForm = (args: { compilation: string | number | { public_id: string
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-artifactForm.get = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+artifactForm.get = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: artifact.url(args, options),
     method: 'get',
 })
@@ -682,7 +682,7 @@ artifactForm.get = (args: { compilation: string | number | { public_id: string |
 * @see app/Http/Controllers/CompilationController.php:231
 * @route '/compilations/{compilation}/artifacts/{type}'
 */
-artifactForm.head = (args: { compilation: string | number | { public_id: string | number }, type: string | number } | [compilation: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+artifactForm.head = (args: { compilation: string | { public_id: string }, type: string | number } | [compilation: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: artifact.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',

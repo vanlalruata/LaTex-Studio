@@ -85,7 +85,7 @@ index.form = indexForm
 * @see app/Http/Controllers/Admin/OrganizationController.php:36
 * @route '/admin/organizations/{organization}/quota'
 */
-export const updateQuota = (args: { organization: string | number | { id: string | number } } | [organization: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const updateQuota = (args: { organization: number | { id: number } } | [organization: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: updateQuota.url(args, options),
     method: 'patch',
 })
@@ -100,7 +100,7 @@ updateQuota.definition = {
 * @see app/Http/Controllers/Admin/OrganizationController.php:36
 * @route '/admin/organizations/{organization}/quota'
 */
-updateQuota.url = (args: { organization: string | number | { id: string | number } } | [organization: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+updateQuota.url = (args: { organization: number | { id: number } } | [organization: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { organization: args }
     }
@@ -133,7 +133,7 @@ updateQuota.url = (args: { organization: string | number | { id: string | number
 * @see app/Http/Controllers/Admin/OrganizationController.php:36
 * @route '/admin/organizations/{organization}/quota'
 */
-updateQuota.patch = (args: { organization: string | number | { id: string | number } } | [organization: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+updateQuota.patch = (args: { organization: number | { id: number } } | [organization: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: updateQuota.url(args, options),
     method: 'patch',
 })
@@ -143,7 +143,7 @@ updateQuota.patch = (args: { organization: string | number | { id: string | numb
 * @see app/Http/Controllers/Admin/OrganizationController.php:36
 * @route '/admin/organizations/{organization}/quota'
 */
-const updateQuotaForm = (args: { organization: string | number | { id: string | number } } | [organization: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateQuotaForm = (args: { organization: number | { id: number } } | [organization: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: updateQuota.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -158,7 +158,7 @@ const updateQuotaForm = (args: { organization: string | number | { id: string | 
 * @see app/Http/Controllers/Admin/OrganizationController.php:36
 * @route '/admin/organizations/{organization}/quota'
 */
-updateQuotaForm.patch = (args: { organization: string | number | { id: string | number } } | [organization: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateQuotaForm.patch = (args: { organization: number | { id: number } } | [organization: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: updateQuota.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',

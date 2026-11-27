@@ -1,117 +1,95 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-REQUEST_FILE="/work/build-request.v1.json"
-OUT_DIR="/work/out"
+WORK_DIR="/work"
+SRC_DIR="${WORK_DIR}/src"
+OUT_DIR="${WORK_DIR}/out"
+REQUEST_FILE="${WORK_DIR}/build-request.v1.json"
 RESULT_FILE="${OUT_DIR}/build-result.v1.json"
+STDOUT_LOG="${OUT_DIR}/worker-stdout.log"
 
 mkdir -p "${OUT_DIR}"
 
 if [[ ! -f "${REQUEST_FILE}" ]]; then
-    echo "Missing build-request.v1.json" >&2
-    exit 2
+    echo "Missing build-request.v1.json" > "${STDOUT_LOG}"
+    jq -n '{status: "failed", exit_code: 1, error: "Missing build-request.v1.json"}' > "${RESULT_FILE}"
+    exit 1
 fi
 
-COMPILATION_ID=$(jq -r '.compilation_id // ""' "${REQUEST_FILE}")
-ENGINE=$(jq -r '.engine // "pdflatex"' "${REQUEST_FILE}")
-ROOT_FILE=$(jq -r '.root_file // "main.tex"' "${REQUEST_FILE}")
-SYNCTEX=$(jq -r '.enable_synctex // true' "${REQUEST_FILE}")
+ENGINE="$(jq -r '.engine // "pdflatex"' "${REQUEST_FILE}")"
+ROOT_FILE="$(jq -r '.root_file // "main.tex"' "${REQUEST_FILE}")"
+BIB_TOOL="$(jq -r '.bibliography_tool // "biber"' "${REQUEST_FILE}")"
+ENABLE_SYNCTEX="$(jq -r '.enable_synctex // true' "${REQUEST_FILE}")"
+WALL_TIMEOUT="$(jq -r '.limits.wall_timeout_seconds // 60' "${REQUEST_FILE}")"
 
-# Allow-list compiler engine
 case "${ENGINE}" in
-    pdflatex)
-        LATEXMK_ENGINE_FLAG="-pdf"
-        ;;
-    xelatex)
-        LATEXMK_ENGINE_FLAG="-xelatex"
-        ;;
-    lualatex)
-        LATEXMK_ENGINE_FLAG="-lualatex"
-        ;;
+    pdflatex) ENGINE_FLAG="-pdf" ;;
+    xelatex)  ENGINE_FLAG="-xelatex" ;;
+    lualatex) ENGINE_FLAG="-lualatex" ;;
     *)
-        jq -n --arg id "${COMPILATION_ID}" --arg err "Unsupported engine: ${ENGINE}" \
-            '{protocol_version:"1.0",compilation_id:$id,status:"failed",exit_code:2,error:$err}' > "${RESULT_FILE}"
-        exit 2
+        echo "Unsupported compiler engine: ${ENGINE}" > "${STDOUT_LOG}"
+        jq -n --arg err "Unsupported engine: ${ENGINE}" '{status: "failed", exit_code: 1, error: $err}' > "${RESULT_FILE}"
+        exit 1
         ;;
 esac
 
-# Validate root_file stays relative inside /work/src
-if [[ "${ROOT_FILE}" = /* || "${ROOT_FILE}" == *".."* ]]; then
-    jq -n --arg id "${COMPILATION_ID}" --arg err "Invalid root_file path" \
-        '{protocol_version:"1.0",compilation_id:$id,status:"failed",exit_code:2,error:$err}' > "${RESULT_FILE}"
-    exit 2
+SYNCTEX_FLAG="-synctex=1"
+if [[ "${ENABLE_SYNCTEX}" != "true" ]]; then
+    SYNCTEX_FLAG="-synctex=0"
 fi
 
-cd /work/src
-
-SYNCTEX_FLAG="-synctex=0"
-if [[ "${SYNCTEX}" == "true" ]]; then
-    SYNCTEX_FLAG="-synctex=1"
+BIB_FLAG=""
+if [[ "${BIB_TOOL}" == "none" ]]; then
+    BIB_FLAG="-bibtex-"
 fi
 
-START_NS=$(date +%s%N)
+START_MS=$(date +%s%3N)
+
+echo "PROGRESS:25"
+echo "PASS:1"
+
+cd "${SRC_DIR}"
+
 set +e
-latexmk \
-    "${LATEXMK_ENGINE_FLAG}" \
-    -no-shell-escape \
-    -interaction=nonstopmode \
-    -file-line-error \
-    "${SYNCTEX_FLAG}" \
-    -outdir="${OUT_DIR}" \
-    "${ROOT_FILE}" > "${OUT_DIR}/worker-stdout.log" 2>&1
+if [[ -n "${BIB_FLAG}" ]]; then
+    timeout --signal=TERM --kill-after=5s "${WALL_TIMEOUT}s" \
+        latexmk "${ENGINE_FLAG}" -interaction=nonstopmode -halt-on-error -file-line-error \
+        -latexoption=-no-shell-escape "${SYNCTEX_FLAG}" "${BIB_FLAG}" \
+        -outdir="${OUT_DIR}" "${ROOT_FILE}" > "${STDOUT_LOG}" 2>&1
+else
+    timeout --signal=TERM --kill-after=5s "${WALL_TIMEOUT}s" \
+        latexmk "${ENGINE_FLAG}" -interaction=nonstopmode -halt-on-error -file-line-error \
+        -latexoption=-no-shell-escape "${SYNCTEX_FLAG}" \
+        -outdir="${OUT_DIR}" "${ROOT_FILE}" > "${STDOUT_LOG}" 2>&1
+fi
 EXIT_CODE=$?
 set -e
-END_NS=$(date +%s%N)
-DURATION_MS=$(( (END_NS - START_NS) / 1000000 ))
 
-BASE_NAME=$(basename "${ROOT_FILE}" .tex)
-PDF_PATH="${OUT_DIR}/${BASE_NAME}.pdf"
-LOG_PATH="${OUT_DIR}/${BASE_NAME}.log"
-SYNCTEX_PATH="${OUT_DIR}/${BASE_NAME}.synctex.gz"
+echo "PROGRESS:90"
+
+END_MS=$(date +%s%3N)
+DURATION_MS=$((END_MS - START_MS))
+if [[ "${DURATION_MS}" -lt 1 ]]; then
+    DURATION_MS=1
+fi
 
 STATUS="failed"
-if [[ ${EXIT_CODE} -eq 0 && -f "${PDF_PATH}" ]]; then
+if [[ "${EXIT_CODE}" -eq 0 ]]; then
     STATUS="succeeded"
-fi
-
-PDF_REL=""
-LOG_REL=""
-SYNCTEX_REL=""
-OUTPUT_BYTES=0
-
-if [[ -f "${PDF_PATH}" ]]; then
-    PDF_REL="out/${BASE_NAME}.pdf"
-    OUTPUT_BYTES=$(wc -c < "${PDF_PATH}")
-fi
-if [[ -f "${LOG_PATH}" ]]; then
-    LOG_REL="out/${BASE_NAME}.log"
-fi
-if [[ -f "${SYNCTEX_PATH}" ]]; then
-    SYNCTEX_REL="out/${BASE_NAME}.synctex.gz"
+elif [[ "${EXIT_CODE}" -eq 124 ]]; then
+    STATUS="timed_out"
 fi
 
 jq -n \
-    --arg id "${COMPILATION_ID}" \
     --arg status "${STATUS}" \
     --argjson exit_code "${EXIT_CODE}" \
     --argjson duration_ms "${DURATION_MS}" \
-    --argjson output_bytes "${OUTPUT_BYTES}" \
-    --arg pdf "${PDF_REL}" \
-    --arg log "${LOG_REL}" \
-    --arg synctex "${SYNCTEX_REL}" \
     '{
         protocol_version: "1.0",
-        compilation_id: $id,
         status: $status,
         exit_code: $exit_code,
         metrics: {
-            duration_ms: $duration_ms,
-            output_bytes: $output_bytes
-        },
-        artifacts: {
-            pdf: (if $pdf == "" then null else $pdf end),
-            log: (if $log == "" then null else $log end),
-            synctex: (if $synctex == "" then null else $synctex end)
+            duration_ms: $duration_ms
         }
     }' > "${RESULT_FILE}"
 

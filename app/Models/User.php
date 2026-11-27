@@ -27,6 +27,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
+ * @property bool $is_institutional_free
+ * @property string|null $institutional_domain
+ * @property Carbon|null $institutional_granted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -84,6 +87,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_institutional_free' => 'boolean',
+            'institutional_granted_at' => 'datetime',
         ];
     }
 }

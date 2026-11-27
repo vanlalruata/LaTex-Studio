@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-export const forward = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const forward = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: forward.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ forward.definition = {
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-forward.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+forward.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -52,7 +52,7 @@ forward.url = (args: { compilation: string | number | { public_id: string | numb
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-forward.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+forward.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: forward.url(args, options),
     method: 'post',
 })
@@ -62,7 +62,7 @@ forward.post = (args: { compilation: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-const forwardForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const forwardForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: forward.url(args, options),
     method: 'post',
 })
@@ -72,7 +72,7 @@ const forwardForm = (args: { compilation: string | number | { public_id: string 
 * @see app/Http/Controllers/CompilationController.php:158
 * @route '/compilations/{compilation}/synctex/forward'
 */
-forwardForm.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+forwardForm.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: forward.url(args, options),
     method: 'post',
 })
@@ -84,7 +84,7 @@ forward.form = forwardForm
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-export const inverse = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const inverse = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: inverse.url(args, options),
     method: 'post',
 })
@@ -99,7 +99,7 @@ inverse.definition = {
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-inverse.url = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+inverse.url = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { compilation: args }
     }
@@ -132,7 +132,7 @@ inverse.url = (args: { compilation: string | number | { public_id: string | numb
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-inverse.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+inverse.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: inverse.url(args, options),
     method: 'post',
 })
@@ -142,7 +142,7 @@ inverse.post = (args: { compilation: string | number | { public_id: string | num
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-const inverseForm = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const inverseForm = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: inverse.url(args, options),
     method: 'post',
 })
@@ -152,7 +152,7 @@ const inverseForm = (args: { compilation: string | number | { public_id: string 
 * @see app/Http/Controllers/CompilationController.php:194
 * @route '/compilations/{compilation}/synctex/inverse'
 */
-inverseForm.post = (args: { compilation: string | number | { public_id: string | number } } | [compilation: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+inverseForm.post = (args: { compilation: string | { public_id: string } } | [compilation: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: inverse.url(args, options),
     method: 'post',
 })

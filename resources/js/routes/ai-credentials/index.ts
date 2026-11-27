@@ -141,7 +141,7 @@ store.form = storeForm
 * @see app/Http/Controllers/Settings/AiCredentialController.php:85
 * @route '/settings/ai-keys/{credential}'
 */
-export const destroy = (args: { credential: string | number | { public_id: string | number } } | [credential: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { credential: string | { public_id: string } } | [credential: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -156,7 +156,7 @@ destroy.definition = {
 * @see app/Http/Controllers/Settings/AiCredentialController.php:85
 * @route '/settings/ai-keys/{credential}'
 */
-destroy.url = (args: { credential: string | number | { public_id: string | number } } | [credential: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { credential: string | { public_id: string } } | [credential: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { credential: args }
     }
@@ -189,7 +189,7 @@ destroy.url = (args: { credential: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/Settings/AiCredentialController.php:85
 * @route '/settings/ai-keys/{credential}'
 */
-destroy.delete = (args: { credential: string | number | { public_id: string | number } } | [credential: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { credential: string | { public_id: string } } | [credential: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -199,7 +199,7 @@ destroy.delete = (args: { credential: string | number | { public_id: string | nu
 * @see app/Http/Controllers/Settings/AiCredentialController.php:85
 * @route '/settings/ai-keys/{credential}'
 */
-const destroyForm = (args: { credential: string | number | { public_id: string | number } } | [credential: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { credential: string | { public_id: string } } | [credential: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -214,7 +214,7 @@ const destroyForm = (args: { credential: string | number | { public_id: string |
 * @see app/Http/Controllers/Settings/AiCredentialController.php:85
 * @route '/settings/ai-keys/{credential}'
 */
-destroyForm.delete = (args: { credential: string | number | { public_id: string | number } } | [credential: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { credential: string | { public_id: string } } | [credential: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',

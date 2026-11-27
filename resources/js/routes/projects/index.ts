@@ -6,6 +6,7 @@ import engine from './engine'
 import tasks from './tasks'
 import milestones from './milestones'
 import integrations from './integrations'
+import git from './git'
 import researchAssets from './research-assets'
 import bibliography from './bibliography'
 import ocr from './ocr'
@@ -81,7 +82,7 @@ store.form = storeForm
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-export const show = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -96,7 +97,7 @@ show.definition = {
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-show.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+show.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -129,7 +130,7 @@ show.url = (args: { project: string | number | { public_id: string | number } } 
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-show.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -139,7 +140,7 @@ show.get = (args: { project: string | number | { public_id: string | number } } 
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-show.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -149,7 +150,7 @@ show.head = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-const showForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const showForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -159,7 +160,7 @@ const showForm = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-showForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -169,7 +170,7 @@ showForm.get = (args: { project: string | number | { public_id: string | number 
 * @see app/Http/Controllers/ProjectController.php:53
 * @route '/projects/{project}'
 */
-showForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -186,7 +187,7 @@ show.form = showForm
 * @see app/Http/Controllers/ProjectController.php:163
 * @route '/projects/{project}'
 */
-export const update = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const update = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -201,7 +202,7 @@ update.definition = {
 * @see app/Http/Controllers/ProjectController.php:163
 * @route '/projects/{project}'
 */
-update.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -234,7 +235,7 @@ update.url = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/ProjectController.php:163
 * @route '/projects/{project}'
 */
-update.patch = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -244,7 +245,7 @@ update.patch = (args: { project: string | number | { public_id: string | number 
 * @see app/Http/Controllers/ProjectController.php:163
 * @route '/projects/{project}'
 */
-const updateForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -259,7 +260,7 @@ const updateForm = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/ProjectController.php:163
 * @route '/projects/{project}'
 */
-updateForm.patch = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.patch = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -276,7 +277,7 @@ update.form = updateForm
 * @see app/Http/Controllers/ProjectController.php:177
 * @route '/projects/{project}'
 */
-export const destroy = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -291,7 +292,7 @@ destroy.definition = {
 * @see app/Http/Controllers/ProjectController.php:177
 * @route '/projects/{project}'
 */
-destroy.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -324,7 +325,7 @@ destroy.url = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/ProjectController.php:177
 * @route '/projects/{project}'
 */
-destroy.delete = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -334,7 +335,7 @@ destroy.delete = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/ProjectController.php:177
 * @route '/projects/{project}'
 */
-const destroyForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -349,7 +350,7 @@ const destroyForm = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/ProjectController.php:177
 * @route '/projects/{project}'
 */
-destroyForm.delete = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -366,7 +367,7 @@ destroy.form = destroyForm
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-export const exportMethod = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const exportMethod = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: exportMethod.url(args, options),
     method: 'get',
 })
@@ -381,7 +382,7 @@ exportMethod.definition = {
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-exportMethod.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+exportMethod.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -414,7 +415,7 @@ exportMethod.url = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-exportMethod.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+exportMethod.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: exportMethod.url(args, options),
     method: 'get',
 })
@@ -424,7 +425,7 @@ exportMethod.get = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-exportMethod.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+exportMethod.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: exportMethod.url(args, options),
     method: 'head',
 })
@@ -434,7 +435,7 @@ exportMethod.head = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-const exportMethodForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const exportMethodForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: exportMethod.url(args, options),
     method: 'get',
 })
@@ -444,7 +445,7 @@ const exportMethodForm = (args: { project: string | number | { public_id: string
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-exportMethodForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+exportMethodForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: exportMethod.url(args, options),
     method: 'get',
 })
@@ -454,7 +455,7 @@ exportMethodForm.get = (args: { project: string | number | { public_id: string |
 * @see app/Http/Controllers/ProjectController.php:187
 * @route '/projects/{project}/export'
 */
-exportMethodForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+exportMethodForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: exportMethod.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -471,7 +472,7 @@ exportMethod.form = exportMethodForm
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-export const index = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -486,7 +487,7 @@ index.definition = {
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-index.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -519,7 +520,7 @@ index.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-index.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -529,7 +530,7 @@ index.get = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-index.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
@@ -539,7 +540,7 @@ index.head = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-const indexForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -549,7 +550,7 @@ const indexForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-indexForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -559,7 +560,7 @@ indexForm.get = (args: { project: string | number | { public_id: string | number
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-indexForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -585,6 +586,7 @@ const projects = {
     tasks: Object.assign(tasks, tasks),
     milestones: Object.assign(milestones, milestones),
     integrations: Object.assign(integrations, integrations),
+    git: Object.assign(git, git),
     researchAssets: Object.assign(researchAssets, researchAssets),
     bibliography: Object.assign(bibliography, bibliography),
     ocr: Object.assign(ocr, ocr),

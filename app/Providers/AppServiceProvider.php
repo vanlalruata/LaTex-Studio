@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
-use App\Services\Compiler\DockerTexLiveAdapter;
+use App\Services\Compiler\CompilerAdapterFactory;
 use App\Services\Compiler\LatexCompilerInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -22,7 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(LatexCompilerInterface::class, DockerTexLiveAdapter::class);
+        $this->app->bind(LatexCompilerInterface::class, function ($app): LatexCompilerInterface {
+            return $app->make(CompilerAdapterFactory::class)->resolve();
+        });
     }
 
     /**
@@ -35,6 +37,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-public-site', static fn (User $user): bool => $user->hasRole('admin'));
 
         RateLimiter::for('contact-enquiry', static fn (Request $request): Limit => Limit::perMinute(5)->by((string) $request->ip()));
+        RateLimiter::for('bibliography-lookup', static function (Request $request): Limit {
+            $user = $request->user();
+
+            return Limit::perMinute(30)->by($user !== null ? (string) $user->id : (string) $request->ip());
+        });
     }
 
     /**

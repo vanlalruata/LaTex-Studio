@@ -97,6 +97,14 @@ class Compilation extends Model
     }
 
     /**
+     * @return BelongsTo<User, $this>
+     */
+    public function triggeredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'triggered_by');
+    }
+
+    /**
      * @return HasMany<BuildArtifact, $this>
      */
     public function artifacts(): HasMany

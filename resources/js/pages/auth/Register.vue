@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+import { GraduationCap } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +13,28 @@ import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
-defineProps<{
+interface InstitutionalDomainOption {
+    domain: string;
+    institution_name: string | null;
+}
+
+const props = defineProps<{
     passwordRules: string;
+    institutionalDomains?: InstitutionalDomainOption[];
 }>();
+
+const emailInput = ref('');
+
+const matchedInstitution = computed<InstitutionalDomainOption | null>(() => {
+    const value = emailInput.value.trim().toLowerCase();
+    const atIndex = value.lastIndexOf('@');
+    if (atIndex === -1) return null;
+
+    const domain = value.slice(atIndex + 1);
+    if (!domain) return null;
+
+    return (props.institutionalDomains ?? []).find((item) => item.domain.toLowerCase() === domain) ?? null;
+});
 
 defineOptions({
     layout: {
@@ -51,6 +73,7 @@ defineOptions({
                 <Label for="email">Email address</Label>
                 <Input
                     id="email"
+                    v-model="emailInput"
                     type="email"
                     required
                     :tabindex="2"
@@ -59,6 +82,16 @@ defineOptions({
                     placeholder="email@example.com"
                 />
                 <InputError :message="errors.email" />
+                <Alert v-if="matchedInstitution" class="border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200">
+                    <GraduationCap class="size-4 text-emerald-600 dark:text-emerald-400" />
+                    <AlertDescription>
+                        Institutional access detected
+                        <span v-if="matchedInstitution.institution_name">
+                            (<strong>{{ matchedInstitution.institution_name }}</strong>)
+                        </span>
+                        — your account will automatically receive free access.
+                    </AlertDescription>
+                </Alert>
             </div>
 
             <div class="grid gap-2">

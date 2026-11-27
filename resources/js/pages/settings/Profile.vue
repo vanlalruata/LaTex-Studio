@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Form, Head, usePage } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
+import { GraduationCap } from '@lucide/vue';
 import { computed } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +40,18 @@ const user = computed(() => page.props.auth.user);
             title="Profile"
             description="Update your name and email address"
         />
+
+        <Alert
+            v-if="user.is_institutional_free"
+            class="border-emerald-500/40 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200"
+        >
+            <GraduationCap class="size-4 text-emerald-600 dark:text-emerald-400" />
+            <AlertTitle>Institutional Free Access</AlertTitle>
+            <AlertDescription>
+                Your account has free access through your institutional email
+                <span v-if="user.institutional_domain">({{ user.institutional_domain }})</span>.
+            </AlertDescription>
+        </Alert>
 
         <Form
             v-bind="ProfileController.update.form()"

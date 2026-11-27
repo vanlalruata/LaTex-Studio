@@ -8,6 +8,9 @@ import ProjectController from './ProjectController'
 import OrganizationController from './OrganizationController'
 import AuditController from './AuditController'
 import UsageController from './UsageController'
+import CompilerSettingsController from './CompilerSettingsController'
+import BuildQueueController from './BuildQueueController'
+import InstitutionalDomainController from './InstitutionalDomainController'
 
 const Admin = {
     PublicSiteController: Object.assign(PublicSiteController, PublicSiteController),
@@ -20,6 +23,9 @@ const Admin = {
     OrganizationController: Object.assign(OrganizationController, OrganizationController),
     AuditController: Object.assign(AuditController, AuditController),
     UsageController: Object.assign(UsageController, UsageController),
+    CompilerSettingsController: Object.assign(CompilerSettingsController, CompilerSettingsController),
+    BuildQueueController: Object.assign(BuildQueueController, BuildQueueController),
+    InstitutionalDomainController: Object.assign(InstitutionalDomainController, InstitutionalDomainController),
 }
 
 export default Admin

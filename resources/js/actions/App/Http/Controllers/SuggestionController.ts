@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-export const index = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ index.definition = {
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-index.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -52,7 +52,7 @@ index.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-index.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -62,7 +62,7 @@ index.get = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-index.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
@@ -72,7 +72,7 @@ index.head = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-const indexForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -82,7 +82,7 @@ const indexForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-indexForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -92,7 +92,7 @@ indexForm.get = (args: { project: string | number | { public_id: string | number
 * @see app/Http/Controllers/SuggestionController.php:20
 * @route '/projects/{project}/suggestions'
 */
-indexForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -109,7 +109,7 @@ index.form = indexForm
 * @see app/Http/Controllers/SuggestionController.php:47
 * @route '/projects/{project}/suggestions'
 */
-export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -124,7 +124,7 @@ store.definition = {
 * @see app/Http/Controllers/SuggestionController.php:47
 * @route '/projects/{project}/suggestions'
 */
-store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -157,7 +157,7 @@ store.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/SuggestionController.php:47
 * @route '/projects/{project}/suggestions'
 */
-store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -167,7 +167,7 @@ store.post = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/SuggestionController.php:47
 * @route '/projects/{project}/suggestions'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -177,7 +177,7 @@ const storeForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/SuggestionController.php:47
 * @route '/projects/{project}/suggestions'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -189,7 +189,7 @@ store.form = storeForm
 * @see app/Http/Controllers/SuggestionController.php:87
 * @route '/projects/{project}/suggestions/{suggestion}/accept'
 */
-export const accept = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const accept = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: accept.url(args, options),
     method: 'post',
 })
@@ -204,7 +204,7 @@ accept.definition = {
 * @see app/Http/Controllers/SuggestionController.php:87
 * @route '/projects/{project}/suggestions/{suggestion}/accept'
 */
-accept.url = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+accept.url = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -234,7 +234,7 @@ accept.url = (args: { project: string | number | { public_id: string | number },
 * @see app/Http/Controllers/SuggestionController.php:87
 * @route '/projects/{project}/suggestions/{suggestion}/accept'
 */
-accept.post = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+accept.post = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: accept.url(args, options),
     method: 'post',
 })
@@ -244,7 +244,7 @@ accept.post = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/SuggestionController.php:87
 * @route '/projects/{project}/suggestions/{suggestion}/accept'
 */
-const acceptForm = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const acceptForm = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: accept.url(args, options),
     method: 'post',
 })
@@ -254,7 +254,7 @@ const acceptForm = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/SuggestionController.php:87
 * @route '/projects/{project}/suggestions/{suggestion}/accept'
 */
-acceptForm.post = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+acceptForm.post = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: accept.url(args, options),
     method: 'post',
 })
@@ -266,7 +266,7 @@ accept.form = acceptForm
 * @see app/Http/Controllers/SuggestionController.php:132
 * @route '/projects/{project}/suggestions/{suggestion}/reject'
 */
-export const reject = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const reject = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reject.url(args, options),
     method: 'post',
 })
@@ -281,7 +281,7 @@ reject.definition = {
 * @see app/Http/Controllers/SuggestionController.php:132
 * @route '/projects/{project}/suggestions/{suggestion}/reject'
 */
-reject.url = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+reject.url = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -311,7 +311,7 @@ reject.url = (args: { project: string | number | { public_id: string | number },
 * @see app/Http/Controllers/SuggestionController.php:132
 * @route '/projects/{project}/suggestions/{suggestion}/reject'
 */
-reject.post = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+reject.post = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reject.url(args, options),
     method: 'post',
 })
@@ -321,7 +321,7 @@ reject.post = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/SuggestionController.php:132
 * @route '/projects/{project}/suggestions/{suggestion}/reject'
 */
-const rejectForm = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const rejectForm = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: reject.url(args, options),
     method: 'post',
 })
@@ -331,7 +331,7 @@ const rejectForm = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/SuggestionController.php:132
 * @route '/projects/{project}/suggestions/{suggestion}/reject'
 */
-rejectForm.post = (args: { project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, suggestion: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+rejectForm.post = (args: { project: string | { public_id: string }, suggestion: string | { public_id: string } } | [project: string | { public_id: string }, suggestion: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: reject.url(args, options),
     method: 'post',
 })

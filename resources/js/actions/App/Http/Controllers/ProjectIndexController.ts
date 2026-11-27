@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-const ProjectIndexController = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+const ProjectIndexController = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: ProjectIndexController.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ ProjectIndexController.definition = {
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-ProjectIndexController.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+ProjectIndexController.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -52,7 +52,7 @@ ProjectIndexController.url = (args: { project: string | number | { public_id: st
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-ProjectIndexController.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+ProjectIndexController.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: ProjectIndexController.url(args, options),
     method: 'get',
 })
@@ -62,7 +62,7 @@ ProjectIndexController.get = (args: { project: string | number | { public_id: st
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-ProjectIndexController.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+ProjectIndexController.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: ProjectIndexController.url(args, options),
     method: 'head',
 })
@@ -72,7 +72,7 @@ ProjectIndexController.head = (args: { project: string | number | { public_id: s
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-const ProjectIndexControllerForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const ProjectIndexControllerForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: ProjectIndexController.url(args, options),
     method: 'get',
 })
@@ -82,7 +82,7 @@ const ProjectIndexControllerForm = (args: { project: string | number | { public_
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-ProjectIndexControllerForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+ProjectIndexControllerForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: ProjectIndexController.url(args, options),
     method: 'get',
 })
@@ -92,7 +92,7 @@ ProjectIndexControllerForm.get = (args: { project: string | number | { public_id
 * @see app/Http/Controllers/ProjectIndexController.php:12
 * @route '/projects/{project}/index'
 */
-ProjectIndexControllerForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+ProjectIndexControllerForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: ProjectIndexController.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',

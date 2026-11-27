@@ -19,6 +19,7 @@ class UpdateProjectFileRequest extends FormRequest
         return [
             'content' => ['present', 'string'],
             'expected_version' => ['nullable', 'integer', 'min:1'],
+            'base_sha256' => ['nullable', 'string', 'size:64'],
         ];
     }
 }

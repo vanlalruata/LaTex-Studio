@@ -141,7 +141,7 @@ store.form = storeForm
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:37
 * @route '/admin/public-site/features/{feature}'
 */
-export const update = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -156,7 +156,7 @@ update.definition = {
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:37
 * @route '/admin/public-site/features/{feature}'
 */
-update.url = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+update.url = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { feature: args }
     }
@@ -189,7 +189,7 @@ update.url = (args: { feature: string | number | { id: string | number } } | [fe
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:37
 * @route '/admin/public-site/features/{feature}'
 */
-update.put = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -199,7 +199,7 @@ update.put = (args: { feature: string | number | { id: string | number } } | [fe
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:37
 * @route '/admin/public-site/features/{feature}'
 */
-const updateForm = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -214,7 +214,7 @@ const updateForm = (args: { feature: string | number | { id: string | number } }
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:37
 * @route '/admin/public-site/features/{feature}'
 */
-updateForm.put = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.put = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -231,7 +231,7 @@ update.form = updateForm
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:48
 * @route '/admin/public-site/features/{feature}'
 */
-export const destroy = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -246,7 +246,7 @@ destroy.definition = {
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:48
 * @route '/admin/public-site/features/{feature}'
 */
-destroy.url = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { feature: args }
     }
@@ -279,7 +279,7 @@ destroy.url = (args: { feature: string | number | { id: string | number } } | [f
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:48
 * @route '/admin/public-site/features/{feature}'
 */
-destroy.delete = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -289,7 +289,7 @@ destroy.delete = (args: { feature: string | number | { id: string | number } } |
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:48
 * @route '/admin/public-site/features/{feature}'
 */
-const destroyForm = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -304,7 +304,7 @@ const destroyForm = (args: { feature: string | number | { id: string | number } 
 * @see app/Http/Controllers/Admin/MarketingFeatureController.php:48
 * @route '/admin/public-site/features/{feature}'
 */
-destroyForm.delete = (args: { feature: string | number | { id: string | number } } | [feature: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { feature: number | { id: number } } | [feature: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',

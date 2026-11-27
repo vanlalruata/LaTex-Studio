@@ -1,10 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\ProjectFileController::store
-* @see app/Http/Controllers/ProjectFileController.php:38
+* @see app/Http/Controllers/ProjectFileController.php:39
 * @route '/projects/{project}/files'
 */
-export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -16,10 +16,10 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::store
-* @see app/Http/Controllers/ProjectFileController.php:38
+* @see app/Http/Controllers/ProjectFileController.php:39
 * @route '/projects/{project}/files'
 */
-store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -49,30 +49,30 @@ store.url = (args: { project: string | number | { public_id: string | number } }
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::store
-* @see app/Http/Controllers/ProjectFileController.php:38
+* @see app/Http/Controllers/ProjectFileController.php:39
 * @route '/projects/{project}/files'
 */
-store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::store
-* @see app/Http/Controllers/ProjectFileController.php:38
+* @see app/Http/Controllers/ProjectFileController.php:39
 * @route '/projects/{project}/files'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::store
-* @see app/Http/Controllers/ProjectFileController.php:38
+* @see app/Http/Controllers/ProjectFileController.php:39
 * @route '/projects/{project}/files'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -81,10 +81,10 @@ store.form = storeForm
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-export const show = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -96,10 +96,10 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-show.url = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+show.url = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -126,50 +126,50 @@ show.url = (args: { project: string | number | { public_id: string | number }, f
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-show.get = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-show.head = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-const showForm = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const showForm = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-showForm.get = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.get = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::show
-* @see app/Http/Controllers/ProjectFileController.php:18
+* @see app/Http/Controllers/ProjectFileController.php:19
 * @route '/projects/{project}/files/{file}'
 */
-showForm.head = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.head = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -183,10 +183,10 @@ show.form = showForm
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::update
-* @see app/Http/Controllers/ProjectFileController.php:100
+* @see app/Http/Controllers/ProjectFileController.php:101
 * @route '/projects/{project}/files/{file}'
 */
-export const update = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -198,10 +198,10 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::update
-* @see app/Http/Controllers/ProjectFileController.php:100
+* @see app/Http/Controllers/ProjectFileController.php:101
 * @route '/projects/{project}/files/{file}'
 */
-update.url = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+update.url = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -228,20 +228,20 @@ update.url = (args: { project: string | number | { public_id: string | number },
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::update
-* @see app/Http/Controllers/ProjectFileController.php:100
+* @see app/Http/Controllers/ProjectFileController.php:101
 * @route '/projects/{project}/files/{file}'
 */
-update.put = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::update
-* @see app/Http/Controllers/ProjectFileController.php:100
+* @see app/Http/Controllers/ProjectFileController.php:101
 * @route '/projects/{project}/files/{file}'
 */
-const updateForm = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -253,10 +253,10 @@ const updateForm = (args: { project: string | number | { public_id: string | num
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::update
-* @see app/Http/Controllers/ProjectFileController.php:100
+* @see app/Http/Controllers/ProjectFileController.php:101
 * @route '/projects/{project}/files/{file}'
 */
-updateForm.put = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.put = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -270,10 +270,10 @@ update.form = updateForm
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::destroy
-* @see app/Http/Controllers/ProjectFileController.php:134
+* @see app/Http/Controllers/ProjectFileController.php:150
 * @route '/projects/{project}/files/{file}'
 */
-export const destroy = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -285,10 +285,10 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::destroy
-* @see app/Http/Controllers/ProjectFileController.php:134
+* @see app/Http/Controllers/ProjectFileController.php:150
 * @route '/projects/{project}/files/{file}'
 */
-destroy.url = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+destroy.url = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -315,20 +315,20 @@ destroy.url = (args: { project: string | number | { public_id: string | number }
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::destroy
-* @see app/Http/Controllers/ProjectFileController.php:134
+* @see app/Http/Controllers/ProjectFileController.php:150
 * @route '/projects/{project}/files/{file}'
 */
-destroy.delete = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::destroy
-* @see app/Http/Controllers/ProjectFileController.php:134
+* @see app/Http/Controllers/ProjectFileController.php:150
 * @route '/projects/{project}/files/{file}'
 */
-const destroyForm = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -340,10 +340,10 @@ const destroyForm = (args: { project: string | number | { public_id: string | nu
 
 /**
 * @see \App\Http\Controllers\ProjectFileController::destroy
-* @see app/Http/Controllers/ProjectFileController.php:134
+* @see app/Http/Controllers/ProjectFileController.php:150
 * @route '/projects/{project}/files/{file}'
 */
-destroyForm.delete = (args: { project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, file: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { project: string | { public_id: string }, file: string | { public_id: string } } | [project: string | { public_id: string }, file: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',

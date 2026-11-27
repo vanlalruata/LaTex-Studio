@@ -1,9 +1,10 @@
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    jq \
     latexmk \
     biber \
     texlive-latex-base \
@@ -11,25 +12,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-latex-extra \
     texlive-science \
     texlive-bibtex-extra \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
     texlive-xetex \
     texlive-luatex \
-    texlive-fonts-recommended \
-    jq \
+    texlive-pictures \
     && rm -rf /var/lib/apt/lists/*
 
-# Harden TeX configuration: disable shell escape and restrict file I/O to workspace
-RUN mkdir -p /etc/texmf/texmf.d \
-    && printf "shell_escape = f\nopenin_any = p\nopenout_any = p\n" > /etc/texmf/texmf.d/99-sandbox.cnf \
-    && update-texmf
+RUN useradd --create-home --uid 10001 --shell /bin/bash texworker
 
-# Create unprivileged non-root worker user
-RUN groupadd --gid 10001 texworker \
-    && useradd --uid 10001 --gid 10001 --create-home --shell /usr/sbin/nologin texworker
-
-COPY entrypoint.sh /usr/local/bin/tex-worker-entrypoint
-RUN chmod 0755 /usr/local/bin/tex-worker-entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER texworker
 WORKDIR /work
 
-ENTRYPOINT ["/usr/local/bin/tex-worker-entrypoint"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

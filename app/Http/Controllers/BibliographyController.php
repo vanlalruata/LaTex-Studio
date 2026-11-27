@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\BibliographySource;
 use App\Models\Project;
+use App\Services\Bibliography\BibTexGenerator;
+use App\Services\Bibliography\BibTexParser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
@@ -91,6 +94,67 @@ class BibliographyController extends Controller
         $source->delete();
 
         return response()->json(['deleted' => true]);
+    }
+
+    public function importBib(
+        Request $request,
+        Project $project,
+        BibTexParser $parser,
+    ): JsonResponse {
+        Gate::authorize('editFiles', $project);
+
+        $validated = $request->validate([
+            'bibtex' => ['required', 'string', 'max:200000'],
+        ]);
+
+        $parsed = $parser->parse($validated['bibtex']);
+        $created = [];
+
+        foreach ($parsed['entries'] as $entry) {
+            $key = $entry['key'];
+            if ($project->bibliographySources()->where('key', $key)->exists()) {
+                $key .= '-'.substr(hash('sha256', $entry['title'].microtime(true)), 0, 6);
+            }
+
+            $source = $project->bibliographySources()->create([
+                'added_by' => $request->user()?->id,
+                'provider' => 'manual',
+                'key' => $key,
+                'title' => $entry['title'],
+                'authors' => $entry['authors'],
+                'year' => $entry['year'],
+                'venue' => $entry['venue'],
+                'doi' => $entry['doi'],
+                'url' => $entry['url'],
+                'raw_bibtex' => $entry['raw_bibtex'],
+                'is_imported' => true,
+            ]);
+
+            $created[] = $this->payload($source);
+        }
+
+        return response()->json([
+            'imported_count' => count($created),
+            'sources' => $created,
+            'errors' => $parsed['errors'],
+        ], 201);
+    }
+
+    public function exportBib(Project $project, BibTexGenerator $generator): Response
+    {
+        Gate::authorize('view', $project);
+
+        $sources = $project->bibliographySources()
+            ->orderBy('key')
+            ->get();
+
+        $content = $generator->generate($sources);
+
+        return response($content, 200, [
+            'Content-Type' => 'application/x-bibtex; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="references.bib"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     /**

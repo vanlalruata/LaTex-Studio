@@ -8,8 +8,11 @@ import CompilationController from './CompilationController'
 import ProjectTaskController from './ProjectTaskController'
 import ProjectMilestoneController from './ProjectMilestoneController'
 import ProjectIntegrationController from './ProjectIntegrationController'
+import GitAuthController from './GitAuthController'
+import GitSyncController from './GitSyncController'
 import ResearchAssetController from './ResearchAssetController'
 import BibliographyController from './BibliographyController'
+import BibliographyLookupController from './BibliographyLookupController'
 import OcrJobController from './OcrJobController'
 import ConversionJobController from './ConversionJobController'
 import AnnotationController from './AnnotationController'
@@ -26,6 +29,7 @@ import EquationController from './EquationController'
 import AiAssistantController from './AiAssistantController'
 import Admin from './Admin'
 import Settings from './Settings'
+import GitWebhookController from './GitWebhookController'
 
 const Controllers = {
     PublicSite: Object.assign(PublicSite, PublicSite),
@@ -38,8 +42,11 @@ const Controllers = {
     ProjectTaskController: Object.assign(ProjectTaskController, ProjectTaskController),
     ProjectMilestoneController: Object.assign(ProjectMilestoneController, ProjectMilestoneController),
     ProjectIntegrationController: Object.assign(ProjectIntegrationController, ProjectIntegrationController),
+    GitAuthController: Object.assign(GitAuthController, GitAuthController),
+    GitSyncController: Object.assign(GitSyncController, GitSyncController),
     ResearchAssetController: Object.assign(ResearchAssetController, ResearchAssetController),
     BibliographyController: Object.assign(BibliographyController, BibliographyController),
+    BibliographyLookupController: Object.assign(BibliographyLookupController, BibliographyLookupController),
     OcrJobController: Object.assign(OcrJobController, OcrJobController),
     ConversionJobController: Object.assign(ConversionJobController, ConversionJobController),
     AnnotationController: Object.assign(AnnotationController, AnnotationController),
@@ -56,6 +63,7 @@ const Controllers = {
     AiAssistantController: Object.assign(AiAssistantController, AiAssistantController),
     Admin: Object.assign(Admin, Admin),
     Settings: Object.assign(Settings, Settings),
+    GitWebhookController: Object.assign(GitWebhookController, GitWebhookController),
 }
 
 export default Controllers

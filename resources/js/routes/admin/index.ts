@@ -5,6 +5,9 @@ import projects from './projects'
 import organizations from './organizations'
 import audit from './audit'
 import usage from './usage'
+import compiler from './compiler'
+import buildQueue from './build-queue'
+import institutionalDomains from './institutional-domains'
 /**
 * @see \App\Http\Controllers\Admin\OverviewController::__invoke
 * @see app/Http/Controllers/Admin/OverviewController.php:18
@@ -94,6 +97,9 @@ const admin = {
     organizations: Object.assign(organizations, organizations),
     audit: Object.assign(audit, audit),
     usage: Object.assign(usage, usage),
+    compiler: Object.assign(compiler, compiler),
+    buildQueue: Object.assign(buildQueue, buildQueue),
+    institutionalDomains: Object.assign(institutionalDomains, institutionalDomains),
 }
 
 export default admin

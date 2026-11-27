@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class ProjectIntegrationController extends Controller
 {
-    private const PROVIDERS = ['github', 'zotero', 'slack', 'overleaf', 'custom'];
+    private const PROVIDERS = ['github', 'gitlab', 'zotero', 'slack', 'overleaf', 'custom'];
 
     private const STATUSES = ['disconnected', 'connected', 'error'];
 

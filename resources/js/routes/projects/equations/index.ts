@@ -6,7 +6,7 @@ import comments from './comments'
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-export const index = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -21,7 +21,7 @@ index.definition = {
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-index.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -54,7 +54,7 @@ index.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-index.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -64,7 +64,7 @@ index.get = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-index.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
@@ -74,7 +74,7 @@ index.head = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-const indexForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -84,7 +84,7 @@ const indexForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-indexForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -94,7 +94,7 @@ indexForm.get = (args: { project: string | number | { public_id: string | number
 * @see app/Http/Controllers/EquationController.php:33
 * @route '/projects/{project}/equations'
 */
-indexForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -111,7 +111,7 @@ index.form = indexForm
 * @see app/Http/Controllers/EquationController.php:103
 * @route '/projects/{project}/equations'
 */
-export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -126,7 +126,7 @@ store.definition = {
 * @see app/Http/Controllers/EquationController.php:103
 * @route '/projects/{project}/equations'
 */
-store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -159,7 +159,7 @@ store.url = (args: { project: string | number | { public_id: string | number } }
 * @see app/Http/Controllers/EquationController.php:103
 * @route '/projects/{project}/equations'
 */
-store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -169,7 +169,7 @@ store.post = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/EquationController.php:103
 * @route '/projects/{project}/equations'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -179,7 +179,7 @@ const storeForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/EquationController.php:103
 * @route '/projects/{project}/equations'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -191,7 +191,7 @@ store.form = storeForm
 * @see app/Http/Controllers/EquationController.php:207
 * @route '/projects/{project}/equations/insert'
 */
-export const insert = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const insert = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: insert.url(args, options),
     method: 'post',
 })
@@ -206,7 +206,7 @@ insert.definition = {
 * @see app/Http/Controllers/EquationController.php:207
 * @route '/projects/{project}/equations/insert'
 */
-insert.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+insert.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -239,7 +239,7 @@ insert.url = (args: { project: string | number | { public_id: string | number } 
 * @see app/Http/Controllers/EquationController.php:207
 * @route '/projects/{project}/equations/insert'
 */
-insert.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+insert.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: insert.url(args, options),
     method: 'post',
 })
@@ -249,7 +249,7 @@ insert.post = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/EquationController.php:207
 * @route '/projects/{project}/equations/insert'
 */
-const insertForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const insertForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: insert.url(args, options),
     method: 'post',
 })
@@ -259,7 +259,7 @@ const insertForm = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/EquationController.php:207
 * @route '/projects/{project}/equations/insert'
 */
-insertForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+insertForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: insert.url(args, options),
     method: 'post',
 })
@@ -271,7 +271,7 @@ insert.form = insertForm
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-export const show = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -286,7 +286,7 @@ show.definition = {
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-show.url = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+show.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -316,7 +316,7 @@ show.url = (args: { project: string | number | { public_id: string | number }, e
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-show.get = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -326,7 +326,7 @@ show.get = (args: { project: string | number | { public_id: string | number }, e
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-show.head = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -336,7 +336,7 @@ show.head = (args: { project: string | number | { public_id: string | number }, 
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-const showForm = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const showForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -346,7 +346,7 @@ const showForm = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-showForm.get = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.get = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, options),
     method: 'get',
 })
@@ -356,7 +356,7 @@ showForm.get = (args: { project: string | number | { public_id: string | number 
 * @see app/Http/Controllers/EquationController.php:71
 * @route '/projects/{project}/equations/{equation}'
 */
-showForm.head = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+showForm.head = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: show.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -373,7 +373,7 @@ show.form = showForm
 * @see app/Http/Controllers/EquationController.php:135
 * @route '/projects/{project}/equations/{equation}'
 */
-export const update = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -388,7 +388,7 @@ update.definition = {
 * @see app/Http/Controllers/EquationController.php:135
 * @route '/projects/{project}/equations/{equation}'
 */
-update.url = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+update.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -418,7 +418,7 @@ update.url = (args: { project: string | number | { public_id: string | number },
 * @see app/Http/Controllers/EquationController.php:135
 * @route '/projects/{project}/equations/{equation}'
 */
-update.put = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -428,7 +428,7 @@ update.put = (args: { project: string | number | { public_id: string | number },
 * @see app/Http/Controllers/EquationController.php:135
 * @route '/projects/{project}/equations/{equation}'
 */
-const updateForm = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const updateForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -443,7 +443,7 @@ const updateForm = (args: { project: string | number | { public_id: string | num
 * @see app/Http/Controllers/EquationController.php:135
 * @route '/projects/{project}/equations/{equation}'
 */
-updateForm.put = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+updateForm.put = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: update.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PUT',
@@ -460,7 +460,7 @@ update.form = updateForm
 * @see app/Http/Controllers/EquationController.php:170
 * @route '/projects/{project}/equations/{equation}'
 */
-export const destroy = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -475,7 +475,7 @@ destroy.definition = {
 * @see app/Http/Controllers/EquationController.php:170
 * @route '/projects/{project}/equations/{equation}'
 */
-destroy.url = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+destroy.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -505,7 +505,7 @@ destroy.url = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/EquationController.php:170
 * @route '/projects/{project}/equations/{equation}'
 */
-destroy.delete = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -515,7 +515,7 @@ destroy.delete = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/EquationController.php:170
 * @route '/projects/{project}/equations/{equation}'
 */
-const destroyForm = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const destroyForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -530,7 +530,7 @@ const destroyForm = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/EquationController.php:170
 * @route '/projects/{project}/equations/{equation}'
 */
-destroyForm.delete = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+destroyForm.delete = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: destroy.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'DELETE',
@@ -547,7 +547,7 @@ destroy.form = destroyForm
 * @see app/Http/Controllers/EquationController.php:269
 * @route '/projects/{project}/equations/{equation}/compile-preview'
 */
-export const compilePreview = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const compilePreview = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: compilePreview.url(args, options),
     method: 'post',
 })
@@ -562,7 +562,7 @@ compilePreview.definition = {
 * @see app/Http/Controllers/EquationController.php:269
 * @route '/projects/{project}/equations/{equation}/compile-preview'
 */
-compilePreview.url = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+compilePreview.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -592,7 +592,7 @@ compilePreview.url = (args: { project: string | number | { public_id: string | n
 * @see app/Http/Controllers/EquationController.php:269
 * @route '/projects/{project}/equations/{equation}/compile-preview'
 */
-compilePreview.post = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+compilePreview.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: compilePreview.url(args, options),
     method: 'post',
 })
@@ -602,7 +602,7 @@ compilePreview.post = (args: { project: string | number | { public_id: string | 
 * @see app/Http/Controllers/EquationController.php:269
 * @route '/projects/{project}/equations/{equation}/compile-preview'
 */
-const compilePreviewForm = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const compilePreviewForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: compilePreview.url(args, options),
     method: 'post',
 })
@@ -612,7 +612,7 @@ const compilePreviewForm = (args: { project: string | number | { public_id: stri
 * @see app/Http/Controllers/EquationController.php:269
 * @route '/projects/{project}/equations/{equation}/compile-preview'
 */
-compilePreviewForm.post = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+compilePreviewForm.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: compilePreview.url(args, options),
     method: 'post',
 })
@@ -624,7 +624,7 @@ compilePreview.form = compilePreviewForm
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-export const previewPdf = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const previewPdf = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: previewPdf.url(args, options),
     method: 'get',
 })
@@ -639,7 +639,7 @@ previewPdf.definition = {
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-previewPdf.url = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+previewPdf.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -669,7 +669,7 @@ previewPdf.url = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-previewPdf.get = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+previewPdf.get = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: previewPdf.url(args, options),
     method: 'get',
 })
@@ -679,7 +679,7 @@ previewPdf.get = (args: { project: string | number | { public_id: string | numbe
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-previewPdf.head = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+previewPdf.head = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: previewPdf.url(args, options),
     method: 'head',
 })
@@ -689,7 +689,7 @@ previewPdf.head = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-const previewPdfForm = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const previewPdfForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: previewPdf.url(args, options),
     method: 'get',
 })
@@ -699,7 +699,7 @@ const previewPdfForm = (args: { project: string | number | { public_id: string |
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-previewPdfForm.get = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+previewPdfForm.get = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: previewPdf.url(args, options),
     method: 'get',
 })
@@ -709,7 +709,7 @@ previewPdfForm.get = (args: { project: string | number | { public_id: string | n
 * @see app/Http/Controllers/EquationController.php:337
 * @route '/projects/{project}/equations/{equation}/preview.pdf'
 */
-previewPdfForm.head = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+previewPdfForm.head = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: previewPdf.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',

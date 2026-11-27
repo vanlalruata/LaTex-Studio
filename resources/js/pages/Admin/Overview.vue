@@ -10,6 +10,9 @@ import { index as publicSiteIndex } from '@/routes/admin/public-site';
 import { index as templatesIndex } from '@/routes/admin/public-site/templates';
 import { index as featuresIndex } from '@/routes/admin/public-site/features';
 import { index as auditIndex } from '@/routes/admin/audit';
+import { index as buildQueueIndex } from '@/routes/admin/build-queue';
+import { index as compilerIndex } from '@/routes/admin/compiler';
+import { index as institutionalDomainsIndex } from '@/routes/admin/institutional-domains';
 import { index as enquiriesIndex } from '@/routes/admin/public-site/enquiries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,6 +65,9 @@ const modules = [
     { title: 'Contact enquiries', description: 'Review and triage incoming messages.', href: enquiriesIndex() },
     { title: 'Audit log', description: 'Search administrator and platform events.', href: auditIndex() },
     { title: 'Usage & builds', description: 'Review recorded usage and build outcomes.', href: usageIndex() },
+    { title: 'Compiler settings', description: 'Switch between Docker and local TeX Live execution.', href: compilerIndex() },
+    { title: 'Build queue', description: 'Monitor active, queued, and stuck compilations.', href: buildQueueIndex() },
+    { title: 'Institutional access', description: 'Whitelist university email domains for free access.', href: institutionalDomainsIndex() },
 ];
 </script>
 

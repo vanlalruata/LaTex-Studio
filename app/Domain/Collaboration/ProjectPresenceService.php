@@ -2,6 +2,8 @@
 
 namespace App\Domain\Collaboration;
 
+use App\Events\UserCursorMoved;
+use App\Events\UserPresenceUpdated;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
@@ -40,6 +42,18 @@ class ProjectPresenceService
         );
 
         Cache::put($key, $presence, now()->addMinutes(2));
+
+        UserPresenceUpdated::dispatch($project->public_id, $this->online($project));
+
+        if ($cursor !== null) {
+            UserCursorMoved::dispatch(
+                $project->public_id,
+                $user->id,
+                $user->name,
+                $this->colorFor($user->id),
+                $cursor,
+            );
+        }
     }
 
     /**

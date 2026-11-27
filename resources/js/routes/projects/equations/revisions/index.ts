@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/EquationController.php:180
 * @route '/projects/{project}/equations/{equation}/revisions/{revision}/restore'
 */
-export const restore = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const restore = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: restore.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ restore.definition = {
 * @see app/Http/Controllers/EquationController.php:180
 * @route '/projects/{project}/equations/{equation}/revisions/{revision}/restore'
 */
-restore.url = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+restore.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -54,7 +54,7 @@ restore.url = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/EquationController.php:180
 * @route '/projects/{project}/equations/{equation}/revisions/{revision}/restore'
 */
-restore.post = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+restore.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: restore.url(args, options),
     method: 'post',
 })
@@ -64,7 +64,7 @@ restore.post = (args: { project: string | number | { public_id: string | number 
 * @see app/Http/Controllers/EquationController.php:180
 * @route '/projects/{project}/equations/{equation}/revisions/{revision}/restore'
 */
-const restoreForm = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const restoreForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: restore.url(args, options),
     method: 'post',
 })
@@ -74,7 +74,7 @@ const restoreForm = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/EquationController.php:180
 * @route '/projects/{project}/equations/{equation}/revisions/{revision}/restore'
 */
-restoreForm.post = (args: { project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, equation: string | number | { public_id: string | number }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+restoreForm.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: restore.url(args, options),
     method: 'post',
 })

@@ -1,17 +1,28 @@
 <script setup lang="ts">
-import { AlertTriangle, BookOpen, Plus, Search } from '@lucide/vue';
+import { AlertTriangle, BookOpen, Download, Globe, Plus, Search, Upload } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import ImportBibDialog from '@/components/bibliography/ImportBibDialog.vue';
+import LookupDialog from '@/components/bibliography/LookupDialog.vue';
 import type { BibEntry } from '@/services/latex/bibtexParser';
 
 const props = defineProps<{
     entries: BibEntry[];
+    canEdit?: boolean;
+    lookupUrl?: string;
+    storeUrl?: string;
+    importUrl?: string;
+    exportUrl?: string;
+    getCsrfToken?: () => string;
 }>();
 
 const emit = defineEmits<{
     insertCite: [key: string];
+    refresh: [];
 }>();
 
 const query = ref('');
+const showLookupDialog = ref(false);
+const showImportDialog = ref(false);
 
 const filteredEntries = computed(() => {
     const q = query.value.trim().toLowerCase();
@@ -32,8 +43,36 @@ const filteredEntries = computed(() => {
 
 <template>
     <div class="flex h-full flex-col">
-        <div class="border-b border-slate-100 px-3 py-2">
+        <div class="flex items-center justify-between border-b border-slate-100 px-3 py-2">
             <span class="text-xs font-semibold tracking-wider text-slate-500 uppercase">Bibliography</span>
+            <div class="flex items-center gap-1">
+                <button
+                    v-if="canEdit && lookupUrl && storeUrl"
+                    type="button"
+                    class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    title="Lookup DOI / arXiv / CrossRef"
+                    @click="showLookupDialog = true"
+                >
+                    <Globe class="size-3.5" />
+                </button>
+                <button
+                    v-if="canEdit && importUrl"
+                    type="button"
+                    class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    title="Import .bib"
+                    @click="showImportDialog = true"
+                >
+                    <Upload class="size-3.5" />
+                </button>
+                <a
+                    v-if="exportUrl"
+                    :href="exportUrl"
+                    class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    title="Export references.bib"
+                >
+                    <Download class="size-3.5" />
+                </a>
+            </div>
         </div>
 
         <div class="border-b border-slate-100 p-2">
@@ -86,5 +125,22 @@ const filteredEntries = computed(() => {
                 </div>
             </div>
         </div>
+
+        <LookupDialog
+            v-if="lookupUrl && storeUrl && getCsrfToken"
+            v-model:open="showLookupDialog"
+            :lookup-url="lookupUrl"
+            :store-url="storeUrl"
+            :get-csrf-token="getCsrfToken"
+            @imported="emit('refresh')"
+        />
+
+        <ImportBibDialog
+            v-if="importUrl && getCsrfToken"
+            v-model:open="showImportDialog"
+            :import-url="importUrl"
+            :get-csrf-token="getCsrfToken"
+            @imported="emit('refresh')"
+        />
     </div>
 </template>

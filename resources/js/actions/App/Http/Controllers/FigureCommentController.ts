@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-export const index = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const index = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -19,7 +19,7 @@ index.definition = {
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-index.url = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+index.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -49,7 +49,7 @@ index.url = (args: { project: string | number | { public_id: string | number }, 
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-index.get = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+index.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -59,7 +59,7 @@ index.get = (args: { project: string | number | { public_id: string | number }, 
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-index.head = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+index.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
@@ -69,7 +69,7 @@ index.head = (args: { project: string | number | { public_id: string | number },
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-const indexForm = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+const indexForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -79,7 +79,7 @@ const indexForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-indexForm.get = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, options),
     method: 'get',
 })
@@ -89,7 +89,7 @@ indexForm.get = (args: { project: string | number | { public_id: string | number
 * @see app/Http/Controllers/FigureCommentController.php:14
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-indexForm.head = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+indexForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
     action: index.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'HEAD',
@@ -106,7 +106,7 @@ index.form = indexForm
 * @see app/Http/Controllers/FigureCommentController.php:29
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-export const store = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -121,7 +121,7 @@ store.definition = {
 * @see app/Http/Controllers/FigureCommentController.php:29
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-store.url = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -151,7 +151,7 @@ store.url = (args: { project: string | number | { public_id: string | number }, 
 * @see app/Http/Controllers/FigureCommentController.php:29
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-store.post = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -161,7 +161,7 @@ store.post = (args: { project: string | number | { public_id: string | number },
 * @see app/Http/Controllers/FigureCommentController.php:29
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-const storeForm = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const storeForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -171,7 +171,7 @@ const storeForm = (args: { project: string | number | { public_id: string | numb
 * @see app/Http/Controllers/FigureCommentController.php:29
 * @route '/projects/{project}/figures/{figure}/comments'
 */
-storeForm.post = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+storeForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: store.url(args, options),
     method: 'post',
 })
@@ -183,7 +183,7 @@ store.form = storeForm
 * @see app/Http/Controllers/FigureCommentController.php:58
 * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
 */
-export const toggleResolve = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const toggleResolve = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggleResolve.url(args, options),
     method: 'post',
 })
@@ -198,7 +198,7 @@ toggleResolve.definition = {
 * @see app/Http/Controllers/FigureCommentController.php:58
 * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
 */
-toggleResolve.url = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+toggleResolve.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
             project: args[0],
@@ -233,7 +233,7 @@ toggleResolve.url = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/FigureCommentController.php:58
 * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
 */
-toggleResolve.post = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+toggleResolve.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggleResolve.url(args, options),
     method: 'post',
 })
@@ -243,7 +243,7 @@ toggleResolve.post = (args: { project: string | number | { public_id: string | n
 * @see app/Http/Controllers/FigureCommentController.php:58
 * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
 */
-const toggleResolveForm = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const toggleResolveForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: toggleResolve.url(args, options),
     method: 'post',
 })
@@ -253,7 +253,7 @@ const toggleResolveForm = (args: { project: string | number | { public_id: strin
 * @see app/Http/Controllers/FigureCommentController.php:58
 * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
 */
-toggleResolveForm.post = (args: { project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, figure: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+toggleResolveForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: toggleResolve.url(args, options),
     method: 'post',
 })

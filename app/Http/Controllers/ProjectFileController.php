@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Collaboration\ConflictDetectionService;
 use App\Domain\Files\PathValidator;
 use App\Domain\Files\SaveProjectFileAction;
 use App\Http\Requests\Projects\StoreProjectFileRequest;
@@ -102,6 +103,7 @@ class ProjectFileController extends Controller
         Project $project,
         ProjectFile $file,
         SaveProjectFileAction $action,
+        ConflictDetectionService $conflictDetection,
     ): JsonResponse {
         Gate::authorize('editFiles', $project);
         abort_unless($file->project_id === $project->id, 404);
@@ -113,6 +115,20 @@ class ProjectFileController extends Controller
         $expectedVersion = $request->filled('expected_version')
             ? $request->integer('expected_version')
             : null;
+        $baseSha256 = $request->filled('base_sha256')
+            ? (string) $request->input('base_sha256')
+            : null;
+
+        $conflict = $conflictDetection->check($file, $expectedVersion, $baseSha256);
+        if ($conflict['has_conflict']) {
+            return response()->json([
+                'message' => 'File has been modified in a newer revision.',
+                'server_version' => $conflict['server_version'],
+                'server_sha256' => $conflict['server_sha256'],
+                'server_content' => $conflict['server_content'],
+                'updated_by_name' => $conflict['updated_by_name'],
+            ], 409);
+        }
 
         $updated = $action->execute(
             project: $project,

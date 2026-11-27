@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import {
     AlertCircle,
     ArrowLeftRight,
@@ -56,7 +56,9 @@ import SymbolPalette from '@/components/editor/SymbolPalette.vue';
 import VisualLatexEditor from '@/components/editor/VisualLatexEditor.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
 import { useBuildInspector } from '@/composables/useBuildInspector';
+import { useCompilationChannel } from '@/composables/useCompilationChannel';
 import { useProjectAnnotations } from '@/composables/useProjectAnnotations';
+import { useSynctex } from '@/composables/useSynctex';
 import { useProjectIntegrations } from '@/composables/useProjectIntegrations';
 import { useProjectTasks } from '@/composables/useProjectTasks';
 import { useResearchWorkspace } from '@/composables/useResearchWorkspace';
@@ -201,6 +203,12 @@ const showBottomDrawer = ref(false);
 const saveStatus = ref<'saved' | 'saving' | 'dirty' | 'conflict' | 'error'>(
     'saved',
 );
+const conflictState = ref<{
+    server_version: number;
+    server_sha256: string | null;
+    server_content: string;
+    updated_by_name: string | null;
+} | null>(null);
 const cursorPos = ref({ lineNumber: 1, column: 1 });
 const newFileName = ref('');
 const showNewFileInput = ref(false);
@@ -225,6 +233,10 @@ const revisionList = revisionState.revisions;
 revisionList.value = [...props.revisions];
 const inspector = useBuildInspector();
 
+const page = usePage();
+const currentUserId = computed(
+    () => (page.props.auth as { user?: { id?: number } })?.user?.id ?? null,
+);
 const { users: presenceUsers } = presence;
 const {
     tasks: projectTasks,
@@ -387,23 +399,24 @@ async function handlePresenceJump(user: {
     }
 }
 
-async function forwardSynctex(): Promise<void> {
+const { forwardLookup: synctexForwardLookup, inverseLookup: synctexInverseLookup } = useSynctex(getCsrfToken);
+
+async function forwardSynctex(targetLine?: number | MouseEvent): Promise<void> {
     if (!currentFile.value || !lastSuccessfulCompilationId.value) {
         return;
     }
 
-    const result = await apiSend<{ page: number }>(
-        synctexRoutes.forward(lastSuccessfulCompilationId.value).url,
-        'POST',
-        {
-            file_path: currentFile.value.path,
-            line: cursorPos.value.lineNumber,
-        },
+    const line = typeof targetLine === 'number' ? targetLine : cursorPos.value.lineNumber;
+
+    const data = await synctexForwardLookup(
+        lastSuccessfulCompilationId.value,
+        currentFile.value.path,
+        line,
     );
 
-    if (result.ok && result.data) {
+    if (data) {
         previewTab.value = 'pdf';
-        pdfViewerRef.value?.goToPage(result.data.page);
+        pdfViewerRef.value?.goToPage(data.page);
     }
 }
 
@@ -416,23 +429,19 @@ async function handleInverseSynctex(payload: {
         return;
     }
 
-    const result = await apiSend<{
-        file_id: string;
-        file_path: string;
-        line: number;
-    }>(synctexRoutes.inverse(lastSuccessfulCompilationId.value).url, 'POST', payload);
+    const data = await synctexInverseLookup(lastSuccessfulCompilationId.value, payload);
 
-    if (!result.ok || !result.data) {
+    if (!data) {
         return;
     }
 
     const file = fileList.value.find(
-        (candidate) => candidate.public_id === result.data?.file_id,
+        (candidate) => candidate.public_id === data.file_id,
     );
 
     if (file) {
         await openFile(file);
-        jumpToLine(result.data.line);
+        jumpToLine(data.line);
     }
 }
 
@@ -536,6 +545,20 @@ async function saveCurrentFile(): Promise<void> {
 
     if (response.status === 409) {
         saveStatus.value = 'conflict';
+        const conflictData = (await response.json()) as {
+            server_version?: number;
+            server_sha256?: string | null;
+            server_content?: string;
+            updated_by_name?: string | null;
+        };
+        if (typeof conflictData.server_version === 'number') {
+            conflictState.value = {
+                server_version: conflictData.server_version,
+                server_sha256: conflictData.server_sha256 ?? null,
+                server_content: conflictData.server_content ?? '',
+                updated_by_name: conflictData.updated_by_name ?? null,
+            };
+        }
         return;
     }
 
@@ -559,7 +582,30 @@ async function saveCurrentFile(): Promise<void> {
     }
 
     saveStatus.value = 'saved';
+    conflictState.value = null;
     void refreshProjectIndex();
+}
+
+function reloadServerConflictVersion(): void {
+    if (!currentFile.value || !conflictState.value) {
+        return;
+    }
+
+    currentFile.value.content = conflictState.value.server_content;
+    currentFile.value.version = conflictState.value.server_version;
+    conflictState.value = null;
+    saveStatus.value = 'saved';
+}
+
+async function overwriteConflictWithLocal(): Promise<void> {
+    if (!currentFile.value || !conflictState.value) {
+        return;
+    }
+
+    currentFile.value.version = conflictState.value.server_version;
+    conflictState.value = null;
+    saveStatus.value = 'dirty';
+    await saveCurrentFile();
 }
 
 async function createFile(): Promise<void> {
@@ -859,7 +905,7 @@ async function pollCompilation(compilationId: string): Promise<void> {
     if (!data.is_terminal) {
         compilePollTimer = setTimeout(() => {
             void pollCompilation(compilationId);
-        }, 800);
+        }, isCompilationChannelConnected.value ? 3000 : 800);
         return;
     }
 
@@ -873,6 +919,33 @@ async function pollCompilation(compilationId: string): Promise<void> {
         showBottomDrawer.value = true;
     }
 }
+
+const { isConnected: isCompilationChannelConnected } = useCompilationChannel(
+    props.project.public_id,
+    {
+        onStatusChanged(payload) {
+            if (activeCompilationId.value && payload.public_id !== activeCompilationId.value) {
+                return;
+            }
+
+            if (latestCompilationState.value) {
+                latestCompilationState.value = {
+                    ...latestCompilationState.value,
+                    status: payload.status,
+                    error_summary: payload.error_summary,
+                };
+            }
+
+            if (payload.is_terminal) {
+                if (compilePollTimer) {
+                    clearTimeout(compilePollTimer);
+                    compilePollTimer = null;
+                }
+                void pollCompilation(payload.public_id);
+            }
+        },
+    },
+);
 
 async function refreshProjectIndex(): Promise<void> {
     const response = await fetch(
@@ -1520,7 +1593,14 @@ onBeforeUnmount(() => {
                 <BibliographyPanel
                     v-else-if="leftSidebarTab === 'bibliography'"
                     :entries="bibEntries"
+                    :can-edit="project.can_edit"
+                    :lookup-url="projectsRoutes.bibliography.lookup(project.public_id).url"
+                    :store-url="projectsRoutes.bibliography.store(project.public_id).url"
+                    :import-url="projectsRoutes.bibliography.import(project.public_id).url"
+                    :export-url="projectsRoutes.bibliography.export(project.public_id).url"
+                    :get-csrf-token="getCsrfToken"
                     @insert-cite="insertSnippet"
+                    @refresh="refreshProjectIndex"
                 />
 
                 <!-- Research Tools -->
@@ -1831,8 +1911,12 @@ onBeforeUnmount(() => {
                             :model-value="currentFile.content"
                             :language="currentLanguage"
                             :read-only="!project.can_edit"
+                            :remote-cursors="presenceUsers"
+                            :current-file-id="currentFile.public_id"
+                            :current-user-id="currentUserId"
                             @update:model-value="handleEditorInput"
                             @cursor-change="handleCursorChange"
+                            @synctex-jump="forwardSynctex"
                             @save="saveCurrentFile"
                         />
                         <VisualLatexEditor
@@ -2467,6 +2551,40 @@ onBeforeUnmount(() => {
                     })
             "
         />
+
+        <!-- File Save Conflict Resolution Modal -->
+        <div
+            v-if="conflictState"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+        >
+            <div class="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
+                <h2 class="text-base font-semibold text-slate-900">
+                    Save conflict detected
+                </h2>
+                <p class="mt-1 text-sm text-slate-600">
+                    This file was updated on the server
+                    <span v-if="conflictState.updated_by_name">by {{ conflictState.updated_by_name }}</span>
+                    (revision v{{ conflictState.server_version }}). Choose how to resolve your unsaved changes:
+                </p>
+
+                <div class="mt-5 flex flex-wrap justify-end gap-2">
+                    <button
+                        type="button"
+                        class="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        @click="reloadServerConflictVersion"
+                    >
+                        Reload server version
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-md bg-rose-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-700"
+                        @click="overwriteConflictWithLocal"
+                    >
+                        Overwrite with my changes
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <Toaster />
     </div>

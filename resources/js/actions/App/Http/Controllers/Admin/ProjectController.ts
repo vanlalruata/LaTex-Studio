@@ -85,7 +85,7 @@ index.form = indexForm
 * @see app/Http/Controllers/Admin/ProjectController.php:55
 * @route '/admin/projects/{project}/archive'
 */
-export const archive = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const archive = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: archive.url(args, options),
     method: 'patch',
 })
@@ -100,7 +100,7 @@ archive.definition = {
 * @see app/Http/Controllers/Admin/ProjectController.php:55
 * @route '/admin/projects/{project}/archive'
 */
-archive.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
+archive.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
@@ -133,7 +133,7 @@ archive.url = (args: { project: string | number | { public_id: string | number }
 * @see app/Http/Controllers/Admin/ProjectController.php:55
 * @route '/admin/projects/{project}/archive'
 */
-archive.patch = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+archive.patch = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: archive.url(args, options),
     method: 'patch',
 })
@@ -143,7 +143,7 @@ archive.patch = (args: { project: string | number | { public_id: string | number
 * @see app/Http/Controllers/Admin/ProjectController.php:55
 * @route '/admin/projects/{project}/archive'
 */
-const archiveForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+const archiveForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: archive.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',
@@ -158,7 +158,7 @@ const archiveForm = (args: { project: string | number | { public_id: string | nu
 * @see app/Http/Controllers/Admin/ProjectController.php:55
 * @route '/admin/projects/{project}/archive'
 */
-archiveForm.patch = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+archiveForm.patch = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
     action: archive.url(args, {
         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
             _method: 'PATCH',

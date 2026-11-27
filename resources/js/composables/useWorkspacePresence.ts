@@ -1,4 +1,5 @@
 import { onBeforeUnmount, ref } from 'vue';
+import { usePresenceChannel } from '@/composables/usePresenceChannel';
 import { apiGet, apiSend } from '@/lib/http';
 import presenceRoutes from '@/routes/projects/presence';
 
@@ -27,6 +28,23 @@ export function useWorkspacePresence(projectPublicId: string) {
     } | null>(null);
 
     let heartbeat: ReturnType<typeof setInterval> | null = null;
+
+    const { isConnected } = usePresenceChannel(projectPublicId, {
+        onPresenceUpdated(nextUsers) {
+            users.value = nextUsers;
+        },
+        onCursorMoved(payload) {
+            const idx = users.value.findIndex((u) => u.id === payload.user_id);
+            if (idx >= 0) {
+                const updated = [...users.value];
+                updated[idx] = {
+                    ...updated[idx],
+                    cursor: payload.cursor,
+                };
+                users.value = updated;
+            }
+        },
+    });
 
     async function refresh(): Promise<void> {
         const result = await apiGet<{ users: PresenceUser[] }>(
@@ -73,5 +91,5 @@ export function useWorkspacePresence(projectPublicId: string) {
 
     onBeforeUnmount(stop);
 
-    return { users, refresh, touch, start, stop };
+    return { users, isConnected, refresh, touch, start, stop };
 }

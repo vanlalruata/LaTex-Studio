@@ -76,4 +76,12 @@ class ProjectFile extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 }

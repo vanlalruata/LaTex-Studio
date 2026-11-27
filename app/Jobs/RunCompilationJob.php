@@ -7,9 +7,12 @@ use App\Domain\Files\PathValidator;
 use App\DTOs\CompilationRequest;
 use App\Enums\ArtifactType;
 use App\Enums\CompilationStatus;
+use App\Events\CompilationStatusChanged;
 use App\Models\BuildArtifact;
 use App\Models\Compilation;
 use App\Models\Diagnostic;
+use App\Services\Bibliography\BibTexGenerator;
+use App\Services\Compiler\CompilerSettingsService;
 use App\Services\Compiler\LatexCompilerInterface;
 use App\Services\Storage\PrivateStorageService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -32,6 +35,8 @@ class RunCompilationJob implements ShouldQueue
 
     public function handle(
         LatexCompilerInterface $compiler,
+        CompilerSettingsService $compilerSettings,
+        BibTexGenerator $bibTexGenerator,
         PrivateStorageService $storage,
         PathValidator $pathValidator,
         DiagnosticsNormalizer $normalizer,
@@ -59,6 +64,7 @@ class RunCompilationJob implements ShouldQueue
             'status' => CompilationStatus::Starting,
             'started_at' => now(),
         ]);
+        CompilationStatusChanged::dispatch($project->public_id, $compilation->public_id, CompilationStatus::Starting);
 
         $workDir = storage_path('app/build-workspaces/'.Str::uuid()->toString());
         $srcDir = $workDir.DIRECTORY_SEPARATOR.'src';
@@ -86,7 +92,18 @@ class RunCompilationJob implements ShouldQueue
                 file_put_contents($targetFile, $contents);
             }
 
+            $referencesPath = $srcDir.DIRECTORY_SEPARATOR.'references.bib';
+            if (! is_file($referencesPath)) {
+                $sources = $project->bibliographySources()->orderBy('key')->get();
+                if ($sources->isNotEmpty()) {
+                    file_put_contents($referencesPath, $bibTexGenerator->generate($sources));
+                }
+            }
+
             $compilation->update(['status' => CompilationStatus::Compiling]);
+            CompilationStatusChanged::dispatch($project->public_id, $compilation->public_id, CompilationStatus::Compiling);
+
+            $settings = $compilerSettings->all();
 
             $result = $compiler->compile(new CompilationRequest(
                 compilationPublicId: $compilation->public_id,
@@ -95,6 +112,11 @@ class RunCompilationJob implements ShouldQueue
                 bibliographyTool: $project->bibliography_tool,
                 enableSynctex: true,
                 workspacePath: $workDir,
+                wallTimeoutSeconds: $settings['wall_timeout'],
+                memoryMb: $settings['docker_memory_mb'],
+                cpus: $settings['docker_cpus'],
+                pidsLimit: $settings['docker_pids_limit'],
+                maxOutputMb: $settings['max_output_mb'],
             ));
 
             if ($compilation->fresh()?->status === CompilationStatus::Cancelled) {
@@ -102,6 +124,7 @@ class RunCompilationJob implements ShouldQueue
             }
 
             $compilation->update(['status' => CompilationStatus::Validating]);
+            CompilationStatusChanged::dispatch($project->public_id, $compilation->public_id, CompilationStatus::Validating);
 
             if ($result->logContents !== null) {
                 $this->storeArtifact($storage, $compilation, ArtifactType::Log, 'build.log', $result->logContents);
@@ -149,10 +172,20 @@ class RunCompilationJob implements ShouldQueue
                 $project->update([
                     'last_successful_compilation_id' => $compilation->id,
                 ]);
+
+                CompilationStatusChanged::dispatch(
+                    $project->public_id,
+                    $compilation->public_id,
+                    CompilationStatus::Published,
+                    null,
+                    $compilation->public_id,
+                );
             } else {
                 $finalStatus = $result->status === CompilationStatus::TimedOut
                     ? CompilationStatus::TimedOut
                     : CompilationStatus::Failed;
+
+                $errorSummary = $result->errorSummary ?? 'Compilation did not produce a valid PDF.';
 
                 $compilation->update([
                     'status' => $finalStatus,
@@ -160,9 +193,17 @@ class RunCompilationJob implements ShouldQueue
                     'duration_ms' => $result->durationMs,
                     'peak_memory_kb' => $result->peakMemoryKb,
                     'worker_image_digest' => $result->workerImageDigest,
-                    'error_summary' => $result->errorSummary ?? 'Compilation did not produce a valid PDF.',
+                    'error_summary' => $errorSummary,
                     'finished_at' => now(),
                 ]);
+
+                CompilationStatusChanged::dispatch(
+                    $project->public_id,
+                    $compilation->public_id,
+                    $finalStatus,
+                    $errorSummary,
+                    $project->lastSuccessfulCompilation?->public_id,
+                );
             }
         } catch (Throwable $exception) {
             $compilation->update([
@@ -170,6 +211,14 @@ class RunCompilationJob implements ShouldQueue
                 'error_summary' => $exception->getMessage(),
                 'finished_at' => now(),
             ]);
+
+            CompilationStatusChanged::dispatch(
+                $project->public_id,
+                $compilation->public_id,
+                CompilationStatus::Failed,
+                $exception->getMessage(),
+                $project->lastSuccessfulCompilation?->public_id,
+            );
         } finally {
             if (is_dir($workDir)) {
                 File::deleteDirectory($workDir);

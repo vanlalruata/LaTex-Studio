@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\AuditController as AdminAuditController;
+use App\Http\Controllers\Admin\BuildQueueController as AdminBuildQueueController;
+use App\Http\Controllers\Admin\CompilerSettingsController as AdminCompilerSettingsController;
 use App\Http\Controllers\Admin\ContactEnquiryController as AdminContactEnquiryController;
+use App\Http\Controllers\Admin\InstitutionalDomainController as AdminInstitutionalDomainController;
 use App\Http\Controllers\Admin\MarketingFeatureController as AdminMarketingFeatureController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\OverviewController as AdminOverviewController;
@@ -13,6 +16,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\AnnotationController;
 use App\Http\Controllers\BibliographyController;
+use App\Http\Controllers\BibliographyLookupController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\ConversionJobController;
@@ -21,6 +25,9 @@ use App\Http\Controllers\EquationController;
 use App\Http\Controllers\FigureCommentController;
 use App\Http\Controllers\FigureController;
 use App\Http\Controllers\FigureRenderController;
+use App\Http\Controllers\GitAuthController;
+use App\Http\Controllers\GitSyncController;
+use App\Http\Controllers\GitWebhookController;
 use App\Http\Controllers\OcrJobController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ProjectChatController;
@@ -46,6 +53,7 @@ use App\Http\Controllers\PublicSite\TemplateController;
 use App\Http\Controllers\ResearchAssetController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\TableDesignController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -110,12 +118,25 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::patch('projects/{project}/integrations/{integration}', [ProjectIntegrationController::class, 'update'])->name('projects.integrations.update');
     Route::delete('projects/{project}/integrations/{integration}', [ProjectIntegrationController::class, 'destroy'])->name('projects.integrations.destroy');
 
+    // Git OAuth & Sync
+    Route::get('projects/{project}/git/{provider}/redirect', [GitAuthController::class, 'redirect'])->name('projects.git.redirect');
+    Route::get('git/{provider}/callback', [GitAuthController::class, 'callback'])->name('git.oauth.callback');
+    Route::get('projects/{project}/git/{provider}/repositories', [GitAuthController::class, 'repositories'])->name('projects.git.repositories');
+    Route::delete('projects/{project}/git/{provider}/disconnect', [GitAuthController::class, 'disconnect'])->name('projects.git.disconnect');
+    Route::post('projects/{project}/git/{provider}/push', [GitSyncController::class, 'push'])->name('projects.git.push');
+    Route::post('projects/{project}/git/{provider}/pull', [GitSyncController::class, 'pull'])->name('projects.git.pull');
+
     // Research workspace: assets, bibliography, OCR and conversion queues
     Route::get('projects/{project}/research-assets', [ResearchAssetController::class, 'index'])->name('projects.research-assets.index');
     Route::post('projects/{project}/research-assets', [ResearchAssetController::class, 'store'])->name('projects.research-assets.store');
     Route::delete('projects/{project}/research-assets/{asset}', [ResearchAssetController::class, 'destroy'])->name('projects.research-assets.destroy');
     Route::get('projects/{project}/bibliography', [BibliographyController::class, 'index'])->name('projects.bibliography.index');
     Route::post('projects/{project}/bibliography', [BibliographyController::class, 'store'])->name('projects.bibliography.store');
+    Route::post('projects/{project}/bibliography/lookup', BibliographyLookupController::class)
+        ->middleware('throttle:bibliography-lookup')
+        ->name('projects.bibliography.lookup');
+    Route::post('projects/{project}/bibliography/import', [BibliographyController::class, 'importBib'])->name('projects.bibliography.import');
+    Route::get('projects/{project}/bibliography/export', [BibliographyController::class, 'exportBib'])->name('projects.bibliography.export');
     Route::delete('projects/{project}/bibliography/{source}', [BibliographyController::class, 'destroy'])->name('projects.bibliography.destroy');
     Route::get('projects/{project}/ocr', [OcrJobController::class, 'index'])->name('projects.ocr.index');
     Route::post('projects/{project}/ocr', [OcrJobController::class, 'store'])->name('projects.ocr.store');
@@ -228,9 +249,23 @@ Route::middleware(['auth', 'verified', 'can:manage-public-site'])
         Route::patch('/organizations/{organization}/quota', [AdminOrganizationController::class, 'updateQuota'])->name('organizations.quota.update');
         Route::get('/audit', [AdminAuditController::class, 'index'])->name('audit.index');
         Route::get('/usage', [AdminUsageController::class, 'index'])->name('usage.index');
+        Route::get('/compiler', [AdminCompilerSettingsController::class, 'index'])->name('compiler.index');
+        Route::put('/compiler', [AdminCompilerSettingsController::class, 'update'])->name('compiler.update');
+        Route::post('/compiler/test', [AdminCompilerSettingsController::class, 'testCompile'])->name('compiler.test');
+        Route::get('/build-queue', [AdminBuildQueueController::class, 'index'])->name('build-queue.index');
+        Route::post('/build-queue/{compilation}/cancel', [AdminBuildQueueController::class, 'cancel'])->name('build-queue.cancel');
+        Route::get('/institutional-domains', [AdminInstitutionalDomainController::class, 'index'])->name('institutional-domains.index');
+        Route::post('/institutional-domains', [AdminInstitutionalDomainController::class, 'store'])->name('institutional-domains.store');
+        Route::put('/institutional-domains/{domain}', [AdminInstitutionalDomainController::class, 'update'])->name('institutional-domains.update');
+        Route::delete('/institutional-domains/{domain}', [AdminInstitutionalDomainController::class, 'destroy'])->name('institutional-domains.destroy');
+        Route::post('/institutional-domains/{domain}/bulk-grant', [AdminInstitutionalDomainController::class, 'bulkGrant'])->name('institutional-domains.bulk-grant');
     });
 
 require __DIR__.'/settings.php';
+
+Route::post('api/webhooks/{provider}/{integration}', [GitWebhookController::class, 'handle'])
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.git.handle');
 
 Route::fallback(function (Request $request) {
     if ($request->expectsJson() || $request->is('api/*')) {

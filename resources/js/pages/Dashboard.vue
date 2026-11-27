@@ -5,6 +5,7 @@ import {
     Cpu,
     FileCode2,
     FolderPlus,
+    GraduationCap,
     HardDrive,
     Layers,
     Plus,
@@ -61,9 +62,21 @@ defineOptions({
 });
 
 const page = usePage();
-const userName = computed(
-    () => (page.props.auth as { user?: { name?: string } })?.user?.name ?? 'Researcher',
+const authUser = computed(
+    () => (page.props.auth as {
+        user?: {
+            name?: string;
+            is_institutional_free?: boolean;
+            institutional_domain?: string | null;
+            institution_name?: string | null;
+        };
+    })?.user,
 );
+const userName = computed(() => authUser.value?.name ?? 'Researcher');
+const institutionalLabel = computed(() => {
+    if (!authUser.value?.is_institutional_free) return null;
+    return authUser.value.institution_name || authUser.value.institutional_domain || 'Institution';
+});
 
 const searchQuery = ref('');
 const showCreateModal = ref(false);
@@ -138,6 +151,13 @@ function submitCreateProject(): void {
                 </p>
             </div>
             <div class="flex items-center gap-3">
+                <span
+                    v-if="institutionalLabel"
+                    class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800"
+                >
+                    <GraduationCap class="size-3.5 text-emerald-600" />
+                    Institutional Access — {{ institutionalLabel }}
+                </span>
                 <button
                     type="button"
                     class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition hover:bg-indigo-700"
