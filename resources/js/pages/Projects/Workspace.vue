@@ -1513,6 +1513,7 @@ onBeforeUnmount(() => {
                 <SymbolPalette
                     v-else-if="leftSidebarTab === 'symbols'"
                     @insert="insertSnippet"
+                    @open-lab="showEquationLab = true"
                 />
 
                 <!-- Bibliography Search -->
