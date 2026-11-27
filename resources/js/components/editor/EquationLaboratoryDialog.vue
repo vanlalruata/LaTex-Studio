@@ -267,7 +267,7 @@ function handleSaveToLibrary(): void {
 
 <template>
     <Dialog :open="open" @update:open="emit('update:open', $event)">
-        <DialogContent class="max-w-5xl gap-3 p-4">
+        <DialogContent class="max-h-[90vh] w-[95vw] max-w-6xl gap-4 overflow-y-auto p-5 sm:max-w-6xl">
             <DialogHeader class="pb-1">
                 <div class="flex flex-wrap items-center justify-between gap-2 pr-6">
                     <div class="flex items-center gap-2">
@@ -313,29 +313,27 @@ function handleSaveToLibrary(): void {
 
             <TooltipProvider>
                 <!-- Category Tabs & Search -->
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <ScrollArea class="max-w-full">
-                        <Tabs v-model="activeCategory">
-                            <TabsList class="h-8 flex-wrap">
-                                <TabsTrigger value="greek" class="px-2 text-xs">Greek</TabsTrigger>
-                                <TabsTrigger value="arrows" class="px-2 text-xs">Arrows</TabsTrigger>
-                                <TabsTrigger value="operators" class="px-2 text-xs">Operators</TabsTrigger>
-                                <TabsTrigger value="relations" class="px-2 text-xs">Relations</TabsTrigger>
-                                <TabsTrigger
-                                    v-for="cat in SYMBOL_CATEGORIES.filter((c) => !['greek', 'arrows', 'operators', 'relations'].includes(c.id))"
-                                    :key="cat.id"
-                                    :value="cat.id"
-                                    class="px-2 text-xs"
-                                >
-                                    {{ cat.label }}
-                                </TabsTrigger>
-                                <TabsTrigger value="favorites" class="px-2 text-xs">Favorites</TabsTrigger>
-                                <TabsTrigger value="recent" class="px-2 text-xs">Recent</TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </ScrollArea>
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <Tabs v-model="activeCategory" class="min-w-0 flex-1">
+                        <TabsList class="h-auto flex-wrap justify-start gap-1 p-1">
+                            <TabsTrigger value="greek" class="px-2.5 py-1 text-xs">Greek</TabsTrigger>
+                            <TabsTrigger value="arrows" class="px-2.5 py-1 text-xs">Arrows</TabsTrigger>
+                            <TabsTrigger value="operators" class="px-2.5 py-1 text-xs">Operators</TabsTrigger>
+                            <TabsTrigger value="relations" class="px-2.5 py-1 text-xs">Relations</TabsTrigger>
+                            <TabsTrigger
+                                v-for="cat in SYMBOL_CATEGORIES.filter((c) => !['greek', 'arrows', 'operators', 'relations'].includes(c.id))"
+                                :key="cat.id"
+                                :value="cat.id"
+                                class="px-2.5 py-1 text-xs"
+                            >
+                                {{ cat.label }}
+                            </TabsTrigger>
+                            <TabsTrigger value="favorites" class="px-2.5 py-1 text-xs">Favorites</TabsTrigger>
+                            <TabsTrigger value="recent" class="px-2.5 py-1 text-xs">Recent</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
 
-                    <div class="relative w-56 shrink-0">
+                    <div class="relative w-64 shrink-0">
                         <Search class="pointer-events-none absolute top-2 left-2.5 size-3.5 text-slate-400" />
                         <Input
                             v-model="searchQuery"
