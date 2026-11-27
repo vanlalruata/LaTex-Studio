@@ -464,16 +464,16 @@ function handleSaveToLibrary(): void {
                     </div>
 
                     <!-- Right: Standard Templates & Insertion Settings -->
-                    <div class="flex flex-col justify-between space-y-3 lg:col-span-4">
-                        <div>
+                    <div class="flex min-h-0 flex-col justify-between gap-3 lg:col-span-4">
+                        <div class="flex min-h-0 flex-1 flex-col">
                             <Label class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
                                 Standard Templates
                             </Label>
                             <p class="mt-0.5 mb-2 text-[11px] text-slate-500">
                                 Click template to insert at cursor without overwriting.
                             </p>
-                            <ScrollArea class="h-64 pr-2">
-                                <div class="space-y-1.5">
+                            <div class="relative min-h-64 flex-1">
+                                <div class="max-h-80 space-y-1.5 overflow-y-auto pr-1.5 lg:absolute lg:inset-0 lg:max-h-none">
                                     <Button
                                         v-for="tpl in EQUATION_TEMPLATES"
                                         :key="tpl.id"
@@ -486,7 +486,7 @@ function handleSaveToLibrary(): void {
                                         <span class="text-[10px] font-normal text-slate-500">{{ tpl.description }}</span>
                                     </Button>
                                 </div>
-                            </ScrollArea>
+                            </div>
                         </div>
 
                         <div class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs">
