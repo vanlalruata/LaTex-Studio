@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Services\Storage\PrivateStorageService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 
@@ -23,7 +24,8 @@ class ProjectFileController extends Controller
 
         $contents = '';
         if (! $file->is_directory && $file->storage_key !== null) {
-            $contents = $storage->getContents($file->storage_key) ?? '';
+            $raw = $storage->getContents($file->storage_key) ?? '';
+            $contents = mb_check_encoding($raw, 'UTF-8') ? $raw : '';
         }
 
         return response()->json([
@@ -58,7 +60,14 @@ class ProjectFileController extends Controller
         }
 
         $isDirectory = $request->boolean('is_directory', false);
-        $contents = $isDirectory ? '' : (string) ($request->input('content') ?? '');
+        $uploadedFile = $request->file('file');
+
+        if ($uploadedFile instanceof UploadedFile) {
+            $isDirectory = false;
+            $contents = (string) file_get_contents($uploadedFile->getRealPath());
+        } else {
+            $contents = $isDirectory ? '' : (string) ($request->input('content') ?? '');
+        }
 
         $storageKey = null;
         $checksum = null;
@@ -71,11 +80,16 @@ class ProjectFileController extends Controller
             $sizeBytes = $stored['size_bytes'];
         }
 
+        $mimeType = $isDirectory ? 'inode/directory' : $validator->inferMimeType($path);
+        if (! $isDirectory && $uploadedFile instanceof UploadedFile && $mimeType === 'application/octet-stream') {
+            $mimeType = $uploadedFile->getClientMimeType() ?: $mimeType;
+        }
+
         $file = ProjectFile::query()->create([
             'project_id' => $project->id,
             'path' => $path,
             'storage_key' => $storageKey,
-            'mime_type' => $isDirectory ? 'inode/directory' : $validator->inferMimeType($path),
+            'mime_type' => $mimeType,
             'size_bytes' => $sizeBytes,
             'sha256_checksum' => $checksum,
             'is_directory' => $isDirectory,
@@ -94,7 +108,7 @@ class ProjectFileController extends Controller
             'size_bytes' => $file->size_bytes,
             'is_directory' => $file->is_directory,
             'version' => $file->version,
-            'content' => $contents,
+            'content' => (! $isDirectory && mb_check_encoding($contents, 'UTF-8')) ? $contents : '',
         ], 201);
     }
 

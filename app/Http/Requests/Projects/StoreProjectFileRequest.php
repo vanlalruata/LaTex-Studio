@@ -19,6 +19,7 @@ class StoreProjectFileRequest extends FormRequest
         return [
             'path' => ['required', 'string', 'max:512'],
             'content' => ['nullable', 'string'],
+            'file' => ['nullable', 'file', 'max:20480'],
             'is_directory' => ['sometimes', 'boolean'],
         ];
     }

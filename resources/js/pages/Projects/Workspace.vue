@@ -13,6 +13,8 @@ import {
     FilePlus,
     Files,
     FileWarning,
+    Folder,
+    FolderPlus,
     History,
     Home,
     Italic,
@@ -32,6 +34,7 @@ import {
     Sparkles,
     Terminal,
     Trash2,
+    Upload,
     Wrench,
     X,
 } from '@lucide/vue';
@@ -55,6 +58,13 @@ import ResearchToolsPanel from '@/components/editor/ResearchToolsPanel.vue';
 import SymbolPalette from '@/components/editor/SymbolPalette.vue';
 import VisualLatexEditor from '@/components/editor/VisualLatexEditor.vue';
 import PdfViewer from '@/components/pdf/PdfViewer.vue';
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { useBuildInspector } from '@/composables/useBuildInspector';
 import { useCompilationChannel } from '@/composables/useCompilationChannel';
 import { useProjectAnnotations } from '@/composables/useProjectAnnotations';
@@ -619,11 +629,75 @@ async function overwriteConflictWithLocal(): Promise<void> {
     await saveCurrentFile();
 }
 
+const creationMode = ref<'file' | 'folder'>('file');
+const uploadTargetDir = ref<string | null>(null);
+const fileUploadInputRef = ref<HTMLInputElement | null>(null);
+
+function parentDirOf(path: string): string | undefined {
+    const idx = path.lastIndexOf('/');
+    return idx > 0 ? path.slice(0, idx) : undefined;
+}
+
+function openCreatePrompt(mode: 'file' | 'folder', parentDir?: string): void {
+    creationMode.value = mode;
+    newFileName.value = parentDir ? `${parentDir}/` : '';
+    showNewFileInput.value = true;
+}
+
+function triggerUploadToFolder(parentDir?: string): void {
+    if (!props.project.can_edit) {
+        return;
+    }
+    uploadTargetDir.value = parentDir ?? null;
+    fileUploadInputRef.value?.click();
+}
+
+async function handleFileUploadChange(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (!files || files.length === 0 || !props.project.can_edit) {
+        return;
+    }
+
+    for (const file of Array.from(files)) {
+        const targetPath = uploadTargetDir.value
+            ? `${uploadTargetDir.value}/${file.name}`
+            : file.name;
+
+        const formData = new FormData();
+        formData.append('path', targetPath);
+        formData.append('file', file);
+
+        const response = await fetch(
+            projectsRoutes.files.store(props.project.public_id).url,
+            {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': getCsrfToken(),
+                },
+                body: formData,
+            },
+        );
+
+        if (response.ok) {
+            const created = (await response.json()) as FileNode & { content: string };
+            fileList.value.push(created);
+        }
+    }
+
+    input.value = '';
+    uploadTargetDir.value = null;
+}
+
 async function createFile(): Promise<void> {
-    const path = newFileName.value.trim();
+    const path = newFileName.value.trim().replace(/\/+$/, '');
     if (!path || !props.project.can_edit) {
         return;
     }
+
+    const isDirectory = creationMode.value === 'folder';
 
     const response = await fetch(
         projectsRoutes.files.store(props.project.public_id).url,
@@ -635,7 +709,11 @@ async function createFile(): Promise<void> {
                 Accept: 'application/json',
                 'X-XSRF-TOKEN': getCsrfToken(),
             },
-            body: JSON.stringify({ path, content: '' }),
+            body: JSON.stringify({
+                path,
+                content: '',
+                is_directory: isDirectory,
+            }),
         },
     );
 
@@ -647,7 +725,10 @@ async function createFile(): Promise<void> {
     fileList.value.push(created);
     newFileName.value = '';
     showNewFileInput.value = false;
-    await openFile(created);
+
+    if (!created.is_directory) {
+        await openFile(created);
+    }
 }
 
 const fileToDelete = ref<FileNode | null>(null);
@@ -1482,15 +1563,39 @@ onBeforeUnmount(() => {
                             class="text-xs font-semibold tracking-wider text-slate-500 uppercase"
                             >Explorer</span
                         >
-                        <button
-                            v-if="project.can_edit"
-                            type="button"
-                            class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                            title="New file"
-                            @click="showNewFileInput = !showNewFileInput"
-                        >
-                            <FilePlus class="size-3.5" />
-                        </button>
+                        <div v-if="project.can_edit" class="flex items-center gap-0.5">
+                            <button
+                                type="button"
+                                class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                title="New file"
+                                @click="openCreatePrompt('file')"
+                            >
+                                <FilePlus class="size-3.5" />
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                title="New folder"
+                                @click="openCreatePrompt('folder')"
+                            >
+                                <FolderPlus class="size-3.5" />
+                            </button>
+                            <button
+                                type="button"
+                                class="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                title="Upload file"
+                                @click="triggerUploadToFolder()"
+                            >
+                                <Upload class="size-3.5" />
+                            </button>
+                            <input
+                                ref="fileUploadInputRef"
+                                type="file"
+                                multiple
+                                class="hidden"
+                                @change="handleFileUploadChange"
+                            />
+                        </div>
                     </div>
 
                     <div class="border-b border-slate-100 p-2">
@@ -1513,53 +1618,123 @@ onBeforeUnmount(() => {
                             <input
                                 v-model="newFileName"
                                 type="text"
-                                placeholder="chapters/sec2.tex"
+                                :placeholder="creationMode === 'folder' ? 'figures' : 'chapters/sec2.tex'"
                                 class="min-w-0 flex-1 rounded border border-indigo-300 px-2 py-1 text-xs outline-none"
                             />
                             <button
                                 type="submit"
                                 class="rounded bg-indigo-600 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-700"
+                                :title="creationMode === 'folder' ? 'Create folder' : 'Create file'"
                             >
                                 <Plus class="size-3.5" />
                             </button>
                         </form>
                     </div>
 
-                    <div class="flex-1 overflow-y-auto p-1.5">
-                        <div
-                            v-for="file in filteredFiles"
-                            :key="file.public_id"
-                            class="group flex items-center justify-between rounded-md px-2 py-1.5 text-xs transition"
-                            :class="
-                                currentFile?.public_id === file.public_id
-                                    ? 'bg-indigo-50 font-medium text-indigo-700'
-                                    : 'text-slate-700 hover:bg-slate-100'
-                            "
-                        >
-                            <button
-                                type="button"
-                                class="flex min-w-0 flex-1 items-center gap-2 text-left"
-                                @click="openFile(file)"
-                            >
-                                <FileCode
-                                    class="size-3.5 shrink-0 text-slate-400"
-                                />
-                                <span class="truncate">{{ file.path }}</span>
-                            </button>
-                            <button
-                                v-if="
-                                    project.can_edit &&
-                                    file.path !== project.root_file_path
-                                "
-                                type="button"
-                                class="hidden rounded p-0.5 text-slate-400 group-hover:block hover:text-rose-600"
-                                title="Delete file"
-                                @click="fileToDelete = file"
-                            >
-                                <Trash2 class="size-3" />
-                            </button>
-                        </div>
-                    </div>
+                    <ContextMenu>
+                        <ContextMenuTrigger as-child>
+                            <div class="flex-1 overflow-y-auto p-1.5">
+                                <ContextMenu v-for="file in filteredFiles" :key="file.public_id">
+                                    <ContextMenuTrigger as-child>
+                                        <div
+                                            class="group flex items-center justify-between rounded-md px-2 py-1.5 text-xs transition"
+                                            :class="
+                                                currentFile?.public_id === file.public_id
+                                                    ? 'bg-indigo-50 font-medium text-indigo-700'
+                                                    : 'text-slate-700 hover:bg-slate-100'
+                                            "
+                                        >
+                                            <button
+                                                type="button"
+                                                class="flex min-w-0 flex-1 items-center gap-2 text-left"
+                                                @click="file.is_directory ? openCreatePrompt('file', file.path) : openFile(file)"
+                                            >
+                                                <Folder
+                                                    v-if="file.is_directory"
+                                                    class="size-3.5 shrink-0 text-amber-500"
+                                                />
+                                                <FileCode
+                                                    v-else
+                                                    class="size-3.5 shrink-0 text-slate-400"
+                                                />
+                                                <span class="truncate">{{ file.path }}</span>
+                                            </button>
+                                            <button
+                                                v-if="
+                                                    project.can_edit &&
+                                                    file.path !== project.root_file_path
+                                                "
+                                                type="button"
+                                                class="hidden rounded p-0.5 text-slate-400 group-hover:block hover:text-rose-600"
+                                                :title="file.is_directory ? 'Delete folder' : 'Delete file'"
+                                                @click="fileToDelete = file"
+                                            >
+                                                <Trash2 class="size-3" />
+                                            </button>
+                                        </div>
+                                    </ContextMenuTrigger>
+                                    <ContextMenuContent v-if="project.can_edit" class="w-48">
+                                        <ContextMenuItem
+                                            @select="
+                                                openCreatePrompt(
+                                                    'file',
+                                                    file.is_directory ? file.path : parentDirOf(file.path),
+                                                )
+                                            "
+                                        >
+                                            <FilePlus class="mr-2 size-3.5" />
+                                            New file
+                                        </ContextMenuItem>
+                                        <ContextMenuItem
+                                            @select="
+                                                openCreatePrompt(
+                                                    'folder',
+                                                    file.is_directory ? file.path : parentDirOf(file.path),
+                                                )
+                                            "
+                                        >
+                                            <FolderPlus class="mr-2 size-3.5" />
+                                            New folder
+                                        </ContextMenuItem>
+                                        <ContextMenuItem
+                                            @select="
+                                                triggerUploadToFolder(
+                                                    file.is_directory ? file.path : parentDirOf(file.path),
+                                                )
+                                            "
+                                        >
+                                            <Upload class="mr-2 size-3.5" />
+                                            Upload any file
+                                        </ContextMenuItem>
+                                        <template v-if="file.path !== project.root_file_path">
+                                            <ContextMenuSeparator />
+                                            <ContextMenuItem
+                                                class="text-rose-600 focus:text-rose-600"
+                                                @select="fileToDelete = file"
+                                            >
+                                                <Trash2 class="mr-2 size-3.5" />
+                                                {{ file.is_directory ? 'Delete folder' : 'Delete file' }}
+                                            </ContextMenuItem>
+                                        </template>
+                                    </ContextMenuContent>
+                                </ContextMenu>
+                            </div>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent v-if="project.can_edit" class="w-48">
+                            <ContextMenuItem @select="openCreatePrompt('file')">
+                                <FilePlus class="mr-2 size-3.5" />
+                                New file
+                            </ContextMenuItem>
+                            <ContextMenuItem @select="openCreatePrompt('folder')">
+                                <FolderPlus class="mr-2 size-3.5" />
+                                New folder
+                            </ContextMenuItem>
+                            <ContextMenuItem @select="triggerUploadToFolder()">
+                                <Upload class="mr-2 size-3.5" />
+                                Upload any file
+                            </ContextMenuItem>
+                        </ContextMenuContent>
+                    </ContextMenu>
 
                     <!-- Document Outline -->
                     <div class="flex h-48 flex-col border-t border-slate-200">
