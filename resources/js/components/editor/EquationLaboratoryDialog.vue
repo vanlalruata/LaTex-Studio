@@ -12,6 +12,7 @@ import {
 } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { toast } from 'vue-sonner';
+import MathfieldAdapter from '@/components/editor/MathfieldAdapter.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -87,6 +88,8 @@ const activeCategory = ref<SymbolCategory | 'all' | 'favorites' | 'recent'>('gre
 const insertMode = ref<EquationInsertMode>('equation');
 const equationLabel = ref('');
 const textareaRef = ref<{ $el?: HTMLElement } | null>(null);
+const mathfieldRef = ref<InstanceType<typeof MathfieldAdapter> | null>(null);
+const editorSurface = ref<'mathfield' | 'source'>('mathfield');
 
 const favoriteIds = ref<string[]>(loadStoredIds(FAVORITES_KEY));
 const recentIds = ref<string[]>(loadStoredIds(RECENTS_KEY));
@@ -183,6 +186,11 @@ function getTextareaElement(): HTMLTextAreaElement | null {
 }
 
 function insertAtCursor(snippet: string): void {
+    if (editorSurface.value === 'mathfield' && mathfieldRef.value) {
+        mathfieldRef.value.insertSnippet(snippet);
+        return;
+    }
+
     const el = getTextareaElement();
     if (!el) {
         updateFormula(formula.value ? `${formula.value} ${snippet}` : snippet);
@@ -342,39 +350,60 @@ function handleSaveToLibrary(): void {
                 <div class="grid grid-cols-1 gap-3 lg:grid-cols-12">
                     <!-- Left: Formula Expression, Live Preview, Symbol Grid -->
                     <div class="space-y-3 lg:col-span-8">
-                        <div>
-                            <div class="mb-1 flex items-center justify-between">
-                                <Label class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-                                    Formula Expression
-                                </Label>
-                                <div class="flex items-center gap-1.5">
-                                    <Badge
-                                        v-if="validation.valid"
-                                        variant="secondary"
-                                        class="text-[10px] text-emerald-700"
-                                    >
-                                        <CheckCircle2 class="mr-1 size-3" />
-                                        Valid Syntax
-                                    </Badge>
-                                    <Badge
-                                        v-for="pkg in validation.requiredPackages"
-                                        :key="pkg"
-                                        variant="outline"
-                                        class="text-[10px]"
-                                    >
-                                        {{ pkg }}
-                                    </Badge>
-                                </div>
+                        <div class="flex items-center justify-between">
+                            <Tabs v-model="editorSurface">
+                                <TabsList class="h-7">
+                                    <TabsTrigger value="mathfield" class="px-2.5 text-xs">Visual Mathfield</TabsTrigger>
+                                    <TabsTrigger value="source" class="px-2.5 text-xs">Raw LaTeX</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                            <div class="flex items-center gap-1.5">
+                                <Badge
+                                    v-if="validation.valid"
+                                    variant="secondary"
+                                    class="text-[10px] text-emerald-700"
+                                >
+                                    <CheckCircle2 class="mr-1 size-3" />
+                                    Valid Syntax
+                                </Badge>
+                                <Badge
+                                    v-for="pkg in validation.requiredPackages"
+                                    :key="pkg"
+                                    variant="outline"
+                                    class="text-[10px]"
+                                >
+                                    {{ pkg }}
+                                </Badge>
                             </div>
-                            <Textarea
-                                ref="textareaRef"
-                                :model-value="formula"
-                                rows="3"
-                                class="font-mono text-xs"
-                                placeholder="Enter LaTeX math expression..."
-                                @update:model-value="updateFormula(String($event))"
-                            />
                         </div>
+
+                        <MathfieldAdapter
+                            v-if="editorSurface === 'mathfield'"
+                            ref="mathfieldRef"
+                            :model-value="formula"
+                            :display-mode="insertMode !== 'inline' && insertMode !== 'inline_parens'"
+                            :read-only="!canEdit"
+                            @update:model-value="updateFormula"
+                            @undo="undo"
+                            @redo="redo"
+                        />
+
+                        <template v-else>
+                            <div>
+                                <Textarea
+                                    ref="textareaRef"
+                                    :model-value="formula"
+                                    rows="3"
+                                    class="font-mono text-xs"
+                                    placeholder="Enter LaTeX math expression..."
+                                    @update:model-value="updateFormula(String($event))"
+                                />
+                            </div>
+                            <div
+                                class="flex min-h-20 items-center justify-center overflow-x-auto rounded-md border border-slate-200 bg-slate-950 px-4 py-3 text-lg text-white"
+                                v-html="previewMathMl"
+                            />
+                        </template>
 
                         <Alert v-if="validation.issues.some((i) => i.severity === 'error')" variant="destructive" class="py-2">
                             <AlertCircle class="size-4" />
@@ -387,21 +416,6 @@ function handleSaveToLibrary(): void {
                                 </ul>
                             </AlertDescription>
                         </Alert>
-
-                        <div>
-                            <div class="mb-1 flex items-center justify-between">
-                                <Label class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
-                                    Live Representation
-                                </Label>
-                                <span class="text-[10px] text-slate-400">
-                                    Typeset MathML Preview (TeX Live authoritative)
-                                </span>
-                            </div>
-                            <div
-                                class="flex min-h-24 items-center justify-center overflow-x-auto rounded-md border border-slate-200 bg-slate-950 px-4 py-3 text-lg text-white"
-                                v-html="previewMathMl"
-                            />
-                        </div>
 
                         <div>
                             <div class="mb-1 flex items-center justify-between">
