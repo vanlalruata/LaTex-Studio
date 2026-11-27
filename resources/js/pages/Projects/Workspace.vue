@@ -7,6 +7,8 @@ import {
     Bold,
     BookOpen,
     CheckCircle2,
+    ChevronDown,
+    ChevronRight,
     Crosshair,
     Download,
     FileCode,
@@ -14,6 +16,7 @@ import {
     Files,
     FileWarning,
     Folder,
+    FolderOpen,
     FolderPlus,
     History,
     Home,
@@ -324,6 +327,117 @@ const filteredFiles = computed(() => {
         return fileList.value;
     }
     return fileList.value.filter((f) => f.path.toLowerCase().includes(q));
+});
+
+const expandedFolders = ref<Record<string, boolean>>({});
+
+function toggleFolder(path: string): void {
+    expandedFolders.value = {
+        ...expandedFolders.value,
+        [path]: !expandedFolders.value[path],
+    };
+}
+
+function expandFolder(path: string): void {
+    const parts = path.split('/').filter(Boolean);
+    const next = { ...expandedFolders.value };
+    let current = '';
+    for (const part of parts) {
+        current = current ? `${current}/${part}` : part;
+        next[current] = true;
+    }
+    expandedFolders.value = next;
+}
+
+interface ExplorerTreeRow {
+    key: string;
+    name: string;
+    path: string;
+    depth: number;
+    isDirectory: boolean;
+    isExpanded: boolean;
+    file: FileNode | null;
+}
+
+const explorerTreeRows = computed<ExplorerTreeRow[]>(() => {
+    interface TreeNode {
+        name: string;
+        path: string;
+        isDirectory: boolean;
+        file: FileNode | null;
+        children: Map<string, TreeNode>;
+    }
+
+    const rootChildren = new Map<string, TreeNode>();
+
+    for (const file of filteredFiles.value) {
+        const parts = file.path.split('/').filter(Boolean);
+        if (parts.length === 0) {
+            continue;
+        }
+
+        let currentMap = rootChildren;
+        let currentPath = '';
+
+        for (let i = 0; i < parts.length; i++) {
+            const segment = parts[i];
+            currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+            const isLeaf = i === parts.length - 1;
+            const isDir = isLeaf ? file.is_directory : true;
+
+            let node = currentMap.get(segment);
+            if (!node) {
+                node = {
+                    name: segment,
+                    path: currentPath,
+                    isDirectory: isDir,
+                    file: isLeaf ? file : null,
+                    children: new Map<string, TreeNode>(),
+                };
+                currentMap.set(segment, node);
+            } else if (isLeaf) {
+                node.file = file;
+                if (file.is_directory) {
+                    node.isDirectory = true;
+                }
+            }
+
+            currentMap = node.children;
+        }
+    }
+
+    const isSearching = fileSearch.value.trim() !== '';
+    const rows: ExplorerTreeRow[] = [];
+
+    function walk(nodes: Map<string, TreeNode>, depth: number): void {
+        const sorted = Array.from(nodes.values()).sort((a, b) => {
+            if (a.isDirectory !== b.isDirectory) {
+                return a.isDirectory ? -1 : 1;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        for (const node of sorted) {
+            const isExpanded = isSearching || Boolean(expandedFolders.value[node.path]);
+            rows.push({
+                key: node.path,
+                name: node.name,
+                path: node.path,
+                depth,
+                isDirectory: node.isDirectory,
+                isExpanded,
+                file: node.file,
+            });
+
+            if (node.isDirectory && isExpanded && node.children.size > 0) {
+                walk(node.children, depth + 1);
+            }
+        }
+    }
+
+    walk(rootChildren, 0);
+
+    return rows;
 });
 
 const outlineHeadings = computed(() => {
@@ -640,6 +754,9 @@ function parentDirOf(path: string): string | undefined {
 
 function openCreatePrompt(mode: 'file' | 'folder', parentDir?: string): void {
     creationMode.value = mode;
+    if (parentDir) {
+        expandFolder(parentDir);
+    }
     newFileName.value = parentDir ? `${parentDir}/` : '';
     showNewFileInput.value = true;
 }
@@ -647,6 +764,9 @@ function openCreatePrompt(mode: 'file' | 'folder', parentDir?: string): void {
 function triggerUploadToFolder(parentDir?: string): void {
     if (!props.project.can_edit) {
         return;
+    }
+    if (parentDir) {
+        expandFolder(parentDir);
     }
     uploadTargetDir.value = parentDir ?? null;
     fileUploadInputRef.value?.click();
@@ -1634,40 +1754,56 @@ onBeforeUnmount(() => {
                     <ContextMenu>
                         <ContextMenuTrigger as-child>
                             <div class="flex-1 overflow-y-auto p-1.5">
-                                <ContextMenu v-for="file in filteredFiles" :key="file.public_id">
+                                <ContextMenu v-for="row in explorerTreeRows" :key="row.key">
                                     <ContextMenuTrigger as-child>
                                         <div
-                                            class="group flex items-center justify-between rounded-md px-2 py-1.5 text-xs transition"
+                                            class="group flex items-center justify-between rounded-md py-1.5 pr-2 text-xs transition"
+                                            :style="{ paddingLeft: `${8 + row.depth * 14}px` }"
                                             :class="
-                                                currentFile?.public_id === file.public_id
+                                                row.file && currentFile?.public_id === row.file.public_id
                                                     ? 'bg-indigo-50 font-medium text-indigo-700'
                                                     : 'text-slate-700 hover:bg-slate-100'
                                             "
                                         >
                                             <button
                                                 type="button"
-                                                class="flex min-w-0 flex-1 items-center gap-2 text-left"
-                                                @click="file.is_directory ? openCreatePrompt('file', file.path) : openFile(file)"
+                                                class="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+                                                @click="row.isDirectory ? toggleFolder(row.path) : (row.file && openFile(row.file))"
                                             >
-                                                <Folder
-                                                    v-if="file.is_directory"
-                                                    class="size-3.5 shrink-0 text-amber-500"
-                                                />
+                                                <template v-if="row.isDirectory">
+                                                    <ChevronDown
+                                                        v-if="row.isExpanded"
+                                                        class="size-3.5 shrink-0 text-slate-400"
+                                                    />
+                                                    <ChevronRight
+                                                        v-else
+                                                        class="size-3.5 shrink-0 text-slate-400"
+                                                    />
+                                                    <FolderOpen
+                                                        v-if="row.isExpanded"
+                                                        class="size-3.5 shrink-0 text-amber-500"
+                                                    />
+                                                    <Folder
+                                                        v-else
+                                                        class="size-3.5 shrink-0 text-amber-500"
+                                                    />
+                                                </template>
                                                 <FileCode
                                                     v-else
-                                                    class="size-3.5 shrink-0 text-slate-400"
+                                                    class="ml-5 size-3.5 shrink-0 text-slate-400"
                                                 />
-                                                <span class="truncate">{{ file.path }}</span>
+                                                <span class="truncate">{{ row.name }}</span>
                                             </button>
                                             <button
                                                 v-if="
                                                     project.can_edit &&
-                                                    file.path !== project.root_file_path
+                                                    row.file &&
+                                                    row.file.path !== project.root_file_path
                                                 "
                                                 type="button"
                                                 class="hidden rounded p-0.5 text-slate-400 group-hover:block hover:text-rose-600"
-                                                :title="file.is_directory ? 'Delete folder' : 'Delete file'"
-                                                @click="fileToDelete = file"
+                                                :title="row.isDirectory ? 'Delete folder' : 'Delete file'"
+                                                @click="fileToDelete = row.file"
                                             >
                                                 <Trash2 class="size-3" />
                                             </button>
@@ -1678,7 +1814,7 @@ onBeforeUnmount(() => {
                                             @select="
                                                 openCreatePrompt(
                                                     'file',
-                                                    file.is_directory ? file.path : parentDirOf(file.path),
+                                                    row.isDirectory ? row.path : parentDirOf(row.path),
                                                 )
                                             "
                                         >
@@ -1689,7 +1825,7 @@ onBeforeUnmount(() => {
                                             @select="
                                                 openCreatePrompt(
                                                     'folder',
-                                                    file.is_directory ? file.path : parentDirOf(file.path),
+                                                    row.isDirectory ? row.path : parentDirOf(row.path),
                                                 )
                                             "
                                         >
@@ -1699,21 +1835,21 @@ onBeforeUnmount(() => {
                                         <ContextMenuItem
                                             @select="
                                                 triggerUploadToFolder(
-                                                    file.is_directory ? file.path : parentDirOf(file.path),
+                                                    row.isDirectory ? row.path : parentDirOf(row.path),
                                                 )
                                             "
                                         >
                                             <Upload class="mr-2 size-3.5" />
                                             Upload any file
                                         </ContextMenuItem>
-                                        <template v-if="file.path !== project.root_file_path">
+                                        <template v-if="row.file && row.file.path !== project.root_file_path">
                                             <ContextMenuSeparator />
                                             <ContextMenuItem
                                                 class="text-rose-600 focus:text-rose-600"
-                                                @select="fileToDelete = file"
+                                                @select="fileToDelete = row.file"
                                             >
                                                 <Trash2 class="mr-2 size-3.5" />
-                                                {{ file.is_directory ? 'Delete folder' : 'Delete file' }}
+                                                {{ row.isDirectory ? 'Delete folder' : 'Delete file' }}
                                             </ContextMenuItem>
                                         </template>
                                     </ContextMenuContent>
