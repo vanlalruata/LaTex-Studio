@@ -16,6 +16,7 @@ void createInertiaApp({
             case name === 'Projects/Workspace':
             case name === 'Projects/TableDesigner':
             case name === 'Projects/FigureEditor':
+            case name === 'Projects/EquationStudio':
                 return null;
             case name.startsWith('Public/'):
                 return PublicLayout;

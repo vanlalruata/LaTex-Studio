@@ -22,6 +22,7 @@ import TableDesignController from './TableDesignController'
 import FigureController from './FigureController'
 import FigureRenderController from './FigureRenderController'
 import FigureCommentController from './FigureCommentController'
+import EquationController from './EquationController'
 import AiAssistantController from './AiAssistantController'
 import Admin from './Admin'
 import Settings from './Settings'
@@ -50,6 +51,7 @@ TableDesignController: Object.assign(TableDesignController, TableDesignControlle
 FigureController: Object.assign(FigureController, FigureController),
 FigureRenderController: Object.assign(FigureRenderController, FigureRenderController),
 FigureCommentController: Object.assign(FigureCommentController, FigureCommentController),
+EquationController: Object.assign(EquationController, EquationController),
 AiAssistantController: Object.assign(AiAssistantController, AiAssistantController),
 Admin: Object.assign(Admin, Admin),
 Settings: Object.assign(Settings, Settings),

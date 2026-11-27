@@ -17,6 +17,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\ConversionJobController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EquationController;
 use App\Http\Controllers\FigureCommentController;
 use App\Http\Controllers\FigureController;
 use App\Http\Controllers\FigureRenderController;
@@ -173,6 +174,19 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('projects/{project}/figures/{figure:public_id}/comments', [FigureCommentController::class, 'index'])->name('projects.figures.comments.index');
     Route::post('projects/{project}/figures/{figure:public_id}/comments', [FigureCommentController::class, 'store'])->name('projects.figures.comments.store');
     Route::post('projects/{project}/figures/{figure:public_id}/comments/{comment:public_id}/resolve', [FigureCommentController::class, 'toggleResolve'])->name('projects.figures.comments.resolve');
+
+    // Advanced Mathematics Equation Studio
+    Route::get('projects/{project}/equations', [EquationController::class, 'index'])->name('projects.equations.index');
+    Route::post('projects/{project}/equations', [EquationController::class, 'store'])->name('projects.equations.store');
+    Route::post('projects/{project}/equations/insert', [EquationController::class, 'insertIntoFile'])->name('projects.equations.insert');
+    Route::get('projects/{project}/equations/{equation:public_id}', [EquationController::class, 'show'])->name('projects.equations.show');
+    Route::put('projects/{project}/equations/{equation:public_id}', [EquationController::class, 'update'])->name('projects.equations.update');
+    Route::delete('projects/{project}/equations/{equation:public_id}', [EquationController::class, 'destroy'])->name('projects.equations.destroy');
+    Route::post('projects/{project}/equations/{equation:public_id}/revisions/{revision:public_id}/restore', [EquationController::class, 'restoreRevision'])->name('projects.equations.revisions.restore');
+    Route::post('projects/{project}/equations/{equation:public_id}/compile-preview', [EquationController::class, 'compilePreview'])->name('projects.equations.compile-preview');
+    Route::get('projects/{project}/equations/{equation:public_id}/preview.pdf', [EquationController::class, 'previewPdf'])->name('projects.equations.preview-pdf');
+    Route::post('projects/{project}/equations/{equation:public_id}/comments', [EquationController::class, 'storeComment'])->name('projects.equations.comments.store');
+    Route::post('projects/{project}/equations/{equation:public_id}/comments/{comment:public_id}/resolve', [EquationController::class, 'toggleResolveComment'])->name('projects.equations.comments.resolve');
 
     // Phase 9: AI Research Assistant
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');

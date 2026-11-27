@@ -220,6 +220,14 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<Equation, $this>
+     */
+    public function equations(): HasMany
+    {
+        return $this->hasMany(Equation::class);
+    }
+
+    /**
      * @return BelongsTo<Compilation, $this>
      */
     public function lastSuccessfulCompilation(): BelongsTo

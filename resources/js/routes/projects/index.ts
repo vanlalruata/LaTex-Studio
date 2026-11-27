@@ -18,6 +18,7 @@ import suggestions from './suggestions'
 import chat from './chat'
 import tables from './tables'
 import figures from './figures'
+import equations from './equations'
 import ai from './ai'
 /**
 * @see \App\Http\Controllers\ProjectController::store
@@ -584,6 +585,7 @@ suggestions: Object.assign(suggestions, suggestions),
 chat: Object.assign(chat, chat),
 tables: Object.assign(tables, tables),
 figures: Object.assign(figures, figures),
+equations: Object.assign(equations, equations),
 ai: Object.assign(ai, ai),
 }
 
