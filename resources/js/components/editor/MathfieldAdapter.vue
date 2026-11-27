@@ -212,12 +212,13 @@ const vkKeys: Record<typeof vkTab.value, Array<{ label: string; snippet: string;
 
         <!-- Visual Rendered Mathfield Surface -->
         <div
-            class="flex min-h-20 cursor-text items-center justify-center overflow-x-auto rounded-md border border-emerald-500/40 bg-slate-950 px-4 py-3 text-lg text-white"
+            class="flex min-h-20 cursor-text items-center overflow-x-auto rounded-md border border-emerald-500/40 bg-slate-950 px-4 py-3 text-lg text-white"
             role="region"
             aria-label="Interactive Mathematical Preview"
             @click="focusField"
-            v-html="renderedMathMl"
-        />
+        >
+            <div class="mx-auto shrink-0 leading-relaxed" v-html="renderedMathMl" />
+        </div>
 
         <!-- Caret-Aware Math Input -->
         <input

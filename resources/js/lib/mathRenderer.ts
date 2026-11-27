@@ -27,12 +27,37 @@ const GREEK_AND_SYMBOLS: Record<string, string> = {
     '\\rightarrow': '→', '\\to': '→', '\\leftarrow': '←', '\\uparrow': '↑', '\\downarrow': '↓', '\\leftrightarrow': '↔',
     '\\Rightarrow': '⇒', '\\Leftarrow': '⇐', '\\Leftrightarrow': '⇔', '\\mapsto': '↦',
     '\\prime': '′',
+    '\\ell': 'ℓ', '\\hbar': 'ℏ', '\\imath': 'ı', '\\jmath': 'ȷ',
+    '\\Re': 'ℜ', '\\Im': 'ℑ', '\\wp': '℘', '\\aleph': 'ℵ',
+    '\\langle': '⟨', '\\rangle': '⟩', '\\lceil': '⌈', '\\rceil': '⌉', '\\lfloor': '⌊', '\\rfloor': '⌋',
+    '\\oplus': '⊕', '\\otimes': '⊗', '\\odot': '⊙', '\\dagger': '†', '\\ddagger': '‡',
+    '\\square': '□', '\\blacksquare': '■', '\\triangle': '△', '\\angle': '∠', '\\degree': '°',
+    '\\implies': '⟹', '\\impliedby': '⟸', '\\iff': '⟺', '\\longrightarrow': '⟶', '\\longleftarrow': '⟵',
     '\\dots': '…', '\\cdots': '⋯', '\\vdots': '⋮', '\\ddots': '⋱',
     '\\{': '{', '\\}': '}', '\\left\\{': '{', '\\right\\}': '}', '\\left': '', '\\right': '',
     '\\min': 'min', '\\max': 'max', '\\inf': 'inf', '\\sup': 'sup', '\\lim': 'lim',
     '\\liminf': 'lim inf', '\\limsup': 'lim sup',
-    '\\log': 'log', '\\ln': 'ln', '\\exp': 'exp', '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan',
+    '\\log': 'log', '\\ln': 'ln', '\\lg': 'lg', '\\exp': 'exp',
+    '\\sin': 'sin', '\\cos': 'cos', '\\tan': 'tan', '\\sec': 'sec', '\\csc': 'csc', '\\cot': 'cot',
+    '\\sinh': 'sinh', '\\cosh': 'cosh', '\\tanh': 'tanh',
+    '\\arcsin': 'arcsin', '\\arccos': 'arccos', '\\arctan': 'arctan',
+    '\\arg': 'arg', '\\det': 'det', '\\dim': 'dim', '\\gcd': 'gcd', '\\hom': 'hom', '\\ker': 'ker',
+    '\\Pr': 'Pr', '\\deg': 'deg', '\\bmod': 'mod',
 };
+
+const UPRIGHT_FUNCTIONS = new Set([
+    '\\log', '\\ln', '\\lg', '\\exp',
+    '\\sin', '\\cos', '\\tan', '\\sec', '\\csc', '\\cot',
+    '\\sinh', '\\cosh', '\\tanh', '\\arcsin', '\\arccos', '\\arctan',
+    '\\arg', '\\det', '\\dim', '\\gcd', '\\hom', '\\ker', '\\Pr', '\\deg', '\\bmod',
+]);
+
+function escapeXml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
 
 const SUB_DIGITS: Record<string, string> = {
     '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
@@ -232,9 +257,10 @@ export function latexToMathML(latex: string, isBlock = true): string {
                 }
             }
 
-            // \frac
-            if (input.startsWith('\\frac', i)) {
-                let afterCmd = i + 5;
+            // \frac, \dfrac, \tfrac
+            const fracCmdMatch = /^\\(d|t)?frac\b/.exec(input.slice(i));
+            if (fracCmdMatch) {
+                let afterCmd = i + fracCmdMatch[0].length;
                 while (afterCmd < input.length && /\s/.test(input[afterCmd])) afterCmd++;
                 const num = extractBalancedBraces(input, afterCmd);
                 if (num) {
@@ -248,6 +274,56 @@ export function latexToMathML(latex: string, isBlock = true): string {
                         i = den.endIndex + 1;
                         continue;
                     }
+                }
+            }
+
+            // \binom, \dbinom, \tbinom
+            const binomCmdMatch = /^\\(d|t)?binom\b/.exec(input.slice(i));
+            if (binomCmdMatch) {
+                let afterCmd = i + binomCmdMatch[0].length;
+                while (afterCmd < input.length && /\s/.test(input[afterCmd])) afterCmd++;
+                const top = extractBalancedBraces(input, afterCmd);
+                if (top) {
+                    let afterTop = top.endIndex + 1;
+                    while (afterTop < input.length && /\s/.test(input[afterTop])) afterTop++;
+                    const bot = extractBalancedBraces(input, afterTop);
+                    if (bot) {
+                        out += `<mrow><mo fence="true" stretchy="true">(</mo><mfrac linethickness="0"><mrow>${convertTokens(top.content)}</mrow><mrow>${convertTokens(bot.content)}</mrow></mfrac><mo fence="true" stretchy="true">)</mo></mrow>`;
+                        i = bot.endIndex + 1;
+                        continue;
+                    }
+                }
+            }
+
+            // \overset, \underset, \stackrel
+            const stackCmdMatch = /^\\(overset|underset|stackrel)\b/.exec(input.slice(i));
+            if (stackCmdMatch) {
+                const kind = stackCmdMatch[1];
+                let afterCmd = i + stackCmdMatch[0].length;
+                while (afterCmd < input.length && /\s/.test(input[afterCmd])) afterCmd++;
+                const firstArg = extractBalancedBraces(input, afterCmd);
+                if (firstArg) {
+                    let afterFirst = firstArg.endIndex + 1;
+                    while (afterFirst < input.length && /\s/.test(input[afterFirst])) afterFirst++;
+                    const secondArg = extractBalancedBraces(input, afterFirst);
+                    if (secondArg) {
+                        const tag = kind === 'underset' ? 'munder' : 'mover';
+                        out += `<${tag}><mrow>${convertTokens(secondArg.content)}</mrow><mrow style="font-size: 0.75em;">${convertTokens(firstArg.content)}</mrow></${tag}>`;
+                        i = secondArg.endIndex + 1;
+                        continue;
+                    }
+                }
+            }
+
+            // \boxed{...}
+            if (input.startsWith('\\boxed', i)) {
+                let afterCmd = i + 6;
+                while (afterCmd < input.length && /\s/.test(input[afterCmd])) afterCmd++;
+                const brace = extractBalancedBraces(input, afterCmd);
+                if (brace) {
+                    out += `<mrow style="border: 1px solid currentColor; padding: 0.15em 0.35em; border-radius: 2px;">${convertTokens(brace.content)}</mrow>`;
+                    i = brace.endIndex + 1;
+                    continue;
                 }
             }
 
@@ -468,11 +544,14 @@ export function latexToMathML(latex: string, isBlock = true): string {
                     } else if (fontCmd === 'boldsymbol' || fontCmd === 'bm') {
                         out += `<mrow style="font-weight: bold;">${convertTokens(innerText)}</mrow>`;
                     } else if (fontCmd === 'mathbf') {
-                        out += `<mi style="font-weight: bold; font-style: normal;">${innerText}</mi>`;
+                        out += `<mrow style="font-weight: bold; font-style: normal;">${convertTokens(innerText)}</mrow>`;
                     } else if (fontCmd === 'mathrm' || fontCmd === 'operatorname') {
-                        out += `<mi style="font-style: normal;">${innerText}</mi>`;
+                        out += `<mrow style="font-style: normal;">${convertTokens(innerText)}</mrow>`;
+                    } else if (fontCmd === 'mathsf') {
+                        out += `<mrow style="font-family: ui-sans-serif, system-ui, sans-serif; font-style: normal;">${convertTokens(innerText)}</mrow>`;
                     } else {
-                        out += `<mtext>${innerText}</mtext>`;
+                        const preserved = escapeXml(innerText).replace(/ /g, '\u00A0');
+                        out += `<mtext>${preserved}</mtext>`;
                     }
                     i = brace.endIndex + 1;
                     continue;
@@ -596,21 +675,25 @@ export function latexToMathML(latex: string, isBlock = true): string {
                 if (cmdMatch) {
                     const cmd = cmdMatch[0];
                     if (GREEK_AND_SYMBOLS[cmd]) {
-                        const sym = GREEK_AND_SYMBOLS[cmd];
-                        if (cmd === '\\mid' || cmd === '\\vert' || cmd === '\\Vert') {
+                        const sym = escapeXml(GREEK_AND_SYMBOLS[cmd]);
+                        if (UPRIGHT_FUNCTIONS.has(cmd)) {
+                            out += `<mi mathvariant="normal" style="font-style: normal; padding-right: 0.15em;">${sym}</mi>`;
+                        } else if (cmd === '\\mid' || cmd === '\\vert' || cmd === '\\Vert') {
                             out += `<mo fence="false" stretchy="false" style="padding: 0 0.25em;">${sym}</mo>`;
+                        } else if (cmd === '\\langle' || cmd === '\\rangle' || cmd === '\\lceil' || cmd === '\\rceil' || cmd === '\\lfloor' || cmd === '\\rfloor') {
+                            out += `<mo stretchy="false">${sym}</mo>`;
                         } else {
                             out += `<mo>${sym}</mo>`;
                         }
                     } else if (cmd === '\\left' || cmd === '\\right') {
                         // ignore wrapper
                     } else {
-                        out += `<mi>${cmd.slice(1)}</mi>`;
+                        out += `<mi>${escapeXml(cmd.slice(1))}</mi>`;
                     }
                     i += cmd.length;
                     continue;
                 } else if (input[i + 1] === '{' || input[i + 1] === '}') {
-                    out += `<mo>${input[i + 1]}</mo>`;
+                    out += `<mo stretchy="false">${input[i + 1]}</mo>`;
                     i += 2;
                     continue;
                 } else {
@@ -629,7 +712,7 @@ export function latexToMathML(latex: string, isBlock = true): string {
 
             // Operators
             if (/[+\-=*\/=<>≠≤≥≈±×÷]/.test(input[i])) {
-                out += `<mo>${input[i]}</mo>`;
+                out += `<mo>${escapeXml(input[i])}</mo>`;
                 i++;
                 continue;
             }
@@ -642,7 +725,12 @@ export function latexToMathML(latex: string, isBlock = true): string {
             }
 
             if (input[i] !== '{' && input[i] !== '}') {
-                out += `<mo>${input[i]}</mo>`;
+                const ch = input[i];
+                if (/[()[\]|]/.test(ch)) {
+                    out += `<mo stretchy="false">${ch}</mo>`;
+                } else {
+                    out += `<mo>${escapeXml(ch)}</mo>`;
+                }
             }
             i++;
         }
@@ -827,8 +915,9 @@ export function latexToSvgDataUrl(latex: string, isDark = false): string | null 
         const cleanLen = clean.replace(/\\[a-zA-Z]+/g, 'XX').replace(/[{}]/g, '').length;
         const rowCount = (clean.match(/\\\\/g)?.length ?? 0) + 1;
         const isMultiLine = /\\\\|aligned|align|flalign|eqnarray|split|gather|multline|matrix|cases/.test(clean);
+        const hasTallOp = /\\(d|t)?frac|\\(d|t)?binom|\\(sum|prod|coprod|int|iint|iiint|oint|lim|overset|underset|stackrel)/.test(clean);
         const estWidth = Math.min(920, Math.max(220, cleanLen * 13 + 110));
-        const estHeight = isMultiLine ? Math.min(360, Math.max(110, rowCount * 40 + 36)) : 76;
+        const estHeight = isMultiLine ? Math.min(380, Math.max(120, rowCount * 44 + 40)) : hasTallOp ? 104 : 72;
 
         const universalSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${estWidth}" height="${estHeight}" viewBox="0 0 ${estWidth} ${estHeight}">
   <style>
