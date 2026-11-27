@@ -31,8 +31,10 @@ interface HealthReport {
     };
     local: {
         available: boolean;
+        detected_bin_path: string | null;
         latexmk_version: string | null;
         pdflatex_version: string | null;
+        available_engines: string[];
         message: string;
     };
 }
@@ -144,6 +146,12 @@ async function runHealthTest(driver: 'docker' | 'local'): Promise<void> {
                     </CardHeader>
                     <CardContent class="space-y-3 text-sm">
                         <p class="text-muted-foreground">{{ props.health.local.message }}</p>
+                        <p v-if="props.health.local.detected_bin_path" class="text-xs text-muted-foreground">
+                            Detected path: <code>{{ props.health.local.detected_bin_path }}</code>
+                            <span v-if="props.health.local.available_engines.length > 0">
+                                · Engines: {{ props.health.local.available_engines.join(', ') }}
+                            </span>
+                        </p>
                         <Button
                             type="button"
                             variant="outline"

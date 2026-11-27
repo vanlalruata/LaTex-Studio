@@ -34,7 +34,11 @@ test('local adapter compiles pdfLaTeX successfully and collects artifacts', func
         return Process::result(output: 'Latexmk: All targets (main.pdf) are up-to-date', exitCode: 0);
     });
 
-    $adapter = new LocalTexLiveAdapter(latexmkPath: '/usr/bin/latexmk');
+    $fakeLatexmk = $this->workDir.DIRECTORY_SEPARATOR.'latexmk';
+    file_put_contents($fakeLatexmk, "#!/bin/sh\nexit 0\n");
+    chmod($fakeLatexmk, 0755);
+
+    $adapter = new LocalTexLiveAdapter(latexmkPath: $fakeLatexmk);
     $result = $adapter->compile(new CompilationRequest(
         compilationPublicId: 'comp-123',
         engine: CompilerEngine::PdfLaTeX,
@@ -53,11 +57,42 @@ test('local adapter compiles pdfLaTeX successfully and collects artifacts', func
 
     Process::assertRan(function (PendingProcess $process): bool {
         return is_array($process->command)
-            && $process->command[0] === '/usr/bin/latexmk'
+            && str_ends_with($process->command[0], 'latexmk')
             && in_array('-pdf', $process->command, true)
             && in_array('-synctex=1', $process->command, true)
             && in_array('-latexoption=-no-shell-escape', $process->command, true)
             && in_array('main.tex', $process->command, true);
+    });
+});
+
+test('local adapter falls back to direct engine execution when latexmk is unavailable', function (): void {
+    $outDir = $this->workDir.DIRECTORY_SEPARATOR.'out';
+
+    Process::fake(function (PendingProcess $process) use ($outDir) {
+        file_put_contents($outDir.DIRECTORY_SEPARATOR.'main.pdf', "%PDF-1.4\n%direct-pdflatex\n");
+        file_put_contents($outDir.DIRECTORY_SEPARATOR.'main.log', "This is pdfTeX\n");
+
+        return Process::result(output: 'Output written on main.pdf', exitCode: 0);
+    });
+
+    $adapter = new LocalTexLiveAdapter(latexmkPath: '/nonexistent/latexmk');
+    $result = $adapter->compile(new CompilationRequest(
+        compilationPublicId: 'comp-direct',
+        engine: CompilerEngine::PdfLaTeX,
+        rootFile: 'main.tex',
+        bibliographyTool: 'none',
+        enableSynctex: true,
+        workspacePath: $this->workDir,
+    ));
+
+    expect($result->status)->toBe(CompilationStatus::Succeeded)
+        ->and($result->pdfContents)->toBe("%PDF-1.4\n%direct-pdflatex\n");
+
+    Process::assertRan(function (PendingProcess $process): bool {
+        return is_array($process->command)
+            && str_ends_with($process->command[0], 'pdflatex')
+            && in_array('-no-shell-escape', $process->command, true)
+            && in_array('-synctex=1', $process->command, true);
     });
 });
 
@@ -66,7 +101,11 @@ test('local adapter passes xelatex and lualatex flags and disables bibtex when r
         '*' => Process::result(output: '', exitCode: 1),
     ]);
 
-    $adapter = new LocalTexLiveAdapter;
+    $fakeLatexmk = $this->workDir.DIRECTORY_SEPARATOR.'latexmk';
+    file_put_contents($fakeLatexmk, "#!/bin/sh\nexit 0\n");
+    chmod($fakeLatexmk, 0755);
+
+    $adapter = new LocalTexLiveAdapter(latexmkPath: $fakeLatexmk);
     $adapter->compile(new CompilationRequest(
         compilationPublicId: 'comp-xe',
         engine: CompilerEngine::XeLaTeX,

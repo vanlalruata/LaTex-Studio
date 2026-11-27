@@ -111,7 +111,14 @@ class CompilerSettingsService
     /**
      * @return array{
      *     docker: array{available: bool, server_version: string|null, image_present: bool, message: string},
-     *     local: array{available: bool, latexmk_version: string|null, pdflatex_version: string|null, message: string}
+     *     local: array{
+     *         available: bool,
+     *         detected_bin_path: string|null,
+     *         latexmk_version: string|null,
+     *         pdflatex_version: string|null,
+     *         available_engines: list<string>,
+     *         message: string
+     *     }
      * }
      */
     public function checkHealth(): array
@@ -141,29 +148,43 @@ class CompilerSettingsService
         $localAvailable = false;
         $latexmkVersion = null;
         $pdflatexVersion = null;
+        $availableEngines = [];
+        $binPath = $settings['local_texlive_bin_path'] !== ''
+            ? $settings['local_texlive_bin_path']
+            : $this->detectLocalTexLiveBinPath();
         $localMessage = 'Local TeX Live binaries were not found.';
 
         try {
             $env = [];
-            if ($settings['local_texlive_bin_path'] !== '') {
-                $env['PATH'] = $settings['local_texlive_bin_path'].PATH_SEPARATOR.(string) getenv('PATH');
+            if ($binPath !== null && $binPath !== '') {
+                $env['PATH'] = $binPath.PATH_SEPARATOR.(string) getenv('PATH');
             }
 
-            $latexmkProc = Process::timeout(5)->env($env)->run([$settings['local_latexmk_path'], '-v']);
+            $latexmkBinary = $binPath !== null && is_executable($binPath.DIRECTORY_SEPARATOR.'latexmk')
+                ? $binPath.DIRECTORY_SEPARATOR.'latexmk'
+                : $settings['local_latexmk_path'];
+            $latexmkProc = Process::timeout(5)->env($env)->run([$latexmkBinary, '-v']);
             if ($latexmkProc->successful()) {
                 $latexmkVersion = strtok(trim($latexmkProc->output()), "\n") ?: 'latexmk';
             }
 
-            $pdflatexProc = Process::timeout(5)->env($env)->run(['pdflatex', '--version']);
-            if ($pdflatexProc->successful()) {
-                $pdflatexVersion = strtok(trim($pdflatexProc->output()), "\n") ?: 'pdflatex';
+            foreach (['pdflatex', 'xelatex', 'lualatex'] as $engine) {
+                $engineBinary = $binPath !== null && is_executable($binPath.DIRECTORY_SEPARATOR.$engine)
+                    ? $binPath.DIRECTORY_SEPARATOR.$engine
+                    : $engine;
+                $proc = Process::timeout(5)->env($env)->run([$engineBinary, '--version']);
+                if ($proc->successful()) {
+                    $availableEngines[] = $engine;
+                    if ($engine === 'pdflatex') {
+                        $pdflatexVersion = strtok(trim($proc->output()), "\n") ?: 'pdflatex';
+                    }
+                }
             }
 
-            if ($latexmkVersion !== null && $pdflatexVersion !== null) {
+            if ($pdflatexVersion !== null) {
                 $localAvailable = true;
-                $localMessage = "Local TeX Live ready ({$pdflatexVersion}).";
-            } elseif ($latexmkVersion !== null || $pdflatexVersion !== null) {
-                $localMessage = 'Partial TeX Live installation detected (both latexmk and pdflatex are required).';
+                $modeNote = $latexmkVersion !== null ? 'latexmk + direct engines' : 'direct engines (no latexmk)';
+                $localMessage = "Local TeX Live ready ({$pdflatexVersion}; {$modeNote}).";
             }
         } catch (Throwable $exception) {
             $localMessage = $exception->getMessage();
@@ -178,11 +199,45 @@ class CompilerSettingsService
             ],
             'local' => [
                 'available' => $localAvailable,
+                'detected_bin_path' => $binPath,
                 'latexmk_version' => $latexmkVersion,
                 'pdflatex_version' => $pdflatexVersion,
+                'available_engines' => $availableEngines,
                 'message' => $localMessage,
             ],
         ];
+    }
+
+    public function detectLocalTexLiveBinPath(): ?string
+    {
+        $patterns = [];
+        $home = getenv('HOME');
+        if (is_string($home) && $home !== '') {
+            $patterns[] = rtrim($home, '/').'/texlive/*/bin/*';
+        }
+        $patterns[] = '/home/*/texlive/*/bin/*';
+        $patterns[] = '/usr/local/texlive/*/bin/*';
+        $patterns[] = '/opt/texlive/*/bin/*';
+
+        $candidates = [];
+        foreach ($patterns as $pattern) {
+            $matches = glob($pattern, GLOB_ONLYDIR);
+            if (is_array($matches)) {
+                rsort($matches);
+                foreach ($matches as $dir) {
+                    $candidates[] = $dir;
+                }
+            }
+        }
+        $candidates[] = '/usr/bin';
+
+        foreach ($candidates as $dir) {
+            if (is_executable($dir.DIRECTORY_SEPARATOR.'pdflatex')) {
+                return $dir;
+            }
+        }
+
+        return null;
     }
 
     /**

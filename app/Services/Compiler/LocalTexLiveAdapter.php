@@ -29,68 +29,30 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
         }
 
         $rootFile = ltrim(str_replace('\\', '/', $request->rootFile), '/');
-        $engineFlag = match ($request->engine) {
-            CompilerEngine::PdfLaTeX => '-pdf',
-            CompilerEngine::XeLaTeX => '-xelatex',
-            CompilerEngine::LuaLaTeX => '-lualatex',
-        };
-
-        $command = [
-            $this->latexmkPath,
-            $engineFlag,
-            '-interaction=nonstopmode',
-            '-halt-on-error',
-            '-file-line-error',
-            '-latexoption=-no-shell-escape',
-            $request->enableSynctex ? '-synctex=1' : '-synctex=0',
-            "-outdir={$outDir}",
-        ];
-
-        if ($request->bibliographyTool === 'none') {
-            $command[] = '-bibtex-';
-        }
-
-        $command[] = $rootFile;
-
         $timeout = $request->wallTimeoutSeconds > 0
             ? $request->wallTimeoutSeconds
             : $this->defaultWallTimeout;
-
         $maxOutputMb = $request->maxOutputMb > 0
             ? $request->maxOutputMb
             : $this->defaultMaxOutputMb;
 
-        $startMs = (int) (microtime(true) * 1000);
-
-        $pendingProcess = Process::path($srcDir)->timeout($timeout);
-
+        $env = [];
         if ($this->texliveBinPath !== '') {
-            $currentPath = (string) getenv('PATH');
-            $pendingProcess = $pendingProcess->env([
-                'PATH' => $this->texliveBinPath.PATH_SEPARATOR.$currentPath,
-            ]);
+            $env['PATH'] = $this->texliveBinPath.PATH_SEPARATOR.(string) getenv('PATH');
         }
 
-        try {
-            $result = $pendingProcess->run($command);
-            $exitCode = $result->exitCode() ?? 1;
-            $errorOutput = $result->errorOutput();
-        } catch (ProcessTimedOutException) {
-            $durationMs = max(1, ((int) (microtime(true) * 1000)) - $startMs);
+        $startMs = (int) (microtime(true) * 1000);
 
-            return new CompilationResult(
-                status: CompilationStatus::TimedOut,
-                exitCode: 124,
-                durationMs: $durationMs,
-                workerImageDigest: 'local-texlive',
-                logContents: $this->readLog($outDir, $rootFile),
-                errorSummary: 'Local TeX Live compilation exceeded wall-clock timeout.',
-            );
+        if ($this->hasLatexmk()) {
+            $command = $this->buildLatexmkCommand($request, $rootFile, $outDir);
+            [$exitCode, $errorOutput, $timedOut] = $this->runCommand($command, $srcDir, $timeout, $env);
+        } else {
+            [$exitCode, $errorOutput, $timedOut] = $this->runDirectEngine($request, $rootFile, $srcDir, $outDir, $timeout, $env);
         }
 
         $durationMs = max(1, ((int) (microtime(true) * 1000)) - $startMs);
 
-        if ($exitCode === 124) {
+        if ($timedOut || $exitCode === 124) {
             return new CompilationResult(
                 status: CompilationStatus::TimedOut,
                 exitCode: 124,
@@ -140,6 +102,141 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
             logContents: $logContents ?? ($errorOutput !== '' ? $errorOutput : null),
             errorSummary: 'LaTeX compilation failed. Inspect normalized diagnostics for details.',
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function buildLatexmkCommand(CompilationRequest $request, string $rootFile, string $outDir): array
+    {
+        $engineFlag = match ($request->engine) {
+            CompilerEngine::PdfLaTeX => '-pdf',
+            CompilerEngine::XeLaTeX => '-xelatex',
+            CompilerEngine::LuaLaTeX => '-lualatex',
+        };
+
+        $command = [
+            $this->resolveBinary($this->latexmkPath),
+            $engineFlag,
+            '-interaction=nonstopmode',
+            '-halt-on-error',
+            '-file-line-error',
+            '-latexoption=-no-shell-escape',
+            $request->enableSynctex ? '-synctex=1' : '-synctex=0',
+            "-outdir={$outDir}",
+        ];
+
+        if ($request->bibliographyTool === 'none') {
+            $command[] = '-bibtex-';
+        }
+
+        $command[] = $rootFile;
+
+        return $command;
+    }
+
+    /**
+     * Fallback multi-pass compilation when latexmk is not installed on the host.
+     *
+     * @param  array<string, string>  $env
+     * @return array{0: int, 1: string, 2: bool}
+     */
+    private function runDirectEngine(
+        CompilationRequest $request,
+        string $rootFile,
+        string $srcDir,
+        string $outDir,
+        int $timeout,
+        array $env,
+    ): array {
+        $binary = $this->resolveBinary($request->engine->value);
+        $command = [
+            $binary,
+            '-interaction=nonstopmode',
+            '-halt-on-error',
+            '-file-line-error',
+            '-no-shell-escape',
+            $request->enableSynctex ? '-synctex=1' : '-synctex=0',
+            "-output-directory={$outDir}",
+            $rootFile,
+        ];
+
+        [$exitCode, $errorOutput, $timedOut] = $this->runCommand($command, $srcDir, $timeout, $env);
+        if ($timedOut || $exitCode !== 0) {
+            return [$exitCode, $errorOutput, $timedOut];
+        }
+
+        $baseName = pathinfo($rootFile, PATHINFO_FILENAME);
+        $bcfPath = $outDir.DIRECTORY_SEPARATOR."{$baseName}.bcf";
+        $auxPath = $outDir.DIRECTORY_SEPARATOR."{$baseName}.aux";
+
+        if ($request->bibliographyTool !== 'none') {
+            if (is_file($bcfPath)) {
+                $this->runCommand([$this->resolveBinary('biber'), "--output-directory={$outDir}", $baseName], $srcDir, $timeout, $env);
+            } elseif (is_file($auxPath) && str_contains((string) file_get_contents($auxPath), '\\bibdata')) {
+                $this->runCommand([$this->resolveBinary('bibtex'), $auxPath], $srcDir, $timeout, $env);
+            }
+        }
+
+        // Second pass for cross-references and bibliography
+        return $this->runCommand($command, $srcDir, $timeout, $env);
+    }
+
+    /**
+     * @param  list<string>  $command
+     * @param  array<string, string>  $env
+     * @return array{0: int, 1: string, 2: bool}
+     */
+    private function runCommand(array $command, string $cwd, int $timeout, array $env): array
+    {
+        $pending = Process::path($cwd)->timeout($timeout);
+        if ($env !== []) {
+            $pending = $pending->env($env);
+        }
+
+        try {
+            $result = $pending->run($command);
+
+            return [$result->exitCode() ?? 1, $result->errorOutput(), false];
+        } catch (ProcessTimedOutException) {
+            return [124, '', true];
+        }
+    }
+
+    private function hasLatexmk(): bool
+    {
+        if (str_contains($this->latexmkPath, DIRECTORY_SEPARATOR)) {
+            return is_executable($this->latexmkPath);
+        }
+
+        if ($this->texliveBinPath !== '' && is_executable($this->texliveBinPath.DIRECTORY_SEPARATOR.$this->latexmkPath)) {
+            return true;
+        }
+
+        $pathDirs = explode(PATH_SEPARATOR, (string) getenv('PATH'));
+        foreach ($pathDirs as $dir) {
+            if ($dir !== '' && is_executable(rtrim($dir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$this->latexmkPath)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function resolveBinary(string $name): string
+    {
+        if (str_contains($name, DIRECTORY_SEPARATOR)) {
+            return $name;
+        }
+
+        if ($this->texliveBinPath !== '') {
+            $candidate = rtrim($this->texliveBinPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$name;
+            if (is_executable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return $name;
     }
 
     private function readLog(string $outDir, string $rootFile): ?string
