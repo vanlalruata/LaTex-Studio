@@ -107,4 +107,12 @@ class Figure extends Model
     {
         return $this->belongsTo(FigureRenderJob::class, 'last_successful_render_job_id');
     }
+
+    /**
+     * @return HasMany<FigureComment, $this>
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(FigureComment::class);
+    }
 }

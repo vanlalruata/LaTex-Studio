@@ -14,6 +14,7 @@ import {
     Hand,
     History,
     Layers,
+    LineChart,
     Lock,
     MousePointer2,
     Play,
@@ -21,6 +22,7 @@ import {
     Redo2,
     RefreshCw,
     Save,
+    Sparkles,
     Square,
     Trash2,
     Type,
@@ -53,6 +55,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -81,6 +90,7 @@ import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Tooltip,
     TooltipContent,
@@ -88,7 +98,23 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import projectsRoutes from '@/routes/projects';
+import {
+    ACADEMIC_TEMPLATES,
+    type AcademicTemplateCategory,
+    type AcademicTemplatePreset,
+    buildFlowchartDiagram,
+    buildGraphTheoryDiagram,
+    buildNeuralNetworkDiagram,
+} from '@/services/figureEditor/academicMakers';
 import { roundCoord } from '@/services/figureEditor/coordinates';
+import {
+    createDefaultPgfPlotsConfig,
+    generatePgfPlotsTikz,
+    parseCsvToSeries,
+    type PgfPlotChartType,
+    type PgfPlotsAxisConfig,
+    SVG_COLOR_MAP,
+} from '@/services/figureEditor/pgfplotsGenerator';
 import {
     cloneScene,
     createDefaultFigureScene,
@@ -112,7 +138,9 @@ import type {
     FigureRecord,
     FigureSceneDocument,
     NodeAnchor,
+    PathDecoration,
     StrokeDash,
+    TikzPattern,
     ViewportState,
 } from '@/services/figureEditor/types';
 
@@ -145,23 +173,38 @@ interface FigureRenderSummary {
     finished_at: string | null;
 }
 
+interface FigureCommentSummary {
+    public_id: string;
+    object_id: string | null;
+    object_label: string | null;
+    body: string;
+    author: string;
+    is_resolved: boolean;
+    created_at: string | null;
+}
+
 const props = defineProps<{
     project: {
         public_id: string;
         title: string;
         root_file_path: string;
         can_edit: boolean;
+        can_comment?: boolean;
     };
     figures: FigureRecord[];
     activeFigure: FigureRecord | null;
     projectFiles?: Array<{ public_id: string; path: string }>;
     revisions?: FigureRevisionSummary[];
+    comments?: FigureCommentSummary[];
     lastRender?: FigureRenderSummary | null;
 }>();
 
 const figuresList = ref<FigureRecord[]>([...props.figures]);
 const activePublicId = ref<string | null>(props.activeFigure?.public_id ?? null);
 const revisionsList = ref<FigureRevisionSummary[]>([...(props.revisions ?? [])]);
+const commentsList = ref<FigureCommentSummary[]>([...(props.comments ?? [])]);
+const newCommentBody = ref('');
+const isPostingComment = ref(false);
 const latestRender = ref<FigureRenderSummary | null>(props.lastRender ?? null);
 const lastSuccessfulPdfUrl = ref<string | null>(props.lastRender?.pdf_url ?? null);
 const isRendering = ref(false);
@@ -195,6 +238,126 @@ const showCreateDialog = ref(false);
 const newFigureName = ref('New TikZ Figure');
 const showDeleteDialog = ref(false);
 const showResetSourceDialog = ref(false);
+const showMakersDialog = ref(false);
+const selectedTemplateCategory = ref<'all' | AcademicTemplateCategory>('all');
+const makerReplaceMode = ref(true);
+const flowchartStepsInput = ref('Input Data, Valid?, Train Model, Evaluate');
+const nnLayersInput = ref('Input ($x_t$), CNN Layer, BiLSTM Layer, Attention ($\\alpha_i$), Output ($F_k$)');
+const graphNodeCount = ref(5);
+const graphDirected = ref(true);
+const showPgfPlotsDialog = ref(false);
+const pgfConfig = ref<PgfPlotsAxisConfig>(createDefaultPgfPlotsConfig());
+const pgfCsvInput = ref('Epoch,Proposed,Baseline\n0,72.5,68.0\n10,84.1,77.2\n20,91.8,82.9\n30,95.4,85.1\n40,96.7,86.0');
+
+const pgfGeneratedCode = computed(() => generatePgfPlotsTikz(pgfConfig.value));
+
+const pgfPreviewBounds = computed(() => {
+    const allPts = pgfConfig.value.series.flatMap((s) => s.points);
+    if (allPts.length === 0) {
+        return { minX: 0, maxX: 10, minY: 0, maxY: 10 };
+    }
+    const xs = allPts.map((p) => p.x);
+    const ys = allPts.map((p) => p.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    return {
+        minX,
+        maxX: maxX === minX ? minX + 1 : maxX,
+        minY,
+        maxY: maxY === minY ? minY + 1 : maxY,
+    };
+});
+
+function pgfPointToSvg(x: number, y: number): { cx: number; cy: number } {
+    const b = pgfPreviewBounds.value;
+    const cx = 36 + ((x - b.minX) / (b.maxX - b.minX)) * 276;
+    const cy = 152 - ((y - b.minY) / (b.maxY - b.minY)) * 124;
+    return { cx, cy };
+}
+
+function pgfSeriesPolyline(series: PgfPlotsAxisConfig['series'][number]): string {
+    return series.points
+        .map((p) => {
+            const pt = pgfPointToSvg(p.x, p.y);
+            return `${pt.cx.toFixed(1)},${pt.cy.toFixed(1)}`;
+        })
+        .join(' ');
+}
+
+function importPgfCsv(): void {
+    const parsed = parseCsvToSeries(pgfCsvInput.value);
+    if (parsed.length === 0) {
+        toast.error('Unable to parse CSV. Ensure at least 2 numeric columns.');
+        return;
+    }
+    pgfConfig.value.series = parsed;
+    toast.success(`Imported ${parsed.length} series from CSV`);
+}
+
+function applyPgfPlotsToFigure(): void {
+    editableSource.value = pgfGeneratedCode.value;
+    figureMode.value = 'source_only';
+    sourceDirty.value = true;
+    isDirty.value = true;
+    if (layoutMode.value === 'visual') {
+        layoutMode.value = 'split';
+    }
+    activeBottomTab.value = 'tikz';
+    showPgfPlotsDialog.value = false;
+    toast.success('PGFPlots code applied! Click "Render TeX" to compile.');
+}
+
+const filteredTemplates = computed(() => {
+    if (selectedTemplateCategory.value === 'all') {
+        return ACADEMIC_TEMPLATES;
+    }
+    return ACADEMIC_TEMPLATES.filter((t) => t.category === selectedTemplateCategory.value);
+});
+
+function applyGeneratedDiagram(
+    generated: { objects: FigureObject[]; connectors: FigureConnector[] },
+    label: string,
+): void {
+    commitSceneMutation((draft) => {
+        if (makerReplaceMode.value) {
+            draft.objects = generated.objects;
+            draft.connectors = generated.connectors;
+            draft.protectedBlocks = [];
+        } else {
+            draft.objects = [...draft.objects, ...generated.objects];
+            draft.connectors = [...draft.connectors, ...generated.connectors];
+        }
+    });
+    figureMode.value = scene.value.protectedBlocks.length > 0 ? 'hybrid' : 'visual_native';
+    sourceDirty.value = false;
+    selectedIds.value = [];
+    showMakersDialog.value = false;
+    toast.success(`Applied "${label}" to canvas`);
+}
+
+function applyTemplatePreset(preset: AcademicTemplatePreset): void {
+    const generated = preset.build(activeLayerId.value);
+    applyGeneratedDiagram(generated, preset.title);
+}
+
+function generateCustomFlowchart(): void {
+    const steps = flowchartStepsInput.value.split(',');
+    applyGeneratedDiagram(buildFlowchartDiagram(activeLayerId.value, steps), 'Custom Flowchart');
+}
+
+function generateCustomNeuralNet(): void {
+    const layers = nnLayersInput.value.split(',');
+    applyGeneratedDiagram(buildNeuralNetworkDiagram(activeLayerId.value, layers), 'Neural Network');
+}
+
+function generateCustomGraph(): void {
+    applyGeneratedDiagram(
+        buildGraphTheoryDiagram(activeLayerId.value, graphNodeCount.value, graphDirected.value),
+        `Graph (${graphNodeCount.value} vertices)`,
+    );
+}
 
 const monacoRef = ref<InstanceType<typeof MonacoEditor> | null>(null);
 const sourceDirty = ref(false);
@@ -203,7 +366,13 @@ const parseWarnings = ref<string[]>([]);
 const generatedResult = computed(() => generateTikzWithSourceMap(scene.value));
 const generatedTikz = computed(() => generatedResult.value.code);
 const sourceMap = computed(() => generatedResult.value.sourceMap);
-const requiredPackages = computed(() => generatedResult.value.requiredPackages);
+const requiredPackages = computed(() => {
+    const base = new Set(generatedResult.value.requiredPackages);
+    if (editableSource.value.includes('\\begin{axis}')) {
+        base.add('pgfplots');
+    }
+    return [...base];
+});
 const requiredLibraries = computed(() => generatedResult.value.requiredLibraries);
 
 const editableSource = ref<string>(
@@ -903,6 +1072,77 @@ function downloadSceneJson(): void {
     URL.revokeObjectURL(url);
 }
 
+async function postFigureComment(): Promise<void> {
+    if (!activePublicId.value || !newCommentBody.value.trim() || isPostingComment.value) {
+        return;
+    }
+    isPostingComment.value = true;
+    try {
+        const response = await fetch(
+            projectsRoutes.figures.comments.store({
+                project: props.project.public_id,
+                figure: activePublicId.value,
+            }).url,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    body: newCommentBody.value.trim(),
+                    object_id: selectedObject.value?.id ?? null,
+                    object_label: selectedObject.value?.tikzName ?? null,
+                }),
+            },
+        );
+        if (!response.ok) {
+            throw new Error(`Comment failed (${response.status})`);
+        }
+        const data = (await response.json()) as { comment: FigureCommentSummary };
+        commentsList.value.unshift(data.comment);
+        newCommentBody.value = '';
+        toast.success('Comment posted');
+    } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Unable to post comment.');
+    } finally {
+        isPostingComment.value = false;
+    }
+}
+
+async function toggleResolveComment(commentPublicId: string): Promise<void> {
+    if (!activePublicId.value) {
+        return;
+    }
+    try {
+        const response = await fetch(
+            projectsRoutes.figures.comments.resolve({
+                project: props.project.public_id,
+                figure: activePublicId.value,
+                comment: commentPublicId,
+            }).url,
+            {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'X-XSRF-TOKEN': getCsrfToken(),
+                },
+            },
+        );
+        if (!response.ok) {
+            throw new Error(`Resolve failed (${response.status})`);
+        }
+        const data = (await response.json()) as { comment: FigureCommentSummary };
+        const idx = commentsList.value.findIndex((c) => c.public_id === data.comment.public_id);
+        if (idx >= 0) {
+            commentsList.value[idx] = data.comment;
+        }
+    } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Unable to update comment.');
+    }
+}
+
 onMounted(() => {
     window.addEventListener('keydown', handleGlobalKeydown);
 });
@@ -914,6 +1154,65 @@ onBeforeUnmount(() => {
     }
 });
 
+function alignSelected(mode: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom'): void {
+    const selected = scene.value.objects.filter((o) => selectedIds.value.includes(o.id));
+    if (selected.length < 2 || !props.project.can_edit) {
+        return;
+    }
+    const targetVal =
+        mode === 'left'
+            ? Math.min(...selected.map((o) => o.x))
+            : mode === 'right'
+              ? Math.max(...selected.map((o) => o.x))
+              : mode === 'center'
+                ? selected.reduce((a, b) => a + b.x, 0) / selected.length
+                : mode === 'top'
+                  ? Math.max(...selected.map((o) => o.y))
+                  : mode === 'bottom'
+                    ? Math.min(...selected.map((o) => o.y))
+                    : selected.reduce((a, b) => a + b.y, 0) / selected.length;
+
+    const idSet = new Set(selectedIds.value);
+    commitSceneMutation((draft) => {
+        for (const obj of draft.objects) {
+            if (!idSet.has(obj.id)) {
+                continue;
+            }
+            if (mode === 'left' || mode === 'center' || mode === 'right') {
+                obj.x = roundCoord(targetVal);
+            } else {
+                obj.y = roundCoord(targetVal);
+            }
+        }
+    });
+}
+
+function wrapSelectedInFitBox(): void {
+    if (selectedIds.value.length < 2 || !props.project.can_edit) {
+        return;
+    }
+    let createdId = '';
+    commitSceneMutation((draft) => {
+        const minZ = draft.objects.reduce((acc, o) => Math.min(acc, o.zIndex), 1);
+        const fitObj = createFigureObject(
+            'fit_box',
+            activeLayerId.value,
+            minZ - 1,
+            0,
+            0,
+            draft.objects.length + 1,
+        );
+        fitObj.fitTargetIds = [...selectedIds.value];
+        fitObj.onBackgroundLayer = true;
+        createdId = fitObj.id;
+        draft.objects.unshift(fitObj);
+    });
+    if (createdId) {
+        selectedIds.value = [createdId];
+    }
+    toast.success('Wrapped selection in Fit background container');
+}
+
 const toolItems: Array<{ id: CanvasTool; label: string; icon: unknown }> = [
     { id: 'select', label: 'Select', icon: MousePointer2 },
     { id: 'pan', label: 'Pan', icon: Hand },
@@ -924,6 +1223,8 @@ const toolItems: Array<{ id: CanvasTool; label: string; icon: unknown }> = [
     { id: 'circle', label: 'Circle', icon: Circle },
     { id: 'ellipse', label: 'Ellipse', icon: Circle },
     { id: 'diamond', label: 'Diamond', icon: Diamond },
+    { id: 'fit_box', label: 'Fit Box', icon: Square },
+    { id: 'matrix', label: 'Matrix', icon: Layers },
     { id: 'text', label: 'Text/Math', icon: Type },
 ];
 
@@ -1120,6 +1421,28 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                             Code
                         </Button>
                     </div>
+
+                    <Button
+                        v-if="project.can_edit"
+                        variant="outline"
+                        size="sm"
+                        class="h-8 text-xs"
+                        @click="showMakersDialog = true"
+                    >
+                        <Sparkles class="mr-1 size-3.5 text-indigo-600" />
+                        Makers &amp; Templates
+                    </Button>
+
+                    <Button
+                        v-if="project.can_edit"
+                        variant="outline"
+                        size="sm"
+                        class="h-8 text-xs"
+                        @click="showPgfPlotsDialog = true"
+                    >
+                        <LineChart class="mr-1 size-3.5 text-emerald-600" />
+                        PGFPlots
+                    </Button>
 
                     <Button
                         v-if="project.can_edit"
@@ -1336,6 +1659,9 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                                     <TabsTrigger value="revisions" class="text-xs">
                                         Revisions ({{ revisionsList.length }})
                                     </TabsTrigger>
+                                    <TabsTrigger value="comments" class="text-xs">
+                                        Comments ({{ commentsList.length }})
+                                    </TabsTrigger>
                                     <TabsTrigger value="packages" class="text-xs">
                                         Packages &amp; Libraries
                                     </TabsTrigger>
@@ -1439,6 +1765,57 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                                         >
                                             <History class="mr-1 size-3" />
                                             Restore
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                            <TabsContent value="comments" class="m-0 min-h-0 flex-1 overflow-auto p-3 text-xs">
+                                <div v-if="project.can_comment && activePublicId" class="mb-3 flex gap-2">
+                                    <Input
+                                        v-model="newCommentBody"
+                                        class="h-8 text-xs"
+                                        :placeholder="selectedObject ? `Comment on ${selectedObject.tikzName}...` : 'Add review comment...'"
+                                        @keydown.enter="postFigureComment"
+                                    />
+                                    <Button size="sm" class="h-8 text-xs" :disabled="isPostingComment" @click="postFigureComment">
+                                        Post
+                                    </Button>
+                                </div>
+                                <div v-if="commentsList.length === 0" class="text-slate-400">
+                                    No review comments on this figure yet.
+                                </div>
+                                <div v-else class="space-y-1.5">
+                                    <div
+                                        v-for="comment in commentsList"
+                                        :key="comment.public_id"
+                                        class="flex items-start justify-between rounded border border-slate-200 px-2.5 py-1.5"
+                                        :class="comment.is_resolved ? 'opacity-60' : ''"
+                                    >
+                                        <div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-medium text-slate-800">{{ comment.author }}</span>
+                                                <Badge
+                                                    v-if="comment.object_label"
+                                                    variant="outline"
+                                                    class="cursor-pointer text-[10px]"
+                                                    @click="comment.object_id && handleCanvasSelectionChange([comment.object_id])"
+                                                >
+                                                    @{{ comment.object_label }}
+                                                </Badge>
+                                                <Badge v-if="comment.is_resolved" variant="secondary" class="text-[10px]">
+                                                    Resolved
+                                                </Badge>
+                                            </div>
+                                            <p class="mt-0.5 text-slate-700">{{ comment.body }}</p>
+                                        </div>
+                                        <Button
+                                            v-if="project.can_comment"
+                                            variant="ghost"
+                                            size="sm"
+                                            class="h-7 text-[11px]"
+                                            @click="toggleResolveComment(comment.public_id)"
+                                        >
+                                            {{ comment.is_resolved ? 'Reopen' : 'Resolve' }}
                                         </Button>
                                     </div>
                                 </div>
@@ -1579,6 +1956,36 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                                                     @change="handleCommitObjectPatch(selectedObject.id, { rotationDeg: Number(($event.target as HTMLInputElement).value) })"
                                                 />
                                             </div>
+                                            <div>
+                                                <Label class="text-[11px]">Scale X</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.1"
+                                                    :model-value="selectedObject.style.scaleX ?? 1"
+                                                    :disabled="!project.can_edit"
+                                                    class="mt-1 h-8 text-xs"
+                                                    @change="handleCommitObjectPatch(selectedObject.id, { style: { ...selectedObject.style, scaleX: Number(($event.target as HTMLInputElement).value) || 1 } })"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label class="text-[11px]">Scale Y</Label>
+                                                <Input
+                                                    type="number"
+                                                    step="0.1"
+                                                    :model-value="selectedObject.style.scaleY ?? 1"
+                                                    :disabled="!project.can_edit"
+                                                    class="mt-1 h-8 text-xs"
+                                                    @change="handleCommitObjectPatch(selectedObject.id, { style: { ...selectedObject.style, scaleY: Number(($event.target as HTMLInputElement).value) || 1 } })"
+                                                />
+                                            </div>
+                                            <div v-if="selectedObject.kind === 'fit_box'" class="col-span-2 flex items-center justify-between pt-1">
+                                                <Label class="text-[11px]">Background Layer</Label>
+                                                <Switch
+                                                    :model-value="Boolean(selectedObject.onBackgroundLayer)"
+                                                    :disabled="!project.can_edit"
+                                                    @update:model-value="handleCommitObjectPatch(selectedObject.id, { onBackgroundLayer: Boolean($event) })"
+                                                />
+                                            </div>
                                         </template>
                                     </AccordionContent>
                                 </AccordionItem>
@@ -1641,6 +2048,26 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                                                     </SelectContent>
                                                 </Select>
                                             </div>
+                                        </div>
+                                        <div>
+                                            <Label class="text-[11px]">TikZ Pattern</Label>
+                                            <Select
+                                                :model-value="selectedObject.style.pattern ?? 'none'"
+                                                :disabled="!project.can_edit"
+                                                @update:model-value="handleCommitObjectPatch(selectedObject.id, { style: { ...selectedObject.style, pattern: $event as TikzPattern } })"
+                                            >
+                                                <SelectTrigger class="mt-1 h-8 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">None (Solid Fill)</SelectItem>
+                                                    <SelectItem value="north east lines">North East Lines</SelectItem>
+                                                    <SelectItem value="north west lines">North West Lines</SelectItem>
+                                                    <SelectItem value="grid">Grid</SelectItem>
+                                                    <SelectItem value="dots">Dots</SelectItem>
+                                                    <SelectItem value="crosshatch">Crosshatch</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                         <Button
                                             v-if="project.can_edit"
@@ -1725,6 +2152,24 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                                                     <SelectItem v-for="a in anchorOptions" :key="a" :value="a">
                                                         {{ a }}
                                                     </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label class="text-[11px]">Path Decoration</Label>
+                                            <Select
+                                                :model-value="selectedConnector.decoration ?? 'none'"
+                                                :disabled="!project.can_edit"
+                                                @update:model-value="handleCommitConnectorPatch(selectedConnector.id, { decoration: $event as PathDecoration })"
+                                            >
+                                                <SelectTrigger class="mt-1 h-8 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">None</SelectItem>
+                                                    <SelectItem value="snake">Snake (Wave)</SelectItem>
+                                                    <SelectItem value="zigzag">Zigzag</SelectItem>
+                                                    <SelectItem value="brace">Brace</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -1853,6 +2298,37 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                                     </AccordionContent>
                                 </AccordionItem>
                             </Accordion>
+                        </div>
+
+                        <!-- Multi-Select Align & Fit Inspector -->
+                        <div v-else-if="selectedIds.length >= 2" class="space-y-3 text-xs">
+                            <p class="font-medium text-slate-700">{{ selectedIds.length }} objects selected</p>
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <Button variant="outline" size="sm" class="h-7 text-[11px]" @click="alignSelected('left')">Left</Button>
+                                <Button variant="outline" size="sm" class="h-7 text-[11px]" @click="alignSelected('center')">Center</Button>
+                                <Button variant="outline" size="sm" class="h-7 text-[11px]" @click="alignSelected('right')">Right</Button>
+                                <Button variant="outline" size="sm" class="h-7 text-[11px]" @click="alignSelected('top')">Top</Button>
+                                <Button variant="outline" size="sm" class="h-7 text-[11px]" @click="alignSelected('middle')">Middle</Button>
+                                <Button variant="outline" size="sm" class="h-7 text-[11px]" @click="alignSelected('bottom')">Bottom</Button>
+                            </div>
+                            <Button
+                                v-if="project.can_edit"
+                                variant="secondary"
+                                size="sm"
+                                class="w-full text-xs"
+                                @click="wrapSelectedInFitBox"
+                            >
+                                Wrap in Fit Background Box
+                            </Button>
+                            <Button
+                                v-if="project.can_edit"
+                                variant="destructive"
+                                size="sm"
+                                class="w-full text-xs"
+                                @click="handleDeleteSelected"
+                            >
+                                Delete Selected
+                            </Button>
                         </div>
 
                         <!-- Canvas & Grid Inspector -->
@@ -2012,6 +2488,216 @@ const arrowTipOptions: ArrowTip[] = ['none', 'Stealth', 'Latex', 'To', 'Circle',
                     </Button>
                     <Button :disabled="isInserting || !insertFileId" @click="insertIntoManuscript">
                         {{ isInserting ? 'Inserting...' : 'Insert into Document' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Academic Makers & Template Gallery Dialog -->
+        <Dialog v-model:open="showMakersDialog">
+            <DialogContent class="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Academic Diagram Makers &amp; Templates</DialogTitle>
+                    <DialogDescription>
+                        Generate publication-ready TikZ diagrams or start from an editable academic template.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                    <span class="font-medium text-slate-700">Replace existing canvas objects</span>
+                    <Switch v-model:model-value="makerReplaceMode" />
+                </div>
+
+                <Tabs default-value="templates" class="w-full">
+                    <TabsList class="grid w-full grid-cols-4">
+                        <TabsTrigger value="templates" class="text-xs">Template Gallery</TabsTrigger>
+                        <TabsTrigger value="flowchart" class="text-xs">Flowchart</TabsTrigger>
+                        <TabsTrigger value="nn" class="text-xs">Neural Network</TabsTrigger>
+                        <TabsTrigger value="graph" class="text-xs">Graph Theory</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="templates" class="mt-3 space-y-3">
+                        <div class="flex flex-wrap gap-1.5">
+                            <Button
+                                v-for="cat in ['all', 'flowchart', 'neural_network', 'architecture', 'ml_workflow', 'graph', 'math'] as const"
+                                :key="cat"
+                                :variant="selectedTemplateCategory === cat ? 'default' : 'outline'"
+                                size="sm"
+                                class="h-7 text-xs capitalize"
+                                @click="selectedTemplateCategory = cat"
+                            >
+                                {{ cat.replace('_', ' ') }}
+                            </Button>
+                        </div>
+
+                        <ScrollArea class="h-72 pr-2">
+                            <div class="grid grid-cols-2 gap-3">
+                                <Card
+                                    v-for="preset in filteredTemplates"
+                                    :key="preset.id"
+                                    class="cursor-pointer transition hover:border-indigo-300"
+                                    @click="applyTemplatePreset(preset)"
+                                >
+                                    <CardHeader class="p-3 pb-1">
+                                        <CardTitle class="text-sm">{{ preset.title }}</CardTitle>
+                                        <CardDescription class="text-xs">{{ preset.description }}</CardDescription>
+                                    </CardHeader>
+                                    <CardContent class="flex flex-wrap gap-1 p-3 pt-1">
+                                        <Badge v-for="tag in preset.tags" :key="tag" variant="secondary" class="text-[10px]">
+                                            {{ tag }}
+                                        </Badge>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="flowchart" class="mt-3 space-y-3 text-xs">
+                        <div>
+                            <Label>Flowchart Steps (comma-separated; end with ? for decision diamond)</Label>
+                            <Input v-model="flowchartStepsInput" class="mt-1.5" />
+                        </div>
+                        <Button size="sm" @click="generateCustomFlowchart">
+                            Generate Flowchart
+                        </Button>
+                    </TabsContent>
+
+                    <TabsContent value="nn" class="mt-3 space-y-3 text-xs">
+                        <div>
+                            <Label>Network Layers (comma-separated; supports $...$ math)</Label>
+                            <Input v-model="nnLayersInput" class="mt-1.5" />
+                        </div>
+                        <Button size="sm" @click="generateCustomNeuralNet">
+                            Generate Neural Network
+                        </Button>
+                    </TabsContent>
+
+                    <TabsContent value="graph" class="mt-3 space-y-3 text-xs">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label>Number of Vertices (3–10)</Label>
+                                <Input v-model.number="graphNodeCount" type="number" min="3" max="10" class="mt-1.5" />
+                            </div>
+                            <div class="flex items-center justify-between pt-6">
+                                <Label>Directed Edges</Label>
+                                <Switch v-model:model-value="graphDirected" />
+                            </div>
+                        </div>
+                        <Button size="sm" @click="generateCustomGraph">
+                            Generate Graph
+                        </Button>
+                    </TabsContent>
+                </Tabs>
+            </DialogContent>
+        </Dialog>
+
+        <!-- PGFPlots Scientific Chart Maker Dialog -->
+        <Dialog v-model:open="showPgfPlotsDialog">
+            <DialogContent class="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>PGFPlots Scientific Chart Maker</DialogTitle>
+                    <DialogDescription>
+                        Configure axes, import CSV data, preview the chart, and generate reproducible pgfplots LaTeX.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label class="text-[11px]">Chart Type</Label>
+                                <Select v-model="pgfConfig.chartType">
+                                    <SelectTrigger class="mt-1 h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="line">Line + Markers</SelectItem>
+                                        <SelectItem value="scatter">Scatter</SelectItem>
+                                        <SelectItem value="bar">Bar Chart</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label class="text-[11px]">Grid</Label>
+                                <Select v-model="pgfConfig.grid">
+                                    <SelectTrigger class="mt-1 h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="major">Major</SelectItem>
+                                        <SelectItem value="both">Both</SelectItem>
+                                        <SelectItem value="none">None</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div>
+                            <Label class="text-[11px]">Title</Label>
+                            <Input v-model="pgfConfig.title" class="mt-1 h-8 text-xs" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <Label class="text-[11px]">X Label</Label>
+                                <Input v-model="pgfConfig.xlabel" class="mt-1 h-8 text-xs" />
+                            </div>
+                            <div>
+                                <Label class="text-[11px]">Y Label</Label>
+                                <Input v-model="pgfConfig.ylabel" class="mt-1 h-8 text-xs" />
+                            </div>
+                        </div>
+                        <div>
+                            <Label class="text-[11px]">CSV Data Import (x, series1, series2, ...)</Label>
+                            <Textarea v-model="pgfCsvInput" rows="4" class="mt-1 font-mono text-[11px]" />
+                            <Button variant="outline" size="sm" class="mt-1.5 h-7 text-xs" @click="importPgfCsv">
+                                Import CSV into Series
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="rounded-md border border-slate-200 bg-white p-2">
+                            <p class="mb-1 text-[11px] font-medium text-slate-500">Live Chart Preview</p>
+                            <svg viewBox="0 0 340 180" class="h-44 w-full bg-slate-50">
+                                <line x1="36" y1="28" x2="36" y2="152" stroke="#334155" stroke-width="1" />
+                                <line x1="36" y1="152" x2="312" y2="152" stroke="#334155" stroke-width="1" />
+                                <text x="174" y="16" text-anchor="middle" class="fill-slate-800 text-[10px] font-semibold">
+                                    {{ pgfConfig.title }}
+                                </text>
+                                <text x="174" y="172" text-anchor="middle" class="fill-slate-600 text-[9px]">
+                                    {{ pgfConfig.xlabel }}
+                                </text>
+                                <g v-for="s in pgfConfig.series" :key="s.id">
+                                    <polyline
+                                        v-if="pgfConfig.chartType !== 'scatter'"
+                                        :points="pgfSeriesPolyline(s)"
+                                        fill="none"
+                                        :stroke="SVG_COLOR_MAP[s.color] ?? '#1d4ed8'"
+                                        stroke-width="1.8"
+                                        :stroke-dasharray="s.lineStyle === 'dashed' ? '5 3' : s.lineStyle === 'dotted' ? '2 2' : undefined"
+                                    />
+                                    <circle
+                                        v-for="(pt, idx) in s.points"
+                                        :key="idx"
+                                        :cx="pgfPointToSvg(pt.x, pt.y).cx"
+                                        :cy="pgfPointToSvg(pt.x, pt.y).cy"
+                                        r="3"
+                                        :fill="SVG_COLOR_MAP[s.color] ?? '#1d4ed8'"
+                                    />
+                                </g>
+                            </svg>
+                        </div>
+                        <div class="max-h-32 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-2">
+                            <pre class="font-mono text-[10px] text-slate-700">{{ pgfGeneratedCode }}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="showPgfPlotsDialog = false">
+                        Cancel
+                    </Button>
+                    <Button @click="applyPgfPlotsToFigure">
+                        Apply PGFPlots to Figure
                     </Button>
                 </DialogFooter>
             </DialogContent>

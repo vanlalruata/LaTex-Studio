@@ -10,6 +10,7 @@ use App\Http\Requests\InsertFigureIntoFileRequest;
 use App\Http\Requests\StoreFigureRequest;
 use App\Http\Requests\UpdateFigureRequest;
 use App\Models\Figure;
+use App\Models\FigureComment;
 use App\Models\FigureRenderJob;
 use App\Models\FigureRevision;
 use App\Models\Project;
@@ -53,11 +54,13 @@ class FigureController extends Controller
                 'title' => $project->title,
                 'root_file_path' => $project->root_file_path,
                 'can_edit' => $user !== null && ($project->roleFor($user)?->canEdit() ?? false),
+                'can_comment' => $user !== null && ($project->roleFor($user)?->canComment() ?? false),
             ],
             'figures' => $figures,
             'activeFigure' => $first !== null ? $this->formatFigure($first) : null,
             'projectFiles' => $this->projectTexFiles($project),
             'revisions' => $first !== null ? $this->formatRevisions($first) : [],
+            'comments' => $first !== null ? $this->formatComments($first) : [],
             'lastRender' => $first?->lastSuccessfulRenderJob !== null
                 ? $this->formatRenderSummary($project, $first, $first->lastSuccessfulRenderJob)
                 : null,
@@ -86,11 +89,13 @@ class FigureController extends Controller
                 'title' => $project->title,
                 'root_file_path' => $project->root_file_path,
                 'can_edit' => $user !== null && ($project->roleFor($user)?->canEdit() ?? false),
+                'can_comment' => $user !== null && ($project->roleFor($user)?->canComment() ?? false),
             ],
             'figures' => $figures,
             'activeFigure' => $this->formatFigure($figure),
             'projectFiles' => $this->projectTexFiles($project),
             'revisions' => $this->formatRevisions($figure),
+            'comments' => $this->formatComments($figure),
             'lastRender' => $figure->lastSuccessfulRenderJob !== null
                 ? $this->formatRenderSummary($project, $figure, $figure->lastSuccessfulRenderJob)
                 : null,
@@ -436,6 +441,27 @@ class FigureController extends Controller
                 : null,
             'finished_at' => $job->finished_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * @return list<array{public_id: string, object_id: string|null, object_label: string|null, body: string, author: string, is_resolved: bool, created_at: string|null}>
+     */
+    private function formatComments(Figure $figure): array
+    {
+        return array_values($figure->comments()
+            ->with('user')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (FigureComment $comment): array => [
+                'public_id' => $comment->public_id,
+                'object_id' => $comment->object_id,
+                'object_label' => $comment->object_label,
+                'body' => $comment->body,
+                'author' => $comment->user->name ?? 'Unknown',
+                'is_resolved' => $comment->resolved_at !== null,
+                'created_at' => $comment->created_at?->toIso8601String(),
+            ])
+            ->all());
     }
 
     /**

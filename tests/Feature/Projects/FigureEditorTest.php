@@ -283,3 +283,57 @@ test('figure can be exported as tex and inserted into manuscript file', function
         ->toContain('\usetikzlibrary{arrows.meta}')
         ->toContain('\input{figures/system-pipeline.tex}');
 });
+
+test('collaborators with comment permission can post and resolve figure comments while viewers cannot', function () {
+    $owner = User::factory()->create();
+    $commenter = User::factory()->create();
+    $viewer = User::factory()->create();
+    $project = Project::factory()->create(['owner_id' => $owner->id]);
+
+    ProjectMember::query()->create([
+        'project_id' => $project->id,
+        'user_id' => $commenter->id,
+        'role' => ProjectRole::Commenter,
+        'invited_by' => $owner->id,
+    ]);
+
+    ProjectMember::query()->create([
+        'project_id' => $project->id,
+        'user_id' => $viewer->id,
+        'role' => ProjectRole::Viewer,
+        'invited_by' => $owner->id,
+    ]);
+
+    $figure = Figure::query()->create([
+        'project_id' => $project->id,
+        'user_id' => $owner->id,
+        'name' => 'Review Diagram',
+        'schema_version' => 1,
+        'mode' => 'visual_native',
+        'scene_json' => ['schema_version' => 1, 'objects' => []],
+        'tikz_source' => '\begin{tikzpicture}\end{tikzpicture}',
+    ]);
+
+    $commentResponse = $this->actingAs($commenter)
+        ->postJson(route('projects.figures.comments.store', [$project, $figure]), [
+            'body' => 'Check arrow label alignment.',
+            'object_id' => 'obj_n1',
+            'object_label' => 'n1',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('comment.object_label', 'n1')
+        ->assertJsonPath('comment.is_resolved', false);
+
+    $commentId = $commentResponse->json('comment.public_id');
+
+    $this->actingAs($commenter)
+        ->postJson(route('projects.figures.comments.resolve', [$project, $figure, $commentId]))
+        ->assertOk()
+        ->assertJsonPath('comment.is_resolved', true);
+
+    $this->actingAs($viewer)
+        ->postJson(route('projects.figures.comments.store', [$project, $figure]), [
+            'body' => 'Viewer should be blocked.',
+        ])
+        ->assertForbidden();
+});

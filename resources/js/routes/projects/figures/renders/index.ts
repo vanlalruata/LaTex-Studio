@@ -80,7 +80,7 @@ store.post = (args: { project: string | { public_id: string }, figure: string | 
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-export const show = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -95,7 +95,7 @@ show.definition = {
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-show.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+show.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -130,7 +130,7 @@ show.url = (args: { project: string | { public_id: string }, figure: string | { 
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-show.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -139,7 +139,7 @@ show.get = (args: { project: string | { public_id: string }, figure: string | { 
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-show.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -149,7 +149,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-    const showForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -159,7 +159,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-        showForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -168,7 +168,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
  * @see app/Http/Controllers/FigureRenderController.php:45
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}'
  */
-        showForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -184,7 +184,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-export const artifact = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const artifact = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: artifact.url(args, options),
     method: 'get',
 })
@@ -199,7 +199,7 @@ artifact.definition = {
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-artifact.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions) => {
+artifact.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -237,7 +237,7 @@ artifact.url = (args: { project: string | { public_id: string }, figure: string 
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-artifact.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+artifact.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: artifact.url(args, options),
     method: 'get',
 })
@@ -246,7 +246,7 @@ artifact.get = (args: { project: string | { public_id: string }, figure: string 
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-artifact.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+artifact.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: artifact.url(args, options),
     method: 'head',
 })
@@ -256,7 +256,7 @@ artifact.head = (args: { project: string | { public_id: string }, figure: string
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-    const artifactForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const artifactForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: artifact.url(args, options),
         method: 'get',
     })
@@ -266,7 +266,7 @@ artifact.head = (args: { project: string | { public_id: string }, figure: string
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-        artifactForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        artifactForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: artifact.url(args, options),
             method: 'get',
         })
@@ -275,7 +275,7 @@ artifact.head = (args: { project: string | { public_id: string }, figure: string
  * @see app/Http/Controllers/FigureRenderController.php:59
  * @route '/projects/{project}/figures/{figure}/renders/{renderJob}/artifacts/{type}'
  */
-        artifactForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | number | { public_id: string | number }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        artifactForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number } | [project: string | { public_id: string }, figure: string | { public_id: string }, renderJob: string | { public_id: string }, type: string | number ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: artifact.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',

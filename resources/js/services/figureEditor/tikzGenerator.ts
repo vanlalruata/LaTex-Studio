@@ -82,6 +82,52 @@ export function generateTikzWithSourceMap(
 
         if (obj.kind === 'coordinate') {
             pushMapped(obj.id, [`  \\coordinate (${obj.tikzName}) at (${x},${y});`]);
+        } else if (obj.kind === 'matrix') {
+            const rows = (obj.matrixCells ?? [['A', 'B']]).map(
+                (r) => `    ${r.join(' & ')} \\\\`,
+            );
+            pushMapped(obj.id, [
+                `  \\matrix (${obj.tikzName}) [matrix of nodes, nodes={draw, minimum width=1.2cm, minimum height=0.7cm}, column sep=2mm, row sep=2mm] at (${x},${y}) {`,
+                ...rows,
+                '  };',
+            ]);
+        } else if (obj.kind === 'fit_box') {
+            const fitNames = (obj.fitTargetIds ?? [])
+                .map((id) => objectsById.get(id)?.tikzName)
+                .filter(Boolean)
+                .map((n) => `(${n})`)
+                .join(' ');
+            const opts: string[] = ['draw'];
+            if (obj.style.dash !== 'solid') {
+                opts.push(obj.style.dash === 'dashdot' ? 'dash dot' : obj.style.dash);
+            }
+            if (obj.style.roundedCornersPt > 0) {
+                opts.push(`rounded corners=${obj.style.roundedCornersPt}pt`);
+            }
+            if (obj.style.fill !== 'none') {
+                opts.push('fill=black!5');
+            }
+            if (fitNames) {
+                opts.push(`fit=${fitNames}`);
+            } else {
+                opts.push(`minimum width=${roundCoord(obj.width)}${scene.unit}`);
+                opts.push(`minimum height=${roundCoord(obj.height)}${scene.unit}`);
+            }
+            if (obj.label.trim()) {
+                opts.push(`label=above:{${obj.label}}`);
+            }
+            const nodeLine = fitNames
+                ? `  \\node[${opts.join(', ')}] (${obj.tikzName}) {};`
+                : `  \\node[${opts.join(', ')}] (${obj.tikzName}) at (${x},${y}) {};`;
+            if (obj.onBackgroundLayer) {
+                pushMapped(obj.id, [
+                    '  \\begin{scope}[on background layer]',
+                    `  ${nodeLine}`,
+                    '  \\end{scope}',
+                ]);
+            } else {
+                pushMapped(obj.id, [nodeLine]);
+            }
         } else {
             const opts: string[] = [];
             if (obj.kind === 'shape') {
@@ -91,7 +137,9 @@ export function generateTikzWithSourceMap(
                 if (obj.style.dash !== 'solid') {
                     opts.push(obj.style.dash === 'dashdot' ? 'dash dot' : obj.style.dash);
                 }
-                if (obj.style.fill !== 'none') {
+                if (obj.style.pattern && obj.style.pattern !== 'none') {
+                    opts.push(`pattern=${obj.style.pattern}`);
+                } else if (obj.style.fill !== 'none') {
                     opts.push('fill=black!5');
                 }
                 if (obj.shape === 'circle') {
@@ -108,6 +156,12 @@ export function generateTikzWithSourceMap(
             }
             if (obj.rotationDeg !== 0) {
                 opts.push(`rotate=${roundCoord(obj.rotationDeg)}`);
+            }
+            if (obj.style.scaleX !== undefined && obj.style.scaleX !== 1) {
+                opts.push(`xscale=${roundCoord(obj.style.scaleX)}`);
+            }
+            if (obj.style.scaleY !== undefined && obj.style.scaleY !== 1) {
+                opts.push(`yscale=${roundCoord(obj.style.scaleY)}`);
             }
 
             const optStr = opts.length > 0 ? `[${opts.join(', ')}]` : '';
@@ -140,6 +194,9 @@ export function generateTikzWithSourceMap(
         }
         if (conn.style.strokeWidthPt !== 0.8) {
             opts.push(`line width=${roundCoord(conn.style.strokeWidthPt)}pt`);
+        }
+        if (conn.decoration && conn.decoration !== 'none') {
+            opts.push(`decorate, decoration={${conn.decoration}}`);
         }
 
         const optStr = opts.length > 0 ? `[${opts.join(', ')}]` : '';

@@ -92,8 +92,10 @@ export function latexToMathML(latex: string, isBlock = true): string {
     clean = clean.replace(/^\\\[([\s\S]*)\\\]$/, '$1');
     clean = clean.replace(/^\\\(([\s\S]*)\\\)$/, '$1');
     clean = clean.replace(/\\label\{[^{}]*\}/g, '');
-    clean = clean.replace(/\\begin\{(equation\*?|gather\*?|multline\*?)\}/g, '');
-    clean = clean.replace(/\\end\{(equation\*?|gather\*?|multline\*?)\}/g, '');
+    clean = clean.replace(/\\tag\*?\{[^{}]*\}/g, '');
+    clean = clean.replace(/\\(nonumber|notag)\b/g, '');
+    clean = clean.replace(/\\begin\{(equation\*?|gather\*?|multline\*?|flalign\*?|eqnarray\*?|split)\}/g, '');
+    clean = clean.replace(/\\end\{(equation\*?|gather\*?|multline\*?|flalign\*?|eqnarray\*?|split)\}/g, '');
 
     const findLastTag = (str: string): { start: number; fullTag: string } | null => {
         const s = str.trimEnd();
@@ -249,7 +251,7 @@ export function latexToMathML(latex: string, isBlock = true): string {
                 }
             }
 
-    // Matrices
+            // Matrices
             if (input.startsWith('\\begin{', i)) {
                 const endEnvIdx = input.indexOf('}', i + 7);
                 if (endEnvIdx !== -1) {
@@ -319,7 +321,16 @@ export function latexToMathML(latex: string, isBlock = true): string {
                             i = closeIdx + closeTag.length;
                             continue;
                         }
-                    } else if (env === 'aligned' || env === 'align' || env === 'align*') {
+                    } else if (
+                        env === 'aligned' ||
+                        env === 'align' ||
+                        env === 'align*' ||
+                        env === 'flalign' ||
+                        env === 'flalign*' ||
+                        env === 'eqnarray' ||
+                        env === 'eqnarray*' ||
+                        env === 'split'
+                    ) {
                         const closeTag = `\\end{${env}}`;
                         const closeIdx = input.indexOf(closeTag, endEnvIdx + 1);
                         if (closeIdx !== -1) {
@@ -429,8 +440,8 @@ export function latexToMathML(latex: string, isBlock = true): string {
                     continue;
                 }
             }
-            // Math font styles: \mathcal, \mathbf, \mathbb, \mathit, \mathsf, \mathrm, \text
-            const mathFontMatch = /^\\(mathcal|mathbb|mathbf|mathit|mathsf|mathrm|text)\s*\{/.exec(input.slice(i));
+            // Math font styles: \mathcal, \mathbf, \boldsymbol, \bm, \mathbb, \mathit, \mathsf, \mathrm, \operatorname, \text
+            const mathFontMatch = /^\\(mathcal|mathbb|mathbf|boldsymbol|bm|mathit|mathsf|mathrm|operatorname|text)\s*\{/.exec(input.slice(i));
             if (mathFontMatch) {
                 const fontCmd = mathFontMatch[1];
                 const braceStart = i + mathFontMatch[0].length - 1;
@@ -454,9 +465,11 @@ export function latexToMathML(latex: string, isBlock = true): string {
                         };
                         const mapped = innerText.split('').map(ch => bbmodMap[ch] || ch).join('');
                         out += `<mi style="font-family: 'Cambria Math', 'STIX Two Math', serif;">${mapped}</mi>`;
+                    } else if (fontCmd === 'boldsymbol' || fontCmd === 'bm') {
+                        out += `<mrow style="font-weight: bold;">${convertTokens(innerText)}</mrow>`;
                     } else if (fontCmd === 'mathbf') {
                         out += `<mi style="font-weight: bold; font-style: normal;">${innerText}</mi>`;
-                    } else if (fontCmd === 'mathrm') {
+                    } else if (fontCmd === 'mathrm' || fontCmd === 'operatorname') {
                         out += `<mi style="font-style: normal;">${innerText}</mi>`;
                     } else {
                         out += `<mtext>${innerText}</mtext>`;
@@ -466,34 +479,53 @@ export function latexToMathML(latex: string, isBlock = true): string {
                 }
             }
 
-            // Diacritics / Accents: \hat{y}, \tilde{x}, \bar{x}, \vec{v}, \dot{x}, \ddot{x}
-            const accentMatch = /^\\(hat|tilde|bar|vec|dot|ddot|check|acute|grave)\s*(\{[^{}]+\}|[a-zA-Z0-9])/.exec(input.slice(i));
-            if (accentMatch) {
-                const accType = accentMatch[1];
-                let targetArg = accentMatch[2];
-                let nextIndex = i + accentMatch[0].length;
-                if (targetArg.startsWith('{') && targetArg.endsWith('}')) {
-                    targetArg = targetArg.slice(1, -1);
+            // Diacritics / Accents: \hat{...}, \widehat{...}, \tilde{...}, \bar{...}, \vec{...}, etc. (supports nested braces)
+            const accentCmdMatch = /^\\(widehat|widetilde|overline|underline|hat|tilde|bar|vec|dot|ddot|check|acute|grave)\b/.exec(input.slice(i));
+            if (accentCmdMatch) {
+                const accType = accentCmdMatch[1];
+                let afterCmd = i + accentCmdMatch[0].length;
+                while (afterCmd < input.length && /\s/.test(input[afterCmd])) afterCmd++;
+                let targetArg = '';
+                let nextIndex = -1;
+                if (input[afterCmd] === '{') {
+                    const brace = extractBalancedBraces(input, afterCmd);
+                    if (brace) {
+                        targetArg = brace.content;
+                        nextIndex = brace.endIndex + 1;
+                    }
+                } else if (afterCmd < input.length && /[a-zA-Z0-9]/.test(input[afterCmd])) {
+                    targetArg = input[afterCmd];
+                    nextIndex = afterCmd + 1;
                 }
-                const targetMathML = convertTokens(targetArg);
-                const accentSymbols: Record<string, string> = {
-                    'hat': '^',
-                    'tilde': '~',
-                    'bar': '¯',
-                    'vec': '→',
-                    'dot': '˙',
-                    'ddot': '¨',
-                    'check': 'ˇ',
-                    'acute': '´',
-                    'grave': '`',
-                };
-                const accGlyph = accentSymbols[accType] || '^';
-                const accStyle = accType === 'hat'
-                    ? 'font-size: 0.65em; line-height: 0.5; vertical-align: 0.1em; transform: scale(0.65, 0.45); display: inline-block;'
-                    : (accType === 'bar' ? 'font-size: 0.7em; line-height: 0.5;' : 'font-size: 0.85em; line-height: 0.8; vertical-align: -0.1em;');
-                out += `<mover accent="true"><mrow>${targetMathML}</mrow><mo style="${accStyle}">${accGlyph}</mo></mover>`;
-                i = nextIndex;
-                continue;
+                if (nextIndex !== -1) {
+                    const targetMathML = convertTokens(targetArg);
+                    const accentSymbols: Record<string, string> = {
+                        'hat': '^',
+                        'widehat': '^',
+                        'tilde': '~',
+                        'widetilde': '~',
+                        'bar': '¯',
+                        'overline': '¯',
+                        'underline': '_',
+                        'vec': '→',
+                        'dot': '˙',
+                        'ddot': '¨',
+                        'check': 'ˇ',
+                        'acute': '´',
+                        'grave': '`',
+                    };
+                    const accGlyph = accentSymbols[accType] || '^';
+                    const accStyle = accType === 'hat' || accType === 'widehat'
+                        ? 'font-size: 0.7em; line-height: 0.5; vertical-align: 0.1em; transform: scale(0.75, 0.5); display: inline-block;'
+                        : (accType === 'bar' || accType === 'overline' ? 'font-size: 0.75em; line-height: 0.5;' : 'font-size: 0.85em; line-height: 0.8; vertical-align: -0.1em;');
+                    if (accType === 'underline') {
+                        out += `<munder accentunder="true"><mrow>${targetMathML}</mrow><mo>${accGlyph}</mo></munder>`;
+                    } else {
+                        out += `<mover accent="true"><mrow>${targetMathML}</mrow><mo style="${accStyle}">${accGlyph}</mo></mover>`;
+                    }
+                    i = nextIndex;
+                    continue;
+                }
             }
 
             // Subscripts _ and Superscripts ^
@@ -546,7 +578,12 @@ export function latexToMathML(latex: string, isBlock = true): string {
                 continue;
             }
 
-            // Escaped spacing or braces
+            // Escaped spacing, norm bars \|, or braces
+            if (input[i] === '\\' && input[i + 1] === '|') {
+                out += '<mo>‖</mo>';
+                i += 2;
+                continue;
+            }
             if (input[i] === '\\' && (input[i + 1] === ',' || input[i + 1] === ';' || input[i + 1] === ':' || input[i + 1] === '!')) {
                 out += '<mspace width="0.22em" />';
                 i += 2;
@@ -628,7 +665,11 @@ export function latexToSvgDataUrl(latex: string, isDark = false): string | null 
     clean = clean.replace(/^\$([\s\S]*)\$$/, '$1');
     clean = clean.replace(/^\\\[([\s\S]*)\\\]$/, '$1');
     clean = clean.replace(/^\\\(([\s\S]*)\\\)$/, '$1');
-    clean = clean.replace(/\\label\{[^{}]*\}/g, '').trim();
+    clean = clean.replace(/\\label\{[^{}]*\}/g, '');
+    clean = clean.replace(/\\tag\*?\{[^{}]*\}/g, '');
+    clean = clean.replace(/\\(nonumber|notag)\b/g, '');
+    clean = clean.replace(/\\begin\{(equation\*?|gather\*?|multline\*?|flalign\*?|eqnarray\*?|split)\}/g, '');
+    clean = clean.replace(/\\end\{(equation\*?|gather\*?|multline\*?|flalign\*?|eqnarray\*?|split)\}/g, '').trim();
 
     const fgColor = isDark ? '#f8fafc' : '#0f172a';
 
@@ -783,23 +824,25 @@ export function latexToSvgDataUrl(latex: string, isDark = false): string | null 
     // Enables identical graphical rendering for ALL mathematical formulas in Monaco hover previews
     try {
         const mathml = latexToMathML(clean, true);
-        const cleanLen = clean.replace(/\\[a-zA-Z]+/g, 'X').replace(/[{}]/g, '').length;
-        const isMultiLine = /\\\\|aligned|pmatrix|bmatrix|vmatrix|cases/.test(clean);
-        const estWidth = Math.min(880, Math.max(160, cleanLen * 12 + 60));
-        const estHeight = isMultiLine ? 110 : 70;
+        const cleanLen = clean.replace(/\\[a-zA-Z]+/g, 'XX').replace(/[{}]/g, '').length;
+        const rowCount = (clean.match(/\\\\/g)?.length ?? 0) + 1;
+        const isMultiLine = /\\\\|aligned|align|flalign|eqnarray|split|gather|multline|matrix|cases/.test(clean);
+        const estWidth = Math.min(920, Math.max(220, cleanLen * 13 + 110));
+        const estHeight = isMultiLine ? Math.min(360, Math.max(110, rowCount * 40 + 36)) : 76;
 
         const universalSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${estWidth}" height="${estHeight}" viewBox="0 0 ${estWidth} ${estHeight}">
   <style>
     .math-hover-wrap {
       font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", "Times New Roman", serif;
-      font-size: 18px;
+      font-size: 16px;
       color: ${fgColor};
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100%;
       box-sizing: border-box;
-      padding: 6px 12px;
+      padding: 6px 14px;
+      overflow: visible;
     }
   </style>
   <foreignObject width="100%" height="100%">

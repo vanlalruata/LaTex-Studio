@@ -49,6 +49,7 @@ import ReviewPanel, {
 } from '@/components/collaboration/ReviewPanel.vue';
 import TaskBoardPanel from '@/components/collaboration/TaskBoardPanel.vue';
 import BibliographyPanel from '@/components/editor/BibliographyPanel.vue';
+import EquationLaboratoryDialog from '@/components/editor/EquationLaboratoryDialog.vue';
 import MonacoEditor from '@/components/editor/MonacoEditor.vue';
 import ResearchToolsPanel from '@/components/editor/ResearchToolsPanel.vue';
 import SymbolPalette from '@/components/editor/SymbolPalette.vue';
@@ -656,6 +657,8 @@ async function createSnapshot(): Promise<void> {
         }
     }
 }
+
+const showEquationLab = ref(false);
 
 function insertSnippet(snippet: string): void {
     editorRef.value?.insertText(snippet);
@@ -1783,15 +1786,12 @@ onBeforeUnmount(() => {
                         </button>
                         <button
                             type="button"
-                            class="rounded p-1 text-slate-600 hover:bg-slate-200"
-                            title="Equation environment"
-                            @click="
-                                insertSnippet(
-                                    '\\begin{equation}\n    \n\\end{equation}\n',
-                                )
-                            "
+                            class="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200"
+                            title="LaTeX Equation Laboratory"
+                            @click="showEquationLab = true"
                         >
-                            <Sigma class="size-3.5" />
+                            <Sigma class="size-3.5 text-emerald-600" />
+                            <span>Equation Lab</span>
                         </button>
                         <button
                             v-if="canSyncTex"
@@ -2444,6 +2444,20 @@ onBeforeUnmount(() => {
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+        <EquationLaboratoryDialog
+            v-model:open="showEquationLab"
+            :can-edit="project.can_edit"
+            @insert="insertSnippet"
+            @save-asset="
+                (payload) =>
+                    createAsset({
+                        kind: 'equation',
+                        title: payload.title,
+                        latex: payload.latex,
+                    })
+            "
+        />
 
         <Toaster />
     </div>

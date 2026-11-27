@@ -17,6 +17,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CompilationController;
 use App\Http\Controllers\ConversionJobController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FigureCommentController;
 use App\Http\Controllers\FigureController;
 use App\Http\Controllers\FigureRenderController;
 use App\Http\Controllers\OcrJobController;
@@ -169,6 +170,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('projects/{project}/figures/{figure:public_id}/renders', [FigureRenderController::class, 'store'])->name('projects.figures.renders.store');
     Route::get('projects/{project}/figures/{figure:public_id}/renders/{renderJob:public_id}', [FigureRenderController::class, 'show'])->name('projects.figures.renders.show');
     Route::get('projects/{project}/figures/{figure:public_id}/renders/{renderJob:public_id}/artifacts/{type}', [FigureRenderController::class, 'artifact'])->name('projects.figures.renders.artifact');
+    Route::get('projects/{project}/figures/{figure:public_id}/comments', [FigureCommentController::class, 'index'])->name('projects.figures.comments.index');
+    Route::post('projects/{project}/figures/{figure:public_id}/comments', [FigureCommentController::class, 'store'])->name('projects.figures.comments.store');
+    Route::post('projects/{project}/figures/{figure:public_id}/comments/{comment:public_id}/resolve', [FigureCommentController::class, 'toggleResolve'])->name('projects.figures.comments.resolve');
 
     // Phase 9: AI Research Assistant
     Route::get('projects/{project}/ai', [AiAssistantController::class, 'index'])->name('projects.ai.index');

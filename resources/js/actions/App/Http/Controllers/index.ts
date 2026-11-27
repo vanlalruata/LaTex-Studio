@@ -21,6 +21,7 @@ import ProjectChatController from './ProjectChatController'
 import TableDesignController from './TableDesignController'
 import FigureController from './FigureController'
 import FigureRenderController from './FigureRenderController'
+import FigureCommentController from './FigureCommentController'
 import AiAssistantController from './AiAssistantController'
 import Admin from './Admin'
 import Settings from './Settings'
@@ -48,6 +49,7 @@ ProjectChatController: Object.assign(ProjectChatController, ProjectChatControlle
 TableDesignController: Object.assign(TableDesignController, TableDesignController),
 FigureController: Object.assign(FigureController, FigureController),
 FigureRenderController: Object.assign(FigureRenderController, FigureRenderController),
+FigureCommentController: Object.assign(FigureCommentController, FigureCommentController),
 AiAssistantController: Object.assign(AiAssistantController, AiAssistantController),
 Admin: Object.assign(Admin, Admin),
 Settings: Object.assign(Settings, Settings),

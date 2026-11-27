@@ -38,10 +38,12 @@ const COMMON_COMMANDS: Array<{ label: string; insertText: string; detail: string
 ];
 
 export function registerLatexProviders(): void {
-    if (providersRegistered) {
+    const globalState = globalThis as { __latexHoverDisposable?: monaco.IDisposable };
+    if (providersRegistered && globalState.__latexHoverDisposable) {
         return;
     }
 
+    globalState.__latexHoverDisposable?.dispose();
     providersRegistered = true;
 
     monaco.languages.registerCompletionItemProvider('latex', {
@@ -131,9 +133,113 @@ export function registerLatexProviders(): void {
         },
     });
 
-    monaco.languages.registerHoverProvider('latex', {
+    const MATH_ENVIRONMENTS = new Set([
+        'equation',
+        'equation*',
+        'align',
+        'align*',
+        'aligned',
+        'gather',
+        'gather*',
+        'multline',
+        'multline*',
+        'flalign',
+        'flalign*',
+        'eqnarray',
+        'eqnarray*',
+        'split',
+        'cases',
+        'matrix',
+        'pmatrix',
+        'bmatrix',
+        'Bmatrix',
+        'vmatrix',
+        'Vmatrix',
+    ]);
+
+    const buildMathHover = (
+        rawTex: string,
+        range: monaco.IRange,
+    ): monaco.languages.Hover | null => {
+        const svgUrl = latexToSvgDataUrl(rawTex, false);
+        const unicode = latexToUnicodeFormatted(rawTex);
+        const contents: monaco.IMarkdownString[] = [];
+
+        if (svgUrl) {
+            contents.push({
+                value: `![Formula Preview](${svgUrl})`,
+                isTrusted: true,
+            });
+        } else if (unicode) {
+            contents.push({ value: `\`${unicode}\`` });
+        }
+
+        if (contents.length === 0) {
+            return null;
+        }
+
+        return { range, contents };
+    };
+
+    const findMathBlockAtOffset = (
+        fullText: string,
+        offset: number,
+    ): { start: number; end: number; tex: string } | null => {
+        // 1. Check multi-line $$...$$ and \[...\]
+        const blockDelims = [/\$\$([\s\S]*?)\$\$/g, /\\\[([\s\S]*?)\\\]/g];
+        for (const regex of blockDelims) {
+            let m: RegExpExecArray | null;
+            while ((m = regex.exec(fullText)) !== null) {
+                const start = m.index;
+                const end = start + m[0].length;
+                if (offset >= start && offset <= end) {
+                    return { start, end, tex: m[0] };
+                }
+            }
+        }
+
+        // 2. Check \begin{env}...\end{env} math environments (matching outermost container)
+        const tokenRegex = /\\(begin|end)\{([a-zA-Z*]+)\}/g;
+        const stack: Array<{ env: string; start: number }> = [];
+        let outermostMatch: { start: number; end: number; tex: string } | null = null;
+        let tok: RegExpExecArray | null;
+
+        while ((tok = tokenRegex.exec(fullText)) !== null) {
+            const kind = tok[1];
+            const env = tok[2];
+            if (!MATH_ENVIRONMENTS.has(env)) {
+                continue;
+            }
+            if (kind === 'begin') {
+                stack.push({ env, start: tok.index });
+            } else {
+                for (let i = stack.length - 1; i >= 0; i--) {
+                    if (stack[i].env === env) {
+                        const open = stack[i];
+                        stack.splice(i);
+                        const end = tok.index + tok[0].length;
+                        if (i === 0 && offset >= open.start && offset <= end) {
+                            outermostMatch = {
+                                start: open.start,
+                                end,
+                                tex: fullText.slice(open.start, end),
+                            };
+                        }
+                        break;
+                    }
+                }
+                if (outermostMatch) {
+                    return outermostMatch;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    globalState.__latexHoverDisposable = monaco.languages.registerHoverProvider('latex', {
         provideHover(model, position) {
-            // Check if cursor is inside a math region on the current line or equation block
+            // 1. Fast path: single-line inline/display math on the hovered line
             const lineContent = model.getLineContent(position.lineNumber);
             const colZero = position.column - 1;
 
@@ -150,31 +256,40 @@ export function registerLatexProviders(): void {
                     const start = m.index;
                     const end = start + m[0].length;
                     if (colZero >= start && colZero <= end) {
-                        const svgUrl = latexToSvgDataUrl(m[0], false);
-                        const unicode = latexToUnicodeFormatted(m[0]);
-                        const contents: monaco.IMarkdownString[] = [];
-
-                        if (svgUrl) {
-                            contents.push({
-                                value: `![Formula Preview](${svgUrl})`,
-                                isTrusted: true,
-                            });
-                        } else if (unicode) {
-                            contents.push({ value: `\`${unicode}\`` });
-                        }
-
-                        if (contents.length > 0) {
-                            return {
-                                range: new monaco.Range(
-                                    position.lineNumber,
-                                    start + 1,
-                                    position.lineNumber,
-                                    end + 1,
-                                ),
-                                contents,
-                            };
+                        const hover = buildMathHover(
+                            m[0],
+                            new monaco.Range(
+                                position.lineNumber,
+                                start + 1,
+                                position.lineNumber,
+                                end + 1,
+                            ),
+                        );
+                        if (hover) {
+                            return hover;
                         }
                     }
+                }
+            }
+
+            // 2. Multi-line math blocks: \begin{equation}...\end{equation}, align, matrix, cases, $$...$$, \[...\]
+            const fullText = model.getValue();
+            const offset = model.getOffsetAt(position);
+            const block = findMathBlockAtOffset(fullText, offset);
+            if (block) {
+                const startPos = model.getPositionAt(block.start);
+                const endPos = model.getPositionAt(block.end);
+                const hover = buildMathHover(
+                    block.tex,
+                    new monaco.Range(
+                        startPos.lineNumber,
+                        startPos.column,
+                        endPos.lineNumber,
+                        endPos.column,
+                    ),
+                );
+                if (hover) {
+                    return hover;
                 }
             }
 

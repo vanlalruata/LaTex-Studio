@@ -89,14 +89,18 @@ export function createFigureObject(
     const isText = shape === 'text';
     const isCoordinate = shape === 'coordinate';
     const isCircle = shape === 'circle';
-    const width = isCoordinate ? 0.35 : isCircle ? 1.6 : isText ? 2.4 : 2.6;
-    const height = isCoordinate ? 0.35 : isCircle ? 1.6 : isText ? 0.8 : 1.3;
+    const isFit = shape === 'fit_box';
+    const isMatrix = shape === 'matrix';
+
+    const width = isCoordinate ? 0.35 : isCircle ? 1.6 : isText ? 2.4 : isMatrix ? 3.8 : isFit ? 4.4 : 2.6;
+    const height = isCoordinate ? 0.35 : isCircle ? 1.6 : isText ? 0.8 : isMatrix ? 2.2 : isFit ? 2.8 : 1.3;
 
     return {
         id: makeId('obj'),
-        kind: isCoordinate ? 'coordinate' : isText ? 'text' : 'shape',
-        tikzName: isCoordinate ? `c${indexHint}` : `n${indexHint}`,
+        kind: isCoordinate ? 'coordinate' : isText ? 'text' : isFit ? 'fit_box' : isMatrix ? 'matrix' : 'shape',
+        tikzName: isCoordinate ? `c${indexHint}` : isFit ? `fit${indexHint}` : isMatrix ? `m${indexHint}` : `n${indexHint}`,
         layerId,
+        groupId: null,
         zIndex,
         x: roundCoord(x),
         y: roundCoord(y),
@@ -104,15 +108,26 @@ export function createFigureObject(
         height,
         rotationDeg: 0,
         shape,
-        label: isCoordinate ? '' : isText ? 'Label' : `Node ${indexHint}`,
+        label: isCoordinate ? '' : isText ? 'Label' : isFit ? 'Group' : isMatrix ? '' : `Node ${indexHint}`,
+        fitTargetIds: isFit ? [] : undefined,
+        onBackgroundLayer: isFit ? true : false,
+        matrixCells: isMatrix
+            ? [
+                  ['$a_{11}$', '$a_{12}$'],
+                  ['$a_{21}$', '$a_{22}$'],
+              ]
+            : undefined,
         style: {
             stroke: isText ? 'none' : '#1e293b',
             strokeWidthPt: isText ? 0 : 0.8,
-            dash: 'solid',
-            fill: isText ? 'none' : isCoordinate ? '#4f46e5' : '#f8fafc',
-            fillOpacity: 1,
+            dash: isFit ? 'dashed' : 'solid',
+            fill: isText ? 'none' : isCoordinate ? '#4f46e5' : isFit ? '#f1f5f9' : '#f8fafc',
+            fillOpacity: isFit ? 0.45 : 1,
             textColor: '#0f172a',
-            roundedCornersPt: shape === 'rounded_rectangle' ? 4 : 0,
+            roundedCornersPt: shape === 'rounded_rectangle' || isFit ? 4 : 0,
+            pattern: 'none',
+            scaleX: 1,
+            scaleY: 1,
         },
         visible: true,
         locked: false,
@@ -156,6 +171,18 @@ export function detectRequiredTikzLibraries(scene: FigureSceneDocument): string[
         if (obj.shape === 'diamond') {
             libs.add('shapes.geometric');
         }
+        if (obj.kind === 'fit_box') {
+            libs.add('fit');
+            if (obj.onBackgroundLayer) {
+                libs.add('backgrounds');
+            }
+        }
+        if (obj.kind === 'matrix') {
+            libs.add('matrix');
+        }
+        if (obj.style.pattern && obj.style.pattern !== 'none') {
+            libs.add('patterns');
+        }
     }
 
     for (const conn of scene.connectors) {
@@ -171,9 +198,44 @@ export function detectRequiredTikzLibraries(scene: FigureSceneDocument): string[
         ) {
             libs.add('arrows.meta');
         }
+        if (conn.decoration === 'snake' || conn.decoration === 'zigzag') {
+            libs.add('decorations.pathmorphing');
+        } else if (conn.decoration === 'brace') {
+            libs.add('decorations.pathreplacing');
+        }
     }
 
     return [...libs].sort();
+}
+
+export function computeFitBoxBounds(
+    objects: FigureObject[],
+    targetIds: string[],
+    padding = 0.45,
+): { x: number; y: number; width: number; height: number } | null {
+    const targets = objects.filter((o) => targetIds.includes(o.id));
+    if (targets.length === 0) {
+        return null;
+    }
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    for (const t of targets) {
+        minX = Math.min(minX, t.x - t.width / 2);
+        maxX = Math.max(maxX, t.x + t.width / 2);
+        minY = Math.min(minY, t.y - t.height / 2);
+        maxY = Math.max(maxY, t.y + t.height / 2);
+    }
+
+    return {
+        x: roundCoord((minX + maxX) / 2),
+        y: roundCoord((minY + maxY) / 2),
+        width: roundCoord(maxX - minX + padding * 2),
+        height: roundCoord(maxY - minY + padding * 2),
+    };
 }
 
 export function detectRequiredPackages(scene: FigureSceneDocument): string[] {

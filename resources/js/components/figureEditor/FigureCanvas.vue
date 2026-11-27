@@ -15,6 +15,7 @@ import {
     tikzSizeToScene,
     tikzToScene,
 } from '@/services/figureEditor/coordinates';
+import { computeFitBoxBounds } from '@/services/figureEditor/sceneHistory';
 import type {
     ArrowTip,
     CanvasTool,
@@ -191,8 +192,23 @@ function getObjectScreenBox(obj: FigureObject): {
     width: number;
     height: number;
 } {
-    const center = tikzToScene(obj.x, obj.y, props.scene.unit);
-    const size = tikzSizeToScene(obj.width, obj.height, props.scene.unit);
+    let x = obj.x;
+    let y = obj.y;
+    let width = obj.width;
+    let height = obj.height;
+
+    if (obj.kind === 'fit_box' && obj.fitTargetIds && obj.fitTargetIds.length > 0) {
+        const bounds = computeFitBoxBounds(props.scene.objects, obj.fitTargetIds);
+        if (bounds) {
+            x = bounds.x;
+            y = bounds.y;
+            width = bounds.width;
+            height = bounds.height;
+        }
+    }
+
+    const center = tikzToScene(x, y, props.scene.unit);
+    const size = tikzSizeToScene(width, height, props.scene.unit);
     return {
         cx: center.sx,
         cy: center.sy,
@@ -201,6 +217,14 @@ function getObjectScreenBox(obj: FigureObject): {
         width: size.sw,
         height: size.sh,
     };
+}
+
+function getObjectFill(obj: FigureObject): string {
+    if (obj.style.pattern && obj.style.pattern !== 'none') {
+        const key = obj.style.pattern.replace(/\s+/g, '-');
+        return `url(#tikz-pat-${key})`;
+    }
+    return obj.style.fill === 'none' ? 'transparent' : obj.style.fill;
 }
 
 function getDiamondPoints(obj: FigureObject): string {
@@ -613,12 +637,20 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
 
 <template>
     <div
-        class="relative h-full w-full overflow-hidden bg-slate-50 select-none focus:outline-none"
+        class="relative h-full w-full overflow-hidden bg-slate-50 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
         tabindex="0"
+        role="region"
         aria-label="TikZ Visual Canvas"
         @keydown="handleKeyDown"
         @keyup="handleKeyUp"
     >
+        <div class="sr-only" aria-live="polite">
+            {{
+                selectedObjects.length === 1
+                    ? `Selected ${selectedObjects[0].tikzName} at (${selectedObjects[0].x}, ${selectedObjects[0].y})`
+                    : `${selectedIds.length} items selected`
+            }}
+        </div>
         <svg
             ref="svgRef"
             class="h-full w-full"
@@ -649,6 +681,23 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
                         stroke="#e2e8f0"
                         :stroke-width="1 / viewport.zoom"
                     />
+                </pattern>
+
+                <!-- TikZ Fill Patterns -->
+                <pattern id="tikz-pat-north-east-lines" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 0 8 L 8 0 M -2 2 L 2 -2 M 6 10 L 10 6" stroke="#475569" stroke-width="1" />
+                </pattern>
+                <pattern id="tikz-pat-north-west-lines" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 0 0 L 8 8 M -2 6 L 2 10 M 6 -2 L 10 2" stroke="#475569" stroke-width="1" />
+                </pattern>
+                <pattern id="tikz-pat-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#475569" stroke-width="0.8" />
+                </pattern>
+                <pattern id="tikz-pat-dots" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <circle cx="4" cy="4" r="1.2" fill="#475569" />
+                </pattern>
+                <pattern id="tikz-pat-crosshatch" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <path d="M 0 8 L 8 0 M 0 0 L 8 8" stroke="#475569" stroke-width="0.8" />
                 </pattern>
 
                 <!-- Arrowhead Markers -->
@@ -794,6 +843,68 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
                         </text>
                     </g>
 
+                    <g v-else-if="obj.kind === 'fit_box'">
+                        <rect
+                            :x="getObjectScreenBox(obj).left"
+                            :y="getObjectScreenBox(obj).top"
+                            :width="getObjectScreenBox(obj).width"
+                            :height="getObjectScreenBox(obj).height"
+                            :rx="obj.style.roundedCornersPt"
+                            :ry="obj.style.roundedCornersPt"
+                            :fill="getObjectFill(obj)"
+                            :fill-opacity="obj.style.fillOpacity"
+                            :stroke="obj.style.stroke === 'none' ? 'transparent' : obj.style.stroke"
+                            :stroke-width="obj.style.strokeWidthPt * 1.33"
+                            :stroke-dasharray="getStrokeDasharray(obj.style.dash)"
+                        />
+                        <text
+                            v-if="obj.label"
+                            :x="getObjectScreenBox(obj).left + 8"
+                            :y="getObjectScreenBox(obj).top + 14"
+                            :fill="obj.style.textColor"
+                            class="pointer-events-none text-[11px] font-semibold"
+                        >
+                            {{ obj.label }}
+                        </text>
+                    </g>
+
+                    <g v-else-if="obj.kind === 'matrix'">
+                        <rect
+                            :x="getObjectScreenBox(obj).left"
+                            :y="getObjectScreenBox(obj).top"
+                            :width="getObjectScreenBox(obj).width"
+                            :height="getObjectScreenBox(obj).height"
+                            fill="#ffffff"
+                            fill-opacity="0.9"
+                            stroke="#64748b"
+                            stroke-dasharray="3 2"
+                            stroke-width="1"
+                        />
+                        <foreignObject
+                            :x="getObjectScreenBox(obj).left + 4"
+                            :y="getObjectScreenBox(obj).top + 4"
+                            :width="Math.max(20, getObjectScreenBox(obj).width - 8)"
+                            :height="Math.max(20, getObjectScreenBox(obj).height - 8)"
+                            class="pointer-events-none"
+                        >
+                            <div class="flex h-full w-full flex-col justify-center gap-1">
+                                <div
+                                    v-for="(row, rIdx) in obj.matrixCells ?? [['A', 'B']]"
+                                    :key="rIdx"
+                                    class="flex flex-1 gap-1"
+                                >
+                                    <div
+                                        v-for="(cell, cIdx) in row"
+                                        :key="cIdx"
+                                        class="flex flex-1 items-center justify-center rounded border border-slate-300 bg-slate-50 text-[10px]"
+                                    >
+                                        {{ cell }}
+                                    </div>
+                                </div>
+                            </div>
+                        </foreignObject>
+                    </g>
+
                     <rect
                         v-else-if="obj.shape === 'rectangle' || obj.shape === 'rounded_rectangle'"
                         :x="getObjectScreenBox(obj).left"
@@ -802,7 +913,7 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
                         :height="getObjectScreenBox(obj).height"
                         :rx="obj.shape === 'rounded_rectangle' ? obj.style.roundedCornersPt : 0"
                         :ry="obj.shape === 'rounded_rectangle' ? obj.style.roundedCornersPt : 0"
-                        :fill="obj.style.fill === 'none' ? 'transparent' : obj.style.fill"
+                        :fill="getObjectFill(obj)"
                         :fill-opacity="obj.style.fillOpacity"
                         :stroke="obj.style.stroke === 'none' ? 'transparent' : obj.style.stroke"
                         :stroke-width="obj.style.strokeWidthPt * 1.33"
@@ -814,7 +925,7 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
                         :cx="getObjectScreenBox(obj).cx"
                         :cy="getObjectScreenBox(obj).cy"
                         :r="Math.min(getObjectScreenBox(obj).width, getObjectScreenBox(obj).height) / 2"
-                        :fill="obj.style.fill === 'none' ? 'transparent' : obj.style.fill"
+                        :fill="getObjectFill(obj)"
                         :fill-opacity="obj.style.fillOpacity"
                         :stroke="obj.style.stroke === 'none' ? 'transparent' : obj.style.stroke"
                         :stroke-width="obj.style.strokeWidthPt * 1.33"
@@ -827,7 +938,7 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
                         :cy="getObjectScreenBox(obj).cy"
                         :rx="getObjectScreenBox(obj).width / 2"
                         :ry="getObjectScreenBox(obj).height / 2"
-                        :fill="obj.style.fill === 'none' ? 'transparent' : obj.style.fill"
+                        :fill="getObjectFill(obj)"
                         :fill-opacity="obj.style.fillOpacity"
                         :stroke="obj.style.stroke === 'none' ? 'transparent' : obj.style.stroke"
                         :stroke-width="obj.style.strokeWidthPt * 1.33"
@@ -837,7 +948,7 @@ function getHandles(obj: FigureObject): Array<{ id: ResizeHandle; x: number; y: 
                     <polygon
                         v-else-if="obj.shape === 'diamond'"
                         :points="getDiamondPoints(obj)"
-                        :fill="obj.style.fill === 'none' ? 'transparent' : obj.style.fill"
+                        :fill="getObjectFill(obj)"
                         :fill-opacity="obj.style.fillOpacity"
                         :stroke="obj.style.stroke === 'none' ? 'transparent' : obj.style.stroke"
                         :stroke-width="obj.style.strokeWidthPt * 1.33"

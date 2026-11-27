@@ -1,9 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 import revisions from './revisions'
 import renders from './renders'
+import comments from './comments'
 /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
 export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -18,7 +19,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
 index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -51,7 +52,7 @@ index.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
 index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -60,7 +61,7 @@ index.get = (args: { project: string | { public_id: string } } | [project: strin
 })
 /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
 index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -70,7 +71,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
 
     /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
     const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -80,7 +81,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
 
             /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
         indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -89,7 +90,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
         })
             /**
 * @see \App\Http\Controllers\FigureController::index
- * @see app/Http/Controllers/FigureController.php:28
+ * @see app/Http/Controllers/FigureController.php:29
  * @route '/projects/{project}/figures'
  */
         indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -105,7 +106,7 @@ index.head = (args: { project: string | { public_id: string } } | [project: stri
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\FigureController::store
- * @see app/Http/Controllers/FigureController.php:100
+ * @see app/Http/Controllers/FigureController.php:105
  * @route '/projects/{project}/figures'
  */
 export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -120,7 +121,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::store
- * @see app/Http/Controllers/FigureController.php:100
+ * @see app/Http/Controllers/FigureController.php:105
  * @route '/projects/{project}/figures'
  */
 store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -153,7 +154,7 @@ store.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\FigureController::store
- * @see app/Http/Controllers/FigureController.php:100
+ * @see app/Http/Controllers/FigureController.php:105
  * @route '/projects/{project}/figures'
  */
 store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -163,7 +164,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
 
     /**
 * @see \App\Http\Controllers\FigureController::store
- * @see app/Http/Controllers/FigureController.php:100
+ * @see app/Http/Controllers/FigureController.php:105
  * @route '/projects/{project}/figures'
  */
     const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -173,7 +174,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
 
             /**
 * @see \App\Http\Controllers\FigureController::store
- * @see app/Http/Controllers/FigureController.php:100
+ * @see app/Http/Controllers/FigureController.php:105
  * @route '/projects/{project}/figures'
  */
         storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -184,7 +185,7 @@ store.post = (args: { project: string | { public_id: string } } | [project: stri
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\FigureController::insert
- * @see app/Http/Controllers/FigureController.php:219
+ * @see app/Http/Controllers/FigureController.php:224
  * @route '/projects/{project}/figures/insert'
  */
 export const insert = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -199,7 +200,7 @@ insert.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::insert
- * @see app/Http/Controllers/FigureController.php:219
+ * @see app/Http/Controllers/FigureController.php:224
  * @route '/projects/{project}/figures/insert'
  */
 insert.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
@@ -232,7 +233,7 @@ insert.url = (args: { project: string | { public_id: string } } | [project: stri
 
 /**
 * @see \App\Http\Controllers\FigureController::insert
- * @see app/Http/Controllers/FigureController.php:219
+ * @see app/Http/Controllers/FigureController.php:224
  * @route '/projects/{project}/figures/insert'
  */
 insert.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -242,7 +243,7 @@ insert.post = (args: { project: string | { public_id: string } } | [project: str
 
     /**
 * @see \App\Http\Controllers\FigureController::insert
- * @see app/Http/Controllers/FigureController.php:219
+ * @see app/Http/Controllers/FigureController.php:224
  * @route '/projects/{project}/figures/insert'
  */
     const insertForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -252,7 +253,7 @@ insert.post = (args: { project: string | { public_id: string } } | [project: str
 
             /**
 * @see \App\Http\Controllers\FigureController::insert
- * @see app/Http/Controllers/FigureController.php:219
+ * @see app/Http/Controllers/FigureController.php:224
  * @route '/projects/{project}/figures/insert'
  */
         insertForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -263,7 +264,7 @@ insert.post = (args: { project: string | { public_id: string } } | [project: str
     insert.form = insertForm
 /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
 export const show = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -278,7 +279,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
 show.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -308,7 +309,7 @@ show.url = (args: { project: string | { public_id: string }, figure: string | { 
 
 /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
 show.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -317,7 +318,7 @@ show.get = (args: { project: string | { public_id: string }, figure: string | { 
 })
 /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
 show.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -327,7 +328,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
 
     /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
     const showForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -337,7 +338,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
 
             /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
         showForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -346,7 +347,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
         })
             /**
 * @see \App\Http\Controllers\FigureController::show
- * @see app/Http/Controllers/FigureController.php:67
+ * @see app/Http/Controllers/FigureController.php:70
  * @route '/projects/{project}/figures/{figure}'
  */
         showForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -362,7 +363,7 @@ show.head = (args: { project: string | { public_id: string }, figure: string | {
     show.form = showForm
 /**
 * @see \App\Http\Controllers\FigureController::update
- * @see app/Http/Controllers/FigureController.php:129
+ * @see app/Http/Controllers/FigureController.php:134
  * @route '/projects/{project}/figures/{figure}'
  */
 export const update = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -377,7 +378,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::update
- * @see app/Http/Controllers/FigureController.php:129
+ * @see app/Http/Controllers/FigureController.php:134
  * @route '/projects/{project}/figures/{figure}'
  */
 update.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -407,7 +408,7 @@ update.url = (args: { project: string | { public_id: string }, figure: string | 
 
 /**
 * @see \App\Http\Controllers\FigureController::update
- * @see app/Http/Controllers/FigureController.php:129
+ * @see app/Http/Controllers/FigureController.php:134
  * @route '/projects/{project}/figures/{figure}'
  */
 update.put = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -417,7 +418,7 @@ update.put = (args: { project: string | { public_id: string }, figure: string | 
 
     /**
 * @see \App\Http\Controllers\FigureController::update
- * @see app/Http/Controllers/FigureController.php:129
+ * @see app/Http/Controllers/FigureController.php:134
  * @route '/projects/{project}/figures/{figure}'
  */
     const updateForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -432,7 +433,7 @@ update.put = (args: { project: string | { public_id: string }, figure: string | 
 
             /**
 * @see \App\Http\Controllers\FigureController::update
- * @see app/Http/Controllers/FigureController.php:129
+ * @see app/Http/Controllers/FigureController.php:134
  * @route '/projects/{project}/figures/{figure}'
  */
         updateForm.put = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -448,7 +449,7 @@ update.put = (args: { project: string | { public_id: string }, figure: string | 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\FigureController::destroy
- * @see app/Http/Controllers/FigureController.php:162
+ * @see app/Http/Controllers/FigureController.php:167
  * @route '/projects/{project}/figures/{figure}'
  */
 export const destroy = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -463,7 +464,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::destroy
- * @see app/Http/Controllers/FigureController.php:162
+ * @see app/Http/Controllers/FigureController.php:167
  * @route '/projects/{project}/figures/{figure}'
  */
 destroy.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -493,7 +494,7 @@ destroy.url = (args: { project: string | { public_id: string }, figure: string |
 
 /**
 * @see \App\Http\Controllers\FigureController::destroy
- * @see app/Http/Controllers/FigureController.php:162
+ * @see app/Http/Controllers/FigureController.php:167
  * @route '/projects/{project}/figures/{figure}'
  */
 destroy.delete = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -503,7 +504,7 @@ destroy.delete = (args: { project: string | { public_id: string }, figure: strin
 
     /**
 * @see \App\Http\Controllers\FigureController::destroy
- * @see app/Http/Controllers/FigureController.php:162
+ * @see app/Http/Controllers/FigureController.php:167
  * @route '/projects/{project}/figures/{figure}'
  */
     const destroyForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -518,7 +519,7 @@ destroy.delete = (args: { project: string | { public_id: string }, figure: strin
 
             /**
 * @see \App\Http\Controllers\FigureController::destroy
- * @see app/Http/Controllers/FigureController.php:162
+ * @see app/Http/Controllers/FigureController.php:167
  * @route '/projects/{project}/figures/{figure}'
  */
         destroyForm.delete = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -534,7 +535,7 @@ destroy.delete = (args: { project: string | { public_id: string }, figure: strin
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
 export const exportMethod = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -549,7 +550,7 @@ exportMethod.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
 exportMethod.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions) => {
@@ -579,7 +580,7 @@ exportMethod.url = (args: { project: string | { public_id: string }, figure: str
 
 /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
 exportMethod.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -588,7 +589,7 @@ exportMethod.get = (args: { project: string | { public_id: string }, figure: str
 })
 /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
 exportMethod.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -598,7 +599,7 @@ exportMethod.head = (args: { project: string | { public_id: string }, figure: st
 
     /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
     const exportMethodForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -608,7 +609,7 @@ exportMethod.head = (args: { project: string | { public_id: string }, figure: st
 
             /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
         exportMethodForm.get = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -617,7 +618,7 @@ exportMethod.head = (args: { project: string | { public_id: string }, figure: st
         })
             /**
 * @see \App\Http\Controllers\FigureController::exportMethod
- * @see app/Http/Controllers/FigureController.php:199
+ * @see app/Http/Controllers/FigureController.php:204
  * @route '/projects/{project}/figures/{figure}/export'
  */
         exportMethodForm.head = (args: { project: string | { public_id: string }, figure: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -641,6 +642,7 @@ destroy: Object.assign(destroy, destroy),
 export: Object.assign(exportMethod, exportMethod),
 revisions: Object.assign(revisions, revisions),
 renders: Object.assign(renders, renders),
+comments: Object.assign(comments, comments),
 }
 
 export default figures

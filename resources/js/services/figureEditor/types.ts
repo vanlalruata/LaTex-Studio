@@ -9,7 +9,9 @@ export type FigureShapeKind =
     | 'ellipse'
     | 'diamond'
     | 'coordinate'
-    | 'text';
+    | 'text'
+    | 'fit_box'
+    | 'matrix';
 
 export type CanvasTool =
     | 'select'
@@ -21,9 +23,21 @@ export type CanvasTool =
     | 'diamond'
     | 'coordinate'
     | 'text'
+    | 'fit_box'
+    | 'matrix'
     | 'connector';
 
 export type StrokeDash = 'solid' | 'dashed' | 'dotted' | 'dashdot';
+
+export type TikzPattern =
+    | 'none'
+    | 'north east lines'
+    | 'north west lines'
+    | 'grid'
+    | 'dots'
+    | 'crosshatch';
+
+export type PathDecoration = 'none' | 'snake' | 'zigzag' | 'brace';
 
 export type NodeAnchor =
     | 'auto'
@@ -60,13 +74,17 @@ export interface FigureObjectStyle {
     fillOpacity: number;
     textColor: string;
     roundedCornersPt: number;
+    pattern?: TikzPattern;
+    scaleX?: number;
+    scaleY?: number;
 }
 
 export interface FigureObject {
     id: string;
-    kind: 'shape' | 'text' | 'coordinate';
+    kind: 'shape' | 'text' | 'coordinate' | 'fit_box' | 'matrix';
     tikzName: string;
     layerId: string;
+    groupId?: string | null;
     zIndex: number;
     x: number;
     y: number;
@@ -75,6 +93,9 @@ export interface FigureObject {
     rotationDeg: number;
     shape: FigureShapeKind;
     label: string;
+    fitTargetIds?: string[];
+    onBackgroundLayer?: boolean;
+    matrixCells?: string[][];
     style: FigureObjectStyle;
     visible: boolean;
     locked: boolean;
@@ -94,6 +115,7 @@ export interface FigureConnector {
     zIndex: number;
     routing: ConnectorRouting;
     curveBendDeg: number;
+    decoration?: PathDecoration;
     from: ConnectorEndpoint;
     to: ConnectorEndpoint;
     arrowStart: ArrowTip;

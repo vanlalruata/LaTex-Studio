@@ -1,10 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\FigureController::restore
- * @see app/Http/Controllers/FigureController.php:172
+ * @see app/Http/Controllers/FigureController.php:177
  * @route '/projects/{project}/figures/{figure}/revisions/{revision}/restore'
  */
-export const restore = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const restore = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: restore.url(args, options),
     method: 'post',
 })
@@ -16,10 +16,10 @@ restore.definition = {
 
 /**
 * @see \App\Http\Controllers\FigureController::restore
- * @see app/Http/Controllers/FigureController.php:172
+ * @see app/Http/Controllers/FigureController.php:177
  * @route '/projects/{project}/figures/{figure}/revisions/{revision}/restore'
  */
-restore.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+restore.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -51,30 +51,30 @@ restore.url = (args: { project: string | { public_id: string }, figure: string |
 
 /**
 * @see \App\Http\Controllers\FigureController::restore
- * @see app/Http/Controllers/FigureController.php:172
+ * @see app/Http/Controllers/FigureController.php:177
  * @route '/projects/{project}/figures/{figure}/revisions/{revision}/restore'
  */
-restore.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+restore.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: restore.url(args, options),
     method: 'post',
 })
 
     /**
 * @see \App\Http\Controllers\FigureController::restore
- * @see app/Http/Controllers/FigureController.php:172
+ * @see app/Http/Controllers/FigureController.php:177
  * @route '/projects/{project}/figures/{figure}/revisions/{revision}/restore'
  */
-    const restoreForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const restoreForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: restore.url(args, options),
         method: 'post',
     })
 
             /**
 * @see \App\Http\Controllers\FigureController::restore
- * @see app/Http/Controllers/FigureController.php:172
+ * @see app/Http/Controllers/FigureController.php:177
  * @route '/projects/{project}/figures/{figure}/revisions/{revision}/restore'
  */
-        restoreForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        restoreForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, revision: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: restore.url(args, options),
             method: 'post',
         })
