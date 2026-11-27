@@ -1,10 +1,10 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-export const index = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+export const index = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
@@ -16,31 +16,31 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-index.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+index.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
-            args = { project: args.public_id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+        args = { project: args.public_id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    project: args[0],
-                }
+            project: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        project: typeof args.project === 'object'
-                ? args.project.public_id
-                : args.project,
-                }
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+    }
 
     return index.definition.url
             .replace('{project}', parsedArgs.project.toString())
@@ -49,64 +49,67 @@ index.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-index.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+index.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: index.url(args, options),
     method: 'get',
 })
+
 /**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-index.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+index.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: index.url(args, options),
     method: 'head',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-    const indexForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(args, options),
-        method: 'get',
-    })
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+const indexForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(args, options),
+    method: 'get',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-        indexForm.get = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(args, options),
-            method: 'get',
-        })
-            /**
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+indexForm.get = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(args, options),
+    method: 'get',
+})
+
+/**
 * @see \App\Http\Controllers\CommentController::index
- * @see app/Http/Controllers/CommentController.php:15
- * @route '/projects/{project}/comments'
- */
-        indexForm.head = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
+* @see app/Http/Controllers/CommentController.php:15
+* @route '/projects/{project}/comments'
+*/
+indexForm.head = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: index.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+index.form = indexForm
+
 /**
 * @see \App\Http\Controllers\CommentController::store
- * @see app/Http/Controllers/CommentController.php:44
- * @route '/projects/{project}/comments'
- */
-export const store = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+* @see app/Http/Controllers/CommentController.php:44
+* @route '/projects/{project}/comments'
+*/
+export const store = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -118,31 +121,31 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\CommentController::store
- * @see app/Http/Controllers/CommentController.php:44
- * @route '/projects/{project}/comments'
- */
-store.url = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions) => {
+* @see app/Http/Controllers/CommentController.php:44
+* @route '/projects/{project}/comments'
+*/
+store.url = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { project: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
-            args = { project: args.public_id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'public_id' in args) {
+        args = { project: args.public_id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    project: args[0],
-                }
+            project: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        project: typeof args.project === 'object'
-                ? args.project.public_id
-                : args.project,
-                }
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+    }
 
     return store.definition.url
             .replace('{project}', parsedArgs.project.toString())
@@ -151,41 +154,42 @@ store.url = (args: { project: string | { public_id: string } } | [project: strin
 
 /**
 * @see \App\Http\Controllers\CommentController::store
- * @see app/Http/Controllers/CommentController.php:44
- * @route '/projects/{project}/comments'
- */
-store.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+* @see app/Http/Controllers/CommentController.php:44
+* @route '/projects/{project}/comments'
+*/
+store.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\CommentController::store
- * @see app/Http/Controllers/CommentController.php:44
- * @route '/projects/{project}/comments'
- */
-    const storeForm = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: store.url(args, options),
-        method: 'post',
-    })
+* @see app/Http/Controllers/CommentController.php:44
+* @route '/projects/{project}/comments'
+*/
+const storeForm = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: store.url(args, options),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\CommentController::store
- * @see app/Http/Controllers/CommentController.php:44
- * @route '/projects/{project}/comments'
- */
-        storeForm.post = (args: { project: string | { public_id: string } } | [project: string | { public_id: string } ] | string | { public_id: string }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: store.url(args, options),
-            method: 'post',
-        })
-    
-    store.form = storeForm
+* @see app/Http/Controllers/CommentController.php:44
+* @route '/projects/{project}/comments'
+*/
+storeForm.post = (args: { project: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number } ] | string | number | { public_id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: store.url(args, options),
+    method: 'post',
+})
+
+store.form = storeForm
+
 /**
 * @see \App\Http\Controllers\CommentController::reply
- * @see app/Http/Controllers/CommentController.php:86
- * @route '/projects/{project}/comments/{thread}/reply'
- */
-export const reply = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+* @see app/Http/Controllers/CommentController.php:86
+* @route '/projects/{project}/comments/{thread}/reply'
+*/
+export const reply = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reply.url(args, options),
     method: 'post',
 })
@@ -197,27 +201,27 @@ reply.definition = {
 
 /**
 * @see \App\Http\Controllers\CommentController::reply
- * @see app/Http/Controllers/CommentController.php:86
- * @route '/projects/{project}/comments/{thread}/reply'
- */
-reply.url = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions) => {
+* @see app/Http/Controllers/CommentController.php:86
+* @route '/projects/{project}/comments/{thread}/reply'
+*/
+reply.url = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
-                    project: args[0],
-                    thread: args[1],
-                }
+            project: args[0],
+            thread: args[1],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        project: typeof args.project === 'object'
-                ? args.project.public_id
-                : args.project,
-                                thread: typeof args.thread === 'object'
-                ? args.thread.public_id
-                : args.thread,
-                }
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+        thread: typeof args.thread === 'object'
+        ? args.thread.public_id
+        : args.thread,
+    }
 
     return reply.definition.url
             .replace('{project}', parsedArgs.project.toString())
@@ -227,41 +231,42 @@ reply.url = (args: { project: string | { public_id: string }, thread: string | {
 
 /**
 * @see \App\Http\Controllers\CommentController::reply
- * @see app/Http/Controllers/CommentController.php:86
- * @route '/projects/{project}/comments/{thread}/reply'
- */
-reply.post = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+* @see app/Http/Controllers/CommentController.php:86
+* @route '/projects/{project}/comments/{thread}/reply'
+*/
+reply.post = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: reply.url(args, options),
     method: 'post',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\CommentController::reply
- * @see app/Http/Controllers/CommentController.php:86
- * @route '/projects/{project}/comments/{thread}/reply'
- */
-    const replyForm = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: reply.url(args, options),
-        method: 'post',
-    })
+* @see app/Http/Controllers/CommentController.php:86
+* @route '/projects/{project}/comments/{thread}/reply'
+*/
+const replyForm = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: reply.url(args, options),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\CommentController::reply
- * @see app/Http/Controllers/CommentController.php:86
- * @route '/projects/{project}/comments/{thread}/reply'
- */
-        replyForm.post = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: reply.url(args, options),
-            method: 'post',
-        })
-    
-    reply.form = replyForm
+* @see app/Http/Controllers/CommentController.php:86
+* @route '/projects/{project}/comments/{thread}/reply'
+*/
+replyForm.post = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: reply.url(args, options),
+    method: 'post',
+})
+
+reply.form = replyForm
+
 /**
 * @see \App\Http\Controllers\CommentController::resolve
- * @see app/Http/Controllers/CommentController.php:112
- * @route '/projects/{project}/comments/{thread}/resolve'
- */
-export const resolve = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+* @see app/Http/Controllers/CommentController.php:112
+* @route '/projects/{project}/comments/{thread}/resolve'
+*/
+export const resolve = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(args, options),
     method: 'post',
 })
@@ -273,27 +278,27 @@ resolve.definition = {
 
 /**
 * @see \App\Http\Controllers\CommentController::resolve
- * @see app/Http/Controllers/CommentController.php:112
- * @route '/projects/{project}/comments/{thread}/resolve'
- */
-resolve.url = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions) => {
+* @see app/Http/Controllers/CommentController.php:112
+* @route '/projects/{project}/comments/{thread}/resolve'
+*/
+resolve.url = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
-                    project: args[0],
-                    thread: args[1],
-                }
+            project: args[0],
+            thread: args[1],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        project: typeof args.project === 'object'
-                ? args.project.public_id
-                : args.project,
-                                thread: typeof args.thread === 'object'
-                ? args.thread.public_id
-                : args.thread,
-                }
+        project: typeof args.project === 'object'
+        ? args.project.public_id
+        : args.project,
+        thread: typeof args.thread === 'object'
+        ? args.thread.public_id
+        : args.thread,
+    }
 
     return resolve.definition.url
             .replace('{project}', parsedArgs.project.toString())
@@ -303,40 +308,41 @@ resolve.url = (args: { project: string | { public_id: string }, thread: string |
 
 /**
 * @see \App\Http\Controllers\CommentController::resolve
- * @see app/Http/Controllers/CommentController.php:112
- * @route '/projects/{project}/comments/{thread}/resolve'
- */
-resolve.post = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+* @see app/Http/Controllers/CommentController.php:112
+* @route '/projects/{project}/comments/{thread}/resolve'
+*/
+resolve.post = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(args, options),
     method: 'post',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\CommentController::resolve
- * @see app/Http/Controllers/CommentController.php:112
- * @route '/projects/{project}/comments/{thread}/resolve'
- */
-    const resolveForm = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: resolve.url(args, options),
-        method: 'post',
-    })
+* @see app/Http/Controllers/CommentController.php:112
+* @route '/projects/{project}/comments/{thread}/resolve'
+*/
+const resolveForm = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: resolve.url(args, options),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\CommentController::resolve
- * @see app/Http/Controllers/CommentController.php:112
- * @route '/projects/{project}/comments/{thread}/resolve'
- */
-        resolveForm.post = (args: { project: string | { public_id: string }, thread: string | { public_id: string } } | [project: string | { public_id: string }, thread: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: resolve.url(args, options),
-            method: 'post',
-        })
-    
-    resolve.form = resolveForm
+* @see app/Http/Controllers/CommentController.php:112
+* @route '/projects/{project}/comments/{thread}/resolve'
+*/
+resolveForm.post = (args: { project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } } | [project: string | number | { public_id: string | number }, thread: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: resolve.url(args, options),
+    method: 'post',
+})
+
+resolve.form = resolveForm
+
 const comments = {
     index: Object.assign(index, index),
-store: Object.assign(store, store),
-reply: Object.assign(reply, reply),
-resolve: Object.assign(resolve, resolve),
+    store: Object.assign(store, store),
+    reply: Object.assign(reply, reply),
+    resolve: Object.assign(resolve, resolve),
 }
 
 export default comments

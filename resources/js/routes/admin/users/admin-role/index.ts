@@ -1,9 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\UserController::update
- * @see app/Http/Controllers/Admin/UserController.php:50
- * @route '/admin/users/{user}/admin-role'
- */
+* @see app/Http/Controllers/Admin/UserController.php:50
+* @route '/admin/users/{user}/admin-role'
+*/
 export const update = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
@@ -16,31 +16,31 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::update
- * @see app/Http/Controllers/Admin/UserController.php:50
- * @route '/admin/users/{user}/admin-role'
- */
+* @see app/Http/Controllers/Admin/UserController.php:50
+* @route '/admin/users/{user}/admin-role'
+*/
 update.url = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { user: args }
     }
 
-            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
-            args = { user: args.id }
-        }
-    
+    if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+        args = { user: args.id }
+    }
+
     if (Array.isArray(args)) {
         args = {
-                    user: args[0],
-                }
+            user: args[0],
+        }
     }
 
     args = applyUrlDefaults(args)
 
     const parsedArgs = {
-                        user: typeof args.user === 'object'
-                ? args.user.id
-                : args.user,
-                }
+        user: typeof args.user === 'object'
+        ? args.user.id
+        : args.user,
+    }
 
     return update.definition.url
             .replace('{user}', parsedArgs.user.toString())
@@ -49,45 +49,46 @@ update.url = (args: { user: number | { id: number } } | [user: number | { id: nu
 
 /**
 * @see \App\Http\Controllers\Admin\UserController::update
- * @see app/Http/Controllers/Admin/UserController.php:50
- * @route '/admin/users/{user}/admin-role'
- */
+* @see app/Http/Controllers/Admin/UserController.php:50
+* @route '/admin/users/{user}/admin-role'
+*/
 update.patch = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\Admin\UserController::update
- * @see app/Http/Controllers/Admin/UserController.php:50
- * @route '/admin/users/{user}/admin-role'
- */
-    const updateForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: update.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PATCH',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
+* @see app/Http/Controllers/Admin/UserController.php:50
+* @route '/admin/users/{user}/admin-role'
+*/
+const updateForm = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: update.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\Admin\UserController::update
- * @see app/Http/Controllers/Admin/UserController.php:50
- * @route '/admin/users/{user}/admin-role'
- */
-        updateForm.patch = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PATCH',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    update.form = updateForm
+* @see app/Http/Controllers/Admin/UserController.php:50
+* @route '/admin/users/{user}/admin-role'
+*/
+updateForm.patch = (args: { user: number | { id: number } } | [user: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    action: update.url(args, {
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'PATCH',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'post',
+})
+
+update.form = updateForm
+
 const adminRole = {
     update: Object.assign(update, update),
 }

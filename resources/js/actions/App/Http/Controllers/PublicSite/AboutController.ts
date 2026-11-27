@@ -1,9 +1,9 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
 const AboutController = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: AboutController.url(options),
     method: 'get',
@@ -16,65 +16,68 @@ AboutController.definition = {
 
 /**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
 AboutController.url = (options?: RouteQueryOptions) => {
     return AboutController.definition.url + queryParams(options)
 }
 
 /**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
 AboutController.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: AboutController.url(options),
     method: 'get',
 })
+
 /**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
 AboutController.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: AboutController.url(options),
     method: 'head',
 })
 
-    /**
+/**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
-    const AboutControllerForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: AboutController.url(options),
-        method: 'get',
-    })
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
+const AboutControllerForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: AboutController.url(options),
+    method: 'get',
+})
 
-            /**
+/**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
-        AboutControllerForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: AboutController.url(options),
-            method: 'get',
-        })
-            /**
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
+AboutControllerForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: AboutController.url(options),
+    method: 'get',
+})
+
+/**
 * @see \App\Http\Controllers\PublicSite\AboutController::__invoke
- * @see app/Http/Controllers/PublicSite/AboutController.php:11
- * @route '/about'
- */
-        AboutControllerForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: AboutController.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    AboutController.form = AboutControllerForm
+* @see app/Http/Controllers/PublicSite/AboutController.php:11
+* @route '/about'
+*/
+AboutControllerForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    action: AboutController.url({
+        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+            _method: 'HEAD',
+            ...(options?.query ?? options?.mergeQuery ?? {}),
+        }
+    }),
+    method: 'get',
+})
+
+AboutController.form = AboutControllerForm
+
 export default AboutController

@@ -9,18 +9,19 @@ import ContactController from './ContactController'
 import FaqController from './FaqController'
 import LegalController from './LegalController'
 import SitemapController from './SitemapController'
+
 const PublicSite = {
     HomeController: Object.assign(HomeController, HomeController),
-FeatureController: Object.assign(FeatureController, FeatureController),
-HowItWorksController: Object.assign(HowItWorksController, HowItWorksController),
-DemoController: Object.assign(DemoController, DemoController),
-TemplateController: Object.assign(TemplateController, TemplateController),
-PricingController: Object.assign(PricingController, PricingController),
-AboutController: Object.assign(AboutController, AboutController),
-ContactController: Object.assign(ContactController, ContactController),
-FaqController: Object.assign(FaqController, FaqController),
-LegalController: Object.assign(LegalController, LegalController),
-SitemapController: Object.assign(SitemapController, SitemapController),
+    FeatureController: Object.assign(FeatureController, FeatureController),
+    HowItWorksController: Object.assign(HowItWorksController, HowItWorksController),
+    DemoController: Object.assign(DemoController, DemoController),
+    TemplateController: Object.assign(TemplateController, TemplateController),
+    PricingController: Object.assign(PricingController, PricingController),
+    AboutController: Object.assign(AboutController, AboutController),
+    ContactController: Object.assign(ContactController, ContactController),
+    FaqController: Object.assign(FaqController, FaqController),
+    LegalController: Object.assign(LegalController, LegalController),
+    SitemapController: Object.assign(SitemapController, SitemapController),
 }
 
 export default PublicSite
