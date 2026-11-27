@@ -26,6 +26,7 @@ class CompilerSettingsService
      *     docker_pids_limit: int,
      *     local_texlive_bin_path: string,
      *     local_latexmk_path: string,
+     *     auto_install_packages: bool,
      *     wall_timeout: int,
      *     max_output_mb: int
      * }
@@ -62,6 +63,7 @@ class CompilerSettingsService
             'local_latexmk_path' => is_string($stored['compiler.local_latexmk_path'] ?? null) && $stored['compiler.local_latexmk_path'] !== ''
                 ? $stored['compiler.local_latexmk_path']
                 : $defaults['local_latexmk_path'],
+            'auto_install_packages' => (bool) ($stored['compiler.auto_install_packages'] ?? $defaults['auto_install_packages']),
             'wall_timeout' => (int) ($stored['compiler.wall_timeout'] ?? $defaults['wall_timeout']),
             'max_output_mb' => (int) ($stored['compiler.max_output_mb'] ?? $defaults['max_output_mb']),
         ];
@@ -85,6 +87,7 @@ class CompilerSettingsService
             'docker_pids_limit' => 'compiler.docker_pids_limit',
             'local_texlive_bin_path' => 'compiler.local_texlive_bin_path',
             'local_latexmk_path' => 'compiler.local_latexmk_path',
+            'auto_install_packages' => 'compiler.auto_install_packages',
             'wall_timeout' => 'compiler.wall_timeout',
             'max_output_mb' => 'compiler.max_output_mb',
         ];
@@ -308,6 +311,7 @@ class CompilerSettingsService
      *     docker_pids_limit: int,
      *     local_texlive_bin_path: string,
      *     local_latexmk_path: string,
+     *     auto_install_packages: bool,
      *     wall_timeout: int,
      *     max_output_mb: int
      * }
@@ -324,6 +328,7 @@ class CompilerSettingsService
             'docker_pids_limit' => (int) config('compiler.docker.pids_limit', 64),
             'local_texlive_bin_path' => (string) config('compiler.local.texlive_bin_path', ''),
             'local_latexmk_path' => (string) config('compiler.local.latexmk_path', 'latexmk'),
+            'auto_install_packages' => (bool) config('compiler.local.auto_install_packages', false),
             'wall_timeout' => (int) config('compiler.docker.wall_timeout', 60),
             'max_output_mb' => (int) config('compiler.docker.max_output_mb', 100),
         ];

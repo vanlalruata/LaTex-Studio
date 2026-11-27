@@ -25,6 +25,7 @@ class UpdateCompilerSettingsRequest extends FormRequest
             'docker_pids_limit' => ['required', 'integer', 'min:16', 'max:1024'],
             'local_texlive_bin_path' => ['nullable', 'string', 'max:512'],
             'local_latexmk_path' => ['required', 'string', 'max:255'],
+            'auto_install_packages' => ['sometimes', 'boolean'],
             'wall_timeout' => ['required', 'integer', 'min:10', 'max:600'],
             'max_output_mb' => ['required', 'integer', 'min:5', 'max:1024'],
         ];

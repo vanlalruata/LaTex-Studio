@@ -167,3 +167,50 @@ test('local adapter returns failed status when exit code is non-zero or pdf is i
         ->and($result->pdfContents)->toBeNull()
         ->and($result->logContents)->toContain('Undefined control sequence');
 });
+
+test('local adapter auto-installs missing sty package via tlmgr and retries once when enabled', function (): void {
+    $outDir = $this->workDir.DIRECTORY_SEPARATOR.'out';
+    $attempt = 0;
+
+    Process::fake(function (PendingProcess $process) use ($outDir, &$attempt) {
+        $cmd = is_array($process->command) ? implode(' ', $process->command) : (string) $process->command;
+
+        if (str_contains($cmd, 'tlmgr search')) {
+            return Process::result(output: "siunits:\n\ttexmf-dist/tex/latex/siunits/siunits.sty\n", exitCode: 0);
+        }
+
+        if (str_contains($cmd, 'tlmgr install siunits')) {
+            return Process::result(output: 'tlmgr install: package siunits installed.', exitCode: 0);
+        }
+
+        $attempt++;
+        if ($attempt === 1) {
+            file_put_contents($outDir.DIRECTORY_SEPARATOR.'main.log', "! LaTeX Error: File `siunits.sty' not found.\n");
+
+            return Process::result(output: '', exitCode: 1);
+        }
+
+        file_put_contents($outDir.DIRECTORY_SEPARATOR.'main.pdf', "%PDF-1.4\n%retried-ok\n");
+        file_put_contents($outDir.DIRECTORY_SEPARATOR.'main.log', "Output written on main.pdf\n");
+
+        return Process::result(output: 'Output written on main.pdf', exitCode: 0);
+    });
+
+    $adapter = new LocalTexLiveAdapter(
+        latexmkPath: '/nonexistent/latexmk',
+        autoInstallPackages: true,
+    );
+
+    $result = $adapter->compile(new CompilationRequest(
+        compilationPublicId: 'comp-autoinstall',
+        engine: CompilerEngine::PdfLaTeX,
+        rootFile: 'main.tex',
+        bibliographyTool: 'none',
+        enableSynctex: false,
+        workspacePath: $this->workDir,
+    ));
+
+    expect($result->status)->toBe(CompilationStatus::Succeeded)
+        ->and($result->pdfContents)->toBe("%PDF-1.4\n%retried-ok\n")
+        ->and($attempt)->toBe(3);
+});

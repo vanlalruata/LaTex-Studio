@@ -28,6 +28,7 @@ return [
     'local' => [
         'texlive_bin_path' => env('TEXLIVE_BIN_PATH', ''),
         'latexmk_path' => env('LATEXMK_PATH', 'latexmk'),
+        'auto_install_packages' => (bool) env('COMPILER_AUTO_INSTALL_PACKAGES', false),
         'wall_timeout' => (int) env('COMPILER_WALL_TIMEOUT', 60),
         'max_output_mb' => (int) env('COMPILER_MAX_OUTPUT_MB', 100),
     ],

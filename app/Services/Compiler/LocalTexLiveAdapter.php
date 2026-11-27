@@ -16,6 +16,7 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
         private readonly string $texliveBinPath = '',
         private readonly int $defaultWallTimeout = 60,
         private readonly int $defaultMaxOutputMb = 100,
+        private readonly bool $autoInstallPackages = false,
     ) {}
 
     public function compile(CompilationRequest $request): CompilationResult
@@ -43,11 +44,13 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
 
         $startMs = (int) (microtime(true) * 1000);
 
-        if ($this->hasLatexmk()) {
-            $command = $this->buildLatexmkCommand($request, $rootFile, $outDir);
-            [$exitCode, $errorOutput, $timedOut] = $this->runCommand($command, $srcDir, $timeout, $env);
-        } else {
-            [$exitCode, $errorOutput, $timedOut] = $this->runDirectEngine($request, $rootFile, $srcDir, $outDir, $timeout, $env);
+        [$exitCode, $errorOutput, $timedOut] = $this->runCompilePass($request, $rootFile, $srcDir, $outDir, $timeout, $env);
+
+        if (! $timedOut && $exitCode !== 0 && $this->autoInstallPackages) {
+            $initialLog = $this->readLog($outDir, $rootFile) ?? $errorOutput;
+            if ($this->installMissingPackagesFromLog($initialLog, $env)) {
+                [$exitCode, $errorOutput, $timedOut] = $this->runCompilePass($request, $rootFile, $srcDir, $outDir, $timeout, $env);
+            }
         }
 
         $durationMs = max(1, ((int) (microtime(true) * 1000)) - $startMs);
@@ -102,6 +105,71 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
             logContents: $logContents ?? ($errorOutput !== '' ? $errorOutput : null),
             errorSummary: 'LaTeX compilation failed. Inspect normalized diagnostics for details.',
         );
+    }
+
+    /**
+     * @param  array<string, string>  $env
+     * @return array{0: int, 1: string, 2: bool}
+     */
+    private function runCompilePass(
+        CompilationRequest $request,
+        string $rootFile,
+        string $srcDir,
+        string $outDir,
+        int $timeout,
+        array $env,
+    ): array {
+        if ($this->hasLatexmk()) {
+            $command = $this->buildLatexmkCommand($request, $rootFile, $outDir);
+
+            return $this->runCommand($command, $srcDir, $timeout, $env);
+        }
+
+        return $this->runDirectEngine($request, $rootFile, $srcDir, $outDir, $timeout, $env);
+    }
+
+    /**
+     * @param  array<string, string>  $env
+     */
+    private function installMissingPackagesFromLog(string $logContents, array $env): bool
+    {
+        if (preg_match_all('/! LaTeX Error: File [`\']([A-Za-z0-9_.-]+)\' not found\./', $logContents, $matches) < 1) {
+            return false;
+        }
+
+        $missingFiles = array_slice(array_values(array_unique($matches[1])), 0, 5);
+        $tlmgr = $this->resolveBinary('tlmgr');
+        $installedAny = false;
+
+        foreach ($missingFiles as $missingFile) {
+            $package = $this->resolveTlmgrPackage($tlmgr, $missingFile, $env);
+            if ($package === null) {
+                continue;
+            }
+
+            $install = Process::timeout(60)->env($env)->run([$tlmgr, 'install', $package]);
+            if ($install->successful()) {
+                $installedAny = true;
+            }
+        }
+
+        return $installedAny;
+    }
+
+    /**
+     * @param  array<string, string>  $env
+     */
+    private function resolveTlmgrPackage(string $tlmgr, string $missingFile, array $env): ?string
+    {
+        $search = Process::timeout(20)->env($env)->run([$tlmgr, 'search', '--global', '--file', '/'.$missingFile]);
+
+        if ($search->successful() && preg_match('/^([A-Za-z0-9_.-]+):/m', $search->output(), $pkgMatch) === 1) {
+            return $pkgMatch[1];
+        }
+
+        $fallback = pathinfo($missingFile, PATHINFO_FILENAME);
+
+        return preg_match('/^[A-Za-z0-9_.-]+$/', $fallback) === 1 ? $fallback : null;
     }
 
     /**

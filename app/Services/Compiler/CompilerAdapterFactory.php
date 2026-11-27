@@ -26,6 +26,7 @@ class CompilerAdapterFactory
                     : (string) ($this->settings->detectLocalTexLiveBinPath() ?? ''),
                 defaultWallTimeout: $resolvedSettings['wall_timeout'],
                 defaultMaxOutputMb: $resolvedSettings['max_output_mb'],
+                autoInstallPackages: $resolvedSettings['auto_install_packages'],
             ),
             default => throw new InvalidArgumentException("Unsupported compiler driver [{$selectedDriver}]."),
         };

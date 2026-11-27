@@ -18,6 +18,7 @@ interface CompilerSettings {
     docker_pids_limit: number;
     local_texlive_bin_path: string;
     local_latexmk_path: string;
+    auto_install_packages: boolean;
     wall_timeout: number;
     max_output_mb: number;
 }
@@ -52,6 +53,7 @@ const form = useForm<CompilerSettings>({
     docker_pids_limit: props.settings.docker_pids_limit,
     local_texlive_bin_path: props.settings.local_texlive_bin_path,
     local_latexmk_path: props.settings.local_latexmk_path,
+    auto_install_packages: props.settings.auto_install_packages,
     wall_timeout: props.settings.wall_timeout,
     max_output_mb: props.settings.max_output_mb,
 });
@@ -286,6 +288,21 @@ async function runHealthTest(driver: 'docker' | 'local'): Promise<void> {
                             <Label for="max_output_mb">Max PDF output size (MB)</Label>
                             <Input id="max_output_mb" v-model.number="form.max_output_mb" type="number" min="5" max="1024" />
                             <p v-if="form.errors.max_output_mb" class="text-xs text-destructive">{{ form.errors.max_output_mb }}</p>
+                        </div>
+
+                        <div class="flex items-start gap-3 rounded-lg border p-3 sm:col-span-2">
+                            <input
+                                id="auto_install_packages"
+                                v-model="form.auto_install_packages"
+                                type="checkbox"
+                                class="mt-0.5 size-4 rounded border-input"
+                            />
+                            <div class="space-y-0.5">
+                                <Label for="auto_install_packages">Auto-install missing TeX packages (Local mode via tlmgr)</Label>
+                                <p class="text-xs text-muted-foreground">
+                                    When a local build fails with a missing <code>.sty</code> / <code>.cls</code> file, automatically resolve and install it using <code>tlmgr</code> and retry once.
+                                </p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
