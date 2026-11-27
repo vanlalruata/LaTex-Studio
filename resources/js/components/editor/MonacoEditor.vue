@@ -152,5 +152,22 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div ref="containerRef" class="h-full w-full overflow-hidden bg-white" />
+    <div ref="containerRef" class="latex-monaco-host h-full w-full overflow-hidden bg-white" />
 </template>
+
+<style scoped>
+.latex-monaco-host :deep(.monaco-hover) {
+    max-width: calc(100% - 16px) !important;
+}
+
+.latex-monaco-host :deep(.monaco-hover .monaco-hover-content) {
+    max-width: 100% !important;
+    overflow-x: auto;
+}
+
+.latex-monaco-host :deep(.monaco-hover .rendered-markdown img) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+</style>

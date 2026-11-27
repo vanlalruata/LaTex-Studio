@@ -912,11 +912,16 @@ export function latexToSvgDataUrl(latex: string, isDark = false): string | null 
     // Enables identical graphical rendering for ALL mathematical formulas in Monaco hover previews
     try {
         const mathml = latexToMathML(clean, true);
-        const cleanLen = clean.replace(/\\[a-zA-Z]+/g, 'XX').replace(/[{}]/g, '').length;
+        const visualText = clean
+            .replace(/\\(d|t)?(frac|binom)\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, (_, __, ___, n, d) => (n.length >= d.length ? n : d))
+            .replace(/\\(left|right|hat|widehat|tilde|widetilde|bar|overline|underline|vec|dot|ddot|boldsymbol|bm|mathbf|mathrm|mathit|mathsf|mathcal|mathbb|operatorname|text|boxed)\b/g, '')
+            .replace(/\\[a-zA-Z]+/g, 'X')
+            .replace(/[{}\s]+/g, ' ');
+        const visualLen = visualText.trim().length;
         const rowCount = (clean.match(/\\\\/g)?.length ?? 0) + 1;
         const isMultiLine = /\\\\|aligned|align|flalign|eqnarray|split|gather|multline|matrix|cases/.test(clean);
         const hasTallOp = /\\(d|t)?frac|\\(d|t)?binom|\\(sum|prod|coprod|int|iint|iiint|oint|lim|overset|underset|stackrel)/.test(clean);
-        const estWidth = Math.min(920, Math.max(220, cleanLen * 13 + 110));
+        const estWidth = Math.min(560, Math.max(120, Math.round(visualLen * 10.5 + 36)));
         const estHeight = isMultiLine ? Math.min(380, Math.max(120, rowCount * 44 + 40)) : hasTallOp ? 104 : 72;
 
         const universalSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${estWidth}" height="${estHeight}" viewBox="0 0 ${estWidth} ${estHeight}">
