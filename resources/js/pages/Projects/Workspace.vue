@@ -188,6 +188,17 @@ const leftSidebarTab = ref<
     | 'tasks'
     | 'integrations'
 >('explorer');
+const isLeftSidebarOpen = ref(true);
+
+function toggleLeftSidebarTab(tab: typeof leftSidebarTab.value): void {
+    if (leftSidebarTab.value === tab) {
+        isLeftSidebarOpen.value = !isLeftSidebarOpen.value;
+        return;
+    }
+
+    leftSidebarTab.value = tab;
+    isLeftSidebarOpen.value = true;
+}
 const editorMode = ref<'code' | 'visual'>('code');
 const previewTab = ref<'pdf' | 'log' | 'warnings' | 'build'>('pdf');
 const showRightRail = ref(true);
@@ -882,6 +893,7 @@ function openReviewPanel(): void {
     showRightRail.value = true;
     rightRailTab.value = 'comments';
     leftSidebarTab.value = 'review';
+    isLeftSidebarOpen.value = true;
 }
 
 async function pollCompilation(compilationId: string): Promise<void> {
@@ -1342,12 +1354,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'explorer'
+                        isLeftSidebarOpen && leftSidebarTab === 'explorer'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Explorer & Outline"
-                    @click="leftSidebarTab = 'explorer'"
+                    @click="toggleLeftSidebarTab('explorer')"
                 >
                     <Files class="size-4" />
                 </button>
@@ -1355,12 +1367,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'symbols'
+                        isLeftSidebarOpen && leftSidebarTab === 'symbols'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Symbol Palette"
-                    @click="leftSidebarTab = 'symbols'"
+                    @click="toggleLeftSidebarTab('symbols')"
                 >
                     <Sigma class="size-4" />
                 </button>
@@ -1368,12 +1380,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'bibliography'
+                        isLeftSidebarOpen && leftSidebarTab === 'bibliography'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Bibliography Search"
-                    @click="leftSidebarTab = 'bibliography'"
+                    @click="toggleLeftSidebarTab('bibliography')"
                 >
                     <BookOpen class="size-4" />
                 </button>
@@ -1381,12 +1393,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'tools'
+                        isLeftSidebarOpen && leftSidebarTab === 'tools'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Research Tools (Tables, TikZ, Math, Snippets)"
-                    @click="leftSidebarTab = 'tools'"
+                    @click="toggleLeftSidebarTab('tools')"
                 >
                     <Wrench class="size-4" />
                 </button>
@@ -1394,12 +1406,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'review'
+                        isLeftSidebarOpen && leftSidebarTab === 'review'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Comments & Track Changes"
-                    @click="leftSidebarTab = 'review'"
+                    @click="toggleLeftSidebarTab('review')"
                 >
                     <MessageSquare class="size-4" />
                 </button>
@@ -1407,12 +1419,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'ai'
+                        isLeftSidebarOpen && leftSidebarTab === 'ai'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="AI Research Assistant"
-                    @click="leftSidebarTab = 'ai'"
+                    @click="toggleLeftSidebarTab('ai')"
                 >
                     <Sparkles class="size-4" />
                 </button>
@@ -1420,12 +1432,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'revisions'
+                        isLeftSidebarOpen && leftSidebarTab === 'revisions'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Revision History"
-                    @click="leftSidebarTab = 'revisions'"
+                    @click="toggleLeftSidebarTab('revisions')"
                 >
                     <History class="size-4" />
                 </button>
@@ -1433,12 +1445,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'tasks'
+                        isLeftSidebarOpen && leftSidebarTab === 'tasks'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Project tasks & milestones"
-                    @click="leftSidebarTab = 'tasks'"
+                    @click="toggleLeftSidebarTab('tasks')"
                 >
                     <ListChecks class="size-4" />
                 </button>
@@ -1446,12 +1458,12 @@ onBeforeUnmount(() => {
                     type="button"
                     class="rounded-lg p-2 transition"
                     :class="
-                        leftSidebarTab === 'integrations'
+                        isLeftSidebarOpen && leftSidebarTab === 'integrations'
                             ? 'bg-white text-indigo-600 shadow-xs'
                             : 'text-slate-500 hover:text-slate-900'
                     "
                     title="Integrations"
-                    @click="leftSidebarTab = 'integrations'"
+                    @click="toggleLeftSidebarTab('integrations')"
                 >
                     <Plug class="size-4" />
                 </button>
@@ -1459,6 +1471,7 @@ onBeforeUnmount(() => {
 
             <!-- Left Explorer + Outline Panel -->
             <aside
+                v-if="isLeftSidebarOpen"
                 class="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white"
             >
                 <template v-if="leftSidebarTab === 'explorer'">
