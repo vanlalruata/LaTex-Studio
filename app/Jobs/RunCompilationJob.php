@@ -27,7 +27,7 @@ class RunCompilationJob implements ShouldQueue
 
     public int $tries = 1;
 
-    public int $timeout = 120;
+    public int $timeout = 300;
 
     public function __construct(
         public readonly int $compilationId,

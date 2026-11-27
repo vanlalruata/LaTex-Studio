@@ -46,11 +46,14 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
 
         [$exitCode, $errorOutput, $timedOut] = $this->runCompilePass($request, $rootFile, $srcDir, $outDir, $timeout, $env);
 
-        if (! $timedOut && $exitCode !== 0 && $this->autoInstallPackages) {
+        $autoInstallRounds = 0;
+        while (! $timedOut && $exitCode !== 0 && $this->autoInstallPackages && $autoInstallRounds < 3) {
             $initialLog = $this->readLog($outDir, $rootFile) ?? $errorOutput;
-            if ($this->installMissingPackagesFromLog($initialLog, $env)) {
-                [$exitCode, $errorOutput, $timedOut] = $this->runCompilePass($request, $rootFile, $srcDir, $outDir, $timeout, $env);
+            if (! $this->installMissingPackagesFromLog($initialLog, $env)) {
+                break;
             }
+            $autoInstallRounds++;
+            [$exitCode, $errorOutput, $timedOut] = $this->runCompilePass($request, $rootFile, $srcDir, $outDir, $timeout, $env);
         }
 
         $durationMs = max(1, ((int) (microtime(true) * 1000)) - $startMs);
@@ -147,7 +150,7 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
                 continue;
             }
 
-            $install = Process::timeout(60)->env($env)->run([$tlmgr, 'install', $package]);
+            $install = Process::timeout(120)->env($env)->run([$tlmgr, 'install', $package]);
             if ($install->successful()) {
                 $installedAny = true;
             }
@@ -161,10 +164,14 @@ class LocalTexLiveAdapter implements LatexCompilerInterface
      */
     private function resolveTlmgrPackage(string $tlmgr, string $missingFile, array $env): ?string
     {
-        $search = Process::timeout(20)->env($env)->run([$tlmgr, 'search', '--global', '--file', '/'.$missingFile]);
+        $search = Process::timeout(45)->env($env)->run([$tlmgr, 'search', '--global', '--file', '/'.$missingFile]);
 
-        if ($search->successful() && preg_match('/^([A-Za-z0-9_.-]+):/m', $search->output(), $pkgMatch) === 1) {
-            return $pkgMatch[1];
+        if ($search->successful() && preg_match_all('/^([A-Za-z0-9_.-]+):\s*$/m', $search->output(), $pkgMatches) >= 1) {
+            foreach ($pkgMatches[1] as $candidate) {
+                if ($candidate !== 'tlmgr') {
+                    return $candidate;
+                }
+            }
         }
 
         $fallback = pathinfo($missingFile, PATHINFO_FILENAME);

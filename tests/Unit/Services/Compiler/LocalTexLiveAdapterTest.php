@@ -176,7 +176,10 @@ test('local adapter auto-installs missing sty package via tlmgr and retries once
         $cmd = is_array($process->command) ? implode(' ', $process->command) : (string) $process->command;
 
         if (str_contains($cmd, 'tlmgr search')) {
-            return Process::result(output: "siunits:\n\ttexmf-dist/tex/latex/siunits/siunits.sty\n", exitCode: 0);
+            return Process::result(
+                output: "tlmgr: package repository https://mirrors.example.org/tlnet (verified)\nsiunits:\n\ttexmf-dist/tex/latex/siunits/siunits.sty\n",
+                exitCode: 0,
+            );
         }
 
         if (str_contains($cmd, 'tlmgr install siunits')) {
