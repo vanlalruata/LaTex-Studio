@@ -179,7 +179,7 @@ store.post = (args: { project: string | { public_id: string }, figure: string | 
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-export const toggleResolve = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const toggleResolve = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggleResolve.url(args, options),
     method: 'post',
 })
@@ -194,7 +194,7 @@ toggleResolve.definition = {
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-toggleResolve.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+toggleResolve.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -229,7 +229,7 @@ toggleResolve.url = (args: { project: string | { public_id: string }, figure: st
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-toggleResolve.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+toggleResolve.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggleResolve.url(args, options),
     method: 'post',
 })
@@ -239,7 +239,7 @@ toggleResolve.post = (args: { project: string | { public_id: string }, figure: s
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-    const toggleResolveForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const toggleResolveForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: toggleResolve.url(args, options),
         method: 'post',
     })
@@ -249,7 +249,7 @@ toggleResolve.post = (args: { project: string | { public_id: string }, figure: s
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-        toggleResolveForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        toggleResolveForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: toggleResolve.url(args, options),
             method: 'post',
         })

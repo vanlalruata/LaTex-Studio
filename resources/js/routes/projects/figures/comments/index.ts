@@ -179,7 +179,7 @@ store.post = (args: { project: string | { public_id: string }, figure: string | 
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-export const resolve = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const resolve = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(args, options),
     method: 'post',
 })
@@ -194,7 +194,7 @@ resolve.definition = {
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-resolve.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+resolve.url = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -229,7 +229,7 @@ resolve.url = (args: { project: string | { public_id: string }, figure: string |
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-resolve.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+resolve.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(args, options),
     method: 'post',
 })
@@ -239,7 +239,7 @@ resolve.post = (args: { project: string | { public_id: string }, figure: string 
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-    const resolveForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const resolveForm = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: resolve.url(args, options),
         method: 'post',
     })
@@ -249,7 +249,7 @@ resolve.post = (args: { project: string | { public_id: string }, figure: string 
  * @see app/Http/Controllers/FigureCommentController.php:58
  * @route '/projects/{project}/figures/{figure}/comments/{comment}/resolve'
  */
-        resolveForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        resolveForm.post = (args: { project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, figure: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: resolve.url(args, options),
             method: 'post',
         })

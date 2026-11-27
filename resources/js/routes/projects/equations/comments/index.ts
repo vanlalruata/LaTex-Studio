@@ -4,7 +4,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
  * @see app/Http/Controllers/EquationController.php:354
  * @route '/projects/{project}/equations/{equation}/comments'
  */
-export const store = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const store = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -19,7 +19,7 @@ store.definition = {
  * @see app/Http/Controllers/EquationController.php:354
  * @route '/projects/{project}/equations/{equation}/comments'
  */
-store.url = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+store.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -49,7 +49,7 @@ store.url = (args: { project: string | { public_id: string }, equation: string |
  * @see app/Http/Controllers/EquationController.php:354
  * @route '/projects/{project}/equations/{equation}/comments'
  */
-store.post = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+store.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: store.url(args, options),
     method: 'post',
 })
@@ -59,7 +59,7 @@ store.post = (args: { project: string | { public_id: string }, equation: string 
  * @see app/Http/Controllers/EquationController.php:354
  * @route '/projects/{project}/equations/{equation}/comments'
  */
-    const storeForm = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const storeForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: store.url(args, options),
         method: 'post',
     })
@@ -69,7 +69,7 @@ store.post = (args: { project: string | { public_id: string }, equation: string 
  * @see app/Http/Controllers/EquationController.php:354
  * @route '/projects/{project}/equations/{equation}/comments'
  */
-        storeForm.post = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        storeForm.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: store.url(args, options),
             method: 'post',
         })
@@ -80,7 +80,7 @@ store.post = (args: { project: string | { public_id: string }, equation: string 
  * @see app/Http/Controllers/EquationController.php:379
  * @route '/projects/{project}/equations/{equation}/comments/{comment}/resolve'
  */
-export const resolve = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const resolve = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(args, options),
     method: 'post',
 })
@@ -95,7 +95,7 @@ resolve.definition = {
  * @see app/Http/Controllers/EquationController.php:379
  * @route '/projects/{project}/equations/{equation}/comments/{comment}/resolve'
  */
-resolve.url = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions) => {
+resolve.url = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions) => {
     if (Array.isArray(args)) {
         args = {
                     project: args[0],
@@ -130,7 +130,7 @@ resolve.url = (args: { project: string | { public_id: string }, equation: string
  * @see app/Http/Controllers/EquationController.php:379
  * @route '/projects/{project}/equations/{equation}/comments/{comment}/resolve'
  */
-resolve.post = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+resolve.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: resolve.url(args, options),
     method: 'post',
 })
@@ -140,7 +140,7 @@ resolve.post = (args: { project: string | { public_id: string }, equation: strin
  * @see app/Http/Controllers/EquationController.php:379
  * @route '/projects/{project}/equations/{equation}/comments/{comment}/resolve'
  */
-    const resolveForm = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const resolveForm = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: resolve.url(args, options),
         method: 'post',
     })
@@ -150,7 +150,7 @@ resolve.post = (args: { project: string | { public_id: string }, equation: strin
  * @see app/Http/Controllers/EquationController.php:379
  * @route '/projects/{project}/equations/{equation}/comments/{comment}/resolve'
  */
-        resolveForm.post = (args: { project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } } | [project: string | { public_id: string }, equation: string | number | { public_id: string | number }, comment: string | number | { public_id: string | number } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        resolveForm.post = (args: { project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } } | [project: string | { public_id: string }, equation: string | { public_id: string }, comment: string | { public_id: string } ], options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: resolve.url(args, options),
             method: 'post',
         })
